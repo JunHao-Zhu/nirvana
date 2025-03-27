@@ -20,7 +20,7 @@ mapping = {
 def get_operation(operation_type: str):
     """Loads a single operation by name""" 
     try:
-        entrypoint = importlib.metadata.entry_points(group="docetl.operation")[
+        entrypoint = importlib.metadata.entry_points(group="mahjong.operation")[
             operation_type
         ]
         return entrypoint.load()
@@ -34,6 +34,6 @@ def get_operations():
     operations = mapping.copy()
     operations.update({
         op.name: op.load()
-        for op in importlib.metadata.entry_points(group="docetl.operation")
+        for op in importlib.metadata.entry_points(group="mahjong.operation")
     })
     return operations

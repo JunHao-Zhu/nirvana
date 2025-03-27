@@ -1,7 +1,7 @@
 import pandas as pd
 
 from mahjong.dataframe import ImageDtype, ImageArray
-from mahjong.llm_setting import client
+from mahjong.utils import configure_llm_backbone
 
 pd.api.types.register_extension_dtype(ImageDtype)
 
@@ -18,4 +18,9 @@ def convert_to_base_data(data: pd.Series | list) -> list:
 
     return data
 
-__all__ = ["ImageDtype", "ImageArray", "convert_to_base_data", "client"]
+__all__ = [
+    "ImageDtype", 
+    "ImageArray", 
+    "convert_to_base_data", 
+    "configure_llm_backbone"
+]

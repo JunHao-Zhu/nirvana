@@ -22,6 +22,7 @@ df = mjg.DataFrame({
 Moreover, in the future, we consider reading data from data lake storages (e.g, S3, Delta Lake, etc.)
 """
 
+import sys
 import base64
 import requests # type: ignore
 from io import BytesIO

@@ -1,7 +1,7 @@
 """
 Map: Perform a projecton on target data based on NL predicates
 """
-import mahjong as mj
+import mahjong as mjg
 from ops.base import BaseOperation
 
 
