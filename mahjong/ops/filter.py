@@ -24,7 +24,7 @@ def filter_helper(
 
 @dataclass
 class FilterOpOutputs:
-    output: Iterable[Any] = None
+    output: Iterable[bool] = None
 
 
 class FilterOperation(BaseOperation):
@@ -53,6 +53,17 @@ class FilterOperation(BaseOperation):
             output = self.llm(full_prompt, "output")
             outputs.append(output["output"])
         return outputs
+    
+    def _postprocess_llm_outputs(llm_outputs: Iterable[str]):
+        outputs = []
+        for output in llm_outputs:
+            if "True" in output:
+                outputs.append(True)
+            elif "False" in output:
+                outputs.append(False)
+            else:
+                raise ValueError("The llm outputs do not contain True or False.")
+        return outputs
 
     def execute(
             self, 
@@ -71,6 +82,8 @@ class FilterOperation(BaseOperation):
             raise NotImplementedError(f"Strategy {strategy} is not implemented.")
         
         outputs = execution_func(processed_data, user_instruction)
+        
+        outputs = self._postprocess_llm_outputs(outputs)
         return FilterOpOutputs(
             output=outputs
         )

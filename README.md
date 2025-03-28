@@ -21,7 +21,7 @@ Before using semantic operators, first configure the llm settings used in the sy
 ```
 
 ### Operators
-Operator `map`: Perform a projecton on target data based on a predicate (the code refers to ops/map.py (execution) and prompt_templates/map_prompter.py (prompts))
+Operator `map`: Perform a projecton on the target data based on a predicate (the code refers to ops/map.py (execution) and prompt_templates/map_prompter.py (prompts))
 ```python
 >>> import pandas as pd
 >>> import mahjong as mjg
@@ -41,4 +41,10 @@ MapOpOutput(
 )
 ```
 
-Operator `filter`:
+Operator `filter`: Evaluate a condition on the target data (returning either True or False) (the code refers to ops/filter.py (execution) and prompt_templates/filter_prompter.py (prompts))
+```python
+>>> mjg.ops.filter(df["title"], "Whether the movie is released after 2000?", strategy="plain_llm")
+FilterOpOutput(
+    output = [False, True]
+)
+```
