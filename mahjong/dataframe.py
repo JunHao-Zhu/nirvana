@@ -34,7 +34,7 @@ from pandas.api.extensions import ExtensionDtype, ExtensionArray
 from PIL import Image
 
 
-def fetch_image(image: str | np.ndarray | Image.Image | None, image_type: str = "Image") -> Image.Image | str | None:
+def fetch_image(image: Union[str, np.ndarray, Image.Image, None], image_type: str = "Image") -> Union[Image.Image, str, None]:
     if image is None:
         return None
 
@@ -97,9 +97,9 @@ class ImageArray(ExtensionArray):
         self._data = np.asarray(values, dtype=object)
         self._dtype = ImageDtype()
         self.allowed_image_types = ["Image", "base64"]
-        self._cached_images: dict[tuple[int, str], str | Image.Image | None] = {}  # Cache for loaded images
+        self._cached_images: dict[tuple[int, str], Union[str, Image.Image, None]] = {}  # Cache for loaded images
 
-    def __getitem__(self, item: int | slice | Sequence[int]) -> np.ndarray:
+    def __getitem__(self, item: Union[int, slice, Sequence[int]]) -> np.ndarray:
         result = self._data[item]
 
         if isinstance(item, (int, np.integer)):

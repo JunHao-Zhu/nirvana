@@ -1,11 +1,12 @@
+from typing import Union
 import pandas as pd
 
 from mahjong.dataframe import ImageDtype, ImageArray
 from mahjong.utils import configure_llm_backbone
 
-pd.api.types.register_extension_dtype(ImageDtype)
+pd.api.extensions.register_extension_dtype(ImageDtype)
 
-def convert_to_base_data(data: pd.Series | list) -> list:
+def convert_to_base_data(data: Union[pd.Series, list]) -> list:
     """
     Converts data to proper base data type.
     - For original pandas data types, this is returns tolist().

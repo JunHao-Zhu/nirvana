@@ -90,7 +90,7 @@ class MapPrompter:
                     {"type": "text", "text": demo["answer"]}
                 ]
             else:
-                raise ValueError(f"Data type {type(demo["data"])} is not supported.")
+                raise ValueError("Data type {} is not supported.".format(type(demo["data"])))
             demos_message.append(
                 {"role": "assistant", "content": demo_content}
             )
