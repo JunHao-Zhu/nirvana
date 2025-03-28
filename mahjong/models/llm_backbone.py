@@ -5,13 +5,13 @@ from dataclasses import dataclass, field
 from openai import OpenAI
 
     
-def _get_api_key_from_file(self, file):
+def _get_api_key_from_file(file):
     with open(file, 'r') as api_file:
         api_key = api_file.readline()
     return api_key
 
 
-def _create_client(self, api_key, **kwargs):
+def _create_client(api_key, **kwargs):
     assert api_key != "", "API key is required."
     client = OpenAI(api_key=api_key, base_url=kwargs["base_url"])
     return client
@@ -32,7 +32,8 @@ class LLMClient:
     def configure(cls, model_name: str = None, api_key: Union[str, Path] = None, base_url=None):
         cls.model = model_name
         api_key = api_key if isinstance(api_key, str) else _get_api_key_from_file(api_key)
-        cls.client = _create_client(cls.api_key, base_url=base_url)
+        cls.client = _create_client(api_key, base_url=base_url)
+        return cls()
     
     def __call__(
             self,

@@ -1,8 +1,12 @@
 """
 Rank: Rank data according to NL predicates.
 """
-import mahjong as mj
-from ops.base import BaseOperation
+
+from mahjong.ops.base import BaseOperation
+
+
+def rank_helper(**kwargs):
+    pass
 
 
 class RankOperation(BaseOperation):

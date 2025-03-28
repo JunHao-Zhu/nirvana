@@ -1,8 +1,12 @@
 """
 Select: Extract relevant information from data based on NL predicates.
 """
-import mahjong as mj
-from ops.base import BaseOperation
+import mahjong as mjg
+from mahjong.ops.base import BaseOperation
+
+
+def select_helper(**kwargs):
+    pass
 
 
 class SelectOperation(BaseOperation):

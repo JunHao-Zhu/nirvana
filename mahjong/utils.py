@@ -1,3 +1,4 @@
+from copy import deepcopy
 from pathlib import Path
 from typing import Union
 
@@ -25,5 +26,5 @@ def configure_llm_backbone(
         >>> mjg.configure_llm_backbone(model_name="gpt-3.5-turbo", api_key="your-api-key")
         ```
     """
-    llm_backbone = LLMClient().configure(model_name, api_key, base_url)
-    BaseOperation.set_llm(llm_backbone)
+    llm_client = LLMClient.configure(model_name, api_key, base_url)
+    BaseOperation.set_llm(deepcopy(llm_client))

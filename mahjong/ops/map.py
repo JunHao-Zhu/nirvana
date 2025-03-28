@@ -9,6 +9,20 @@ from mahjong.ops.base import BaseOperation
 from mahjong.prompt_templates.map_prompter import MapPrompter
 
 
+def map_helper(
+    processed_data: Iterable[Any], user_instruction: str, target_schema: str = None, strategy: str = None, **kwargs
+):
+    map_op = MapOperation()
+    outputs = map_op.execute(
+        processed_data=processed_data,
+        user_instruction=user_instruction,
+        target_schema=target_schema,
+        strategy=strategy,
+        **kwargs
+    )
+    return outputs
+
+
 @dataclass
 class MapOpOutputs:
     field_name: str = None

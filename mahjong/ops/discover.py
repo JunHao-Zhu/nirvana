@@ -4,6 +4,10 @@ Later to implement.
 """
 
 
+def discover_helper(**kwargs):
+    pass
+
+
 class DiscoverOperation:
     """ TODO: Implement DiscoverOperation class """
     

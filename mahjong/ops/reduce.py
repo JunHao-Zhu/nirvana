@@ -1,8 +1,12 @@
 """
 Reduce: aggregate multiple data based on NL predicates
 """
-import mahjong as mj
-from ops.base import BaseOperation
+import mahjong as mjg
+from mahjong.ops.base import BaseOperation
+
+
+def reduce_helper(**kwargs):
+    pass
 
 
 class ReduceOperation(BaseOperation):

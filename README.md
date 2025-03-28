@@ -25,17 +25,16 @@ Operator `map`: Perform a projecton on target data based on a predicate (the cod
 ```python
 >>> import pandas as pd
 >>> import mahjong as mjg
->>> from mahjong.ops.map import MapOperation as map
 
 >>> df = pd.DataFrame(
 ... {
 ...     "title": ["The Godfather", "The Dark Knight"], 
 ...     "overview": [
-...         "The story follows the Corleone crime family, ...", 
-...         "The story follows Batman, Police Lieutenant Jim Gordon (Gary Oldman), ..."
+...         "An organized crime dynasty's aging patriarch transfers control of his clandestine empire to his reluctant son.", 
+...         "When the menace known as the Joker wreaks havoc and chaos on the people of Gotham, Batman must accept one of the greatest psychological and physical tests of his ability to fight injustice."
 ...     ]
 ... })
->>> map.execute(df["overview"], "According to the movie overview, extract the genre of each movie", target_schema = "genre", strategy="plain_llm")
+>>> mjg.ops.map(df["overview"], "According to the movie overview, extract the genre of each movie.", target_schema = "genre", strategy="plain_llm")
 MapOpOutput(
     field_name = "genre",
     output = ["crime, drama", "action, thriller, superhero"]

@@ -9,8 +9,9 @@ class BaseOperation(ABC):
     def __init__(self, op_name: str, *args, **kwargs):
         self.op_name = op_name
 
-    def set_llm(self, llm: LLMClient):
-        self.llm = llm
+    @classmethod
+    def set_llm(cls, llm: LLMClient):
+        cls.llm = llm
 
     @abstractmethod
     def execute(self, *args, **kwargs):

@@ -1,39 +1,16 @@
-import importlib.metadata
-
-from mahjong.ops.discover import DiscoverOperation
-from mahjong.ops.filter import FilterOperation
-from mahjong.ops.map import MapOperation
-from mahjong.ops.rank import RankOperation
-from mahjong.ops.reduce import ReduceOperation
-from mahjong.ops.select import SelectOperation
+from mahjong.ops.discover import discover_helper as discover
+from mahjong.ops.filter import filter_helper as filter
+from mahjong.ops.map import map_helper as map
+from mahjong.ops.rank import rank_helper as rank
+from mahjong.ops.reduce import reduce_helper as reduce
+from mahjong.ops.select import select_helper as select
 
 
-mapping = {
-    "discover": DiscoverOperation,
-    "filter": FilterOperation,
-    "map": MapOperation,
-    "rank": RankOperation,
-    "reduce": ReduceOperation,
-    "select": SelectOperation,
-}
-
-def get_operation(operation_type: str):
-    """Loads a single operation by name""" 
-    try:
-        entrypoint = importlib.metadata.entry_points(group="mahjong.operation")[
-            operation_type
-        ]
-        return entrypoint.load()
-    except KeyError:
-        if operation_type in mapping:
-            return mapping[operation_type]
-        raise KeyError(f"Unrecognized operation {operation_type}")
-
-def get_operations():
-    """Load all available operations and return them as a dictionary"""
-    operations = mapping.copy()
-    operations.update({
-        op.name: op.load()
-        for op in importlib.metadata.entry_points(group="mahjong.operation")
-    })
-    return operations
+__all__ = [
+    "discover",
+    "filter",
+    "map",
+    "rank",
+    "reduce",
+    "select"
+]
