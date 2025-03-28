@@ -7,10 +7,21 @@ from zero to hero
 2. build semantic operators by referencing [LOTUS](https://github.com/lotus-data/lotus) and [DocETL](https://github.com/ucbepic/docetl).
 
 
-## Operators
-The coding example of operators is as follow:
+## Tutorial
 
-`Map`: perform a projecton on target data based on a predicate (the code refers to ops/map.py (execution) and prompt_templates/map_prompter.py (prompts))
+### LLM Backbone configuration
+Before using semantic operators, first configure the llm settings used in the system. Taking DeepSeek as an example,
+```python
+>>> import mahjong as mjg
+>>> mjg.configure_llm_backbone(
+...     model_name = "deepseek-chat", 
+...     api_key = "<Your API Key>",
+...     base_url = "https://api.deepseek.com"
+... )
+```
+
+### Operators
+Operator `map`: Perform a projecton on target data based on a predicate (the code refers to ops/map.py (execution) and prompt_templates/map_prompter.py (prompts))
 ```python
 >>> import pandas as pd
 >>> import mahjong as mjg
@@ -22,12 +33,13 @@ The coding example of operators is as follow:
 ...     "overview": [
 ...         "The story follows the Corleone crime family, ...", 
 ...         "The story follows Batman, Police Lieutenant Jim Gordon (Gary Oldman), ..."
-... ]
+...     ]
 ... })
 >>> map.execute(df["overview"], "According to the movie overview, extract the genre of each movie", target_schema = "genre", strategy="plain_llm")
-
 MapOpOutput(
     field_name = "genre",
     output = ["crime, drama", "action, thriller, superhero"]
 )
 ```
+
+Operator `filter`:
