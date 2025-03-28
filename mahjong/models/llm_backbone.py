@@ -1,6 +1,6 @@
 import re
 from pathlib import Path
-from typing import Union, Optional
+from typing import Union, Optional, List, Dict, Any
 from dataclasses import dataclass, field
 from openai import OpenAI
 
@@ -36,15 +36,10 @@ class LLMClient:
     
     def __call__(
             self,
-            prompt: str,
-            system_prompt: str = "",
+            messages: List[Dict[str, str]],
+            parse_tags: Union[List[str], str] = None,
             **kwargs,
-    ):
-        if system_prompt:
-            messages = [{"role": "system", "content": system_prompt},
-                        {"role": "user", "content": prompt}]
-        else:
-            messages = [{"role": "user", "content": prompt}]
+    ) -> Dict[str, Any]:
         response = self.client.chat.completions.create(
             model=self.model,
             messages=messages,
@@ -52,8 +47,16 @@ class LLMClient:
             temperature=self.config.temperature,
             **kwargs
         )
-        return response.choices[0].message.content
+        llm_ouput = response.choices[0].message.content
+
+        outputs = dict()
+        if isinstance(parse_tags, str):
+            outputs[parse_tags] = self._extract_xml(llm_ouput, parse_tags)
+        else:
+            for tag in parse_tags:
+                outputs[tag] = self._extract_xml(llm_ouput, tag)
+        return outputs
 
     def _extract_xml(self, text: str, tag: str):
         match = re.search(f"<{tag}>(.*?)</{tag}>", text, re.DOTALL)
-        return match.group(1).strip() if match else ''
+        return match.group(1).strip() if match else None
