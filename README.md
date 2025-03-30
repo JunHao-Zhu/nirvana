@@ -38,7 +38,7 @@ Operator `map`: Perform a projecton on the target data based on a predicate (the
 ...     ]
 ... })
 >>> mjg.ops.map(df["overview"], "According to the movie overview, extract the genre of each movie.", target_schema = "genre", strategy="plain_llm")
-MapOpOutput(
+MapOpOutputs(
     field_name = "genre",
     output = ["crime, drama", "action, thriller, superhero"]
 )
@@ -47,7 +47,7 @@ MapOpOutput(
 Operator `filter`: Evaluate a condition on the target data (returning either True or False) (the code refers to ops/filter.py (execution) and prompt_templates/filter_prompter.py (prompts))
 ```python
 >>> mjg.ops.filter(df["title"], "Whether the movie is released after 2000?", strategy="plain_llm")
-FilterOpOutput(
+FilterOpOutputs(
     output = [False, True]
 )
 ```
@@ -55,7 +55,7 @@ FilterOpOutput(
 Operator `reduce`: Aggregate a set of data based on the user instruction (the code refers to ops/reduce.py (execution) and prompt_templates/reduce_prompter.py (prompts))
 ```python
 >>> mjg.ops.reduce(df["overview"], "Based on the overviews of the given movies, provide several common points of these movies. The common points should be concise.")
-ReduceOpOutput(
+ReduceOpOutputs(
     output = "1. Both movies involve a transfer or test of leadership and capability. 2. The protagonists face significant psychological challenges. 3. The stories revolve around crime and justice. 4. The main characters are reluctant or tested in their roles. 5. Both narratives feature a clash between order and chaos."
 )
 ```
