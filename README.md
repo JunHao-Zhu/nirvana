@@ -1,10 +1,13 @@
-# Mahjong: LLM-powered Multi-modal Native Data Lake
+# Mahjong: Revolutionize Multi-modal Data Analytics with LLMs
 
 from zero to hero
 
 ## TODO
-1. build dataframe, Pandas is a good start like [LOTUS](https://github.com/lotus-data/lotus).
-2. build semantic operators by referencing [LOTUS](https://github.com/lotus-data/lotus) and [DocETL](https://github.com/ucbepic/docetl).
+- [x] Build dataframe that supports image data. Pandas is a good start like [LOTUS](https://github.com/lotus-data/lotus).
+- [ ] Build semantic operators by referencing [LOTUS](https://github.com/lotus-data/lotus) and [DocETL](https://github.com/ucbepic/docetl).
+- [ ] Build our dataframe independent of Pandas, like [Meerkat](https://github.com/HazyResearch/meerkat).
+- [ ] Optimizations for operators and operator orchastration.
+- [ ] Optimizations for connector to external databases and data lakes.
 
 
 ## Tutorial
@@ -48,3 +51,12 @@ FilterOpOutput(
     output = [False, True]
 )
 ```
+
+Operator `reduce`: Aggregate a set of data based on the user instruction (the code refers to ops/reduce.py (execution) and prompt_templates/reduce_prompter.py (prompts))
+```python
+>>> mjg.ops.reduce(df["overview"], "Based on the overviews of the given movies, provide several common points of these movies. The common points should be concise.")
+ReduceOpOutput(
+    output = "1. Both movies involve a transfer or test of leadership and capability. 2. The protagonists face significant psychological challenges. 3. The stories revolve around crime and justice. 4. The main characters are reluctant or tested in their roles. 5. Both narratives feature a clash between order and chaos."
+)
+```
+> The current version of the reduce operator is simple. In the next step, we will implement it using several optimizations, like `summarize and aggregate` and `incremental aggregation`.
