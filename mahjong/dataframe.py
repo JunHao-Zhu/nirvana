@@ -33,6 +33,8 @@ import pandas as pd
 from pandas.api.extensions import ExtensionDtype, ExtensionArray
 from PIL import Image
 
+from mahjong.lineage.lineage import LineageMixin
+
 
 def fetch_image(image: Union[str, np.ndarray, Image.Image, None], image_type: str = "Image") -> Union[Image.Image, str, None]:
     if image is None:
@@ -231,6 +233,28 @@ def _compare_images(img1, img2) -> bool:
         return img1.size == img2.size and img1.mode == img2.mode and img1.tobytes() == img2.tobytes()
     else:
         return img1 == img2
+    
+
+@pd.api.extensions.register_dataframe_accessor("tile")
+class Tile(LineageMixin):
+    def __init__(self, pandas_obj):
+        self._obj = pandas_obj
+
+    def semantic_map(self, user_instruction):
+        self.add_operator(op_name="map",
+                          user_instruction=user_instruction)
+        
+    def semantic_filter(self, user_instruction):
+        self.add_operator(op_name="filter",
+                          user_instruction=user_instruction)
+        
+    def semantic_reduce(self, user_instruction):
+        self.add_operator(op_name="reduce",
+                          user_instruction=user_instruction)
+        
+    def execute(self):
+        self.optimize()
+        pass
 
 
 class DataFrame:

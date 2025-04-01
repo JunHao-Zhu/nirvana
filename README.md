@@ -6,7 +6,12 @@ from zero to hero
 - [x] Build dataframe that supports image data. Pandas is a good start like [LOTUS](https://github.com/lotus-data/lotus).
 - [ ] Build semantic operators by referencing [LOTUS](https://github.com/lotus-data/lotus) and [DocETL](https://github.com/ucbepic/docetl).
 - [ ] Build our dataframe independent of Pandas, like [Meerkat](https://github.com/HazyResearch/meerkat).
-- [ ] Optimizations for operators and operator orchastration.
+- [ ] Optimizations for operators and operator orchastration (OptimizerMixin, LineageMixin for DataFrame):
+    <ol start="0">
+    <li>[ ] Determine the optimization targets (trade off between latency, cost, and accuracy).</li>
+    <li>[ ] Add data lineage recording the operators (and NL instructions) for operator fusion.</li>
+    <li>[ ] Add optimizers choosing an appropriate physical execution for each op.</li>
+    </ol>
 - [ ] Optimizations for connector to external databases and data lakes.
 
 
