@@ -238,6 +238,7 @@ def _compare_images(img1, img2) -> bool:
 @pd.api.extensions.register_dataframe_accessor("tile")
 class Tile(LineageMixin):
     def __init__(self, pandas_obj):
+        super().__init__()
         self._obj = pandas_obj
 
     def semantic_map(self, user_instruction):

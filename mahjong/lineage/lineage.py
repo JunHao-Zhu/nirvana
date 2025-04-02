@@ -17,11 +17,8 @@ op_mapping = {
 
 
 class LineageNode:
-    def __init__(self, op_name, user_instruction: str,):
-        self.op_name = op_name
-        self.op = op_mapping[op_name]()
-        self.user_instruction = user_instruction
-
+    def __init__(self):
+        self.is_visited = False
         self._parent: List[LineageNode] = []
         self._child: List[LineageNode] = []
 
@@ -32,11 +29,19 @@ class LineageNode:
     @property
     def child(self):
         return self._child
+
+
+class LineageOpNode(LineageNode):
+    def __init__(self, op_name, user_instruction: str,):
+        super().__init__()
+        self.op_name = op_name
+        self.op = op_mapping[op_name]()
+        self.user_instruction = user_instruction
     
-    def add_child(self, node: "LineageNode"):
+    def add_child(self, node: LineageNode):
         self._child.append(node)
 
-    def add_parent(self, node: "LineageNode"):
+    def add_parent(self, node: LineageNode):
         self._parent.append(node)
 
 
@@ -45,7 +50,7 @@ class LineageMixin:
         self.last_op = None
 
     def add_operator(self, op_name, user_instruction):
-        op_node = LineageNode(op_name, user_instruction)
+        op_node = LineageOpNode(op_name, user_instruction)
         if self.last_op is None:
             self.last_op = op_node
         else:
@@ -56,12 +61,40 @@ class LineageMixin:
     def optimize(self):
         pass
 
-    def print_logic_plan(self):
-        print("Logic Plan:\n")
-        plan = []
-        
+    def print_logical_plan(self):
+        print("Logical Plan:")
+
+        logical_plan = []
         def _print_op(node: LineageNode):
-            if len(node.parent) == 0:
-                return f"({node.op_name}, {node.user_instruction})"
+            if node.is_visited:
+                return ""
             
-        pass
+            if len(node.parent) == 0:
+                return f"({node.op_name}, {node.user_instruction})\n"
+            
+            op_info = ""
+            for parent_node in node.parent:
+                op_info += _print_op(parent_node)
+            if op_info:
+                logical_plan.append(op_info)
+            
+            node.is_visited = True
+            return f"({node.op_name}, {node.user_instruction})\n"
+        
+        op_info = _print_op(self.last_op)
+        if op_info:
+            logical_plan.append(op_info)
+
+        logical_plan = "=>".join(logical_plan)
+        print(logical_plan)
+
+        def _clear_visited_flag(node: LineageNode):
+            if not node.is_visited:
+                return
+            
+            node.is_visited = False
+            for parent_node in node.parent:
+                _clear_visited_flag(parent_node)
+            return
+
+        _clear_visited_flag(self.last_op)
