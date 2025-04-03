@@ -29,14 +29,33 @@ class LineageNode:
     @property
     def child(self):
         return self._child
+    
+
+class LineageDataNode(LineageNode):
+    def __init__(self):
+        super().__init__()
+    
+    def add_child(self, node: LineageNode):
+        self._child.append(node)
+
+    def add_parent(self, node: LineageNode):
+        self._parent.append(node)
 
 
 class LineageOpNode(LineageNode):
-    def __init__(self, op_name, user_instruction: str,):
+    def __init__(
+            self, 
+            op_name: str, 
+            user_instruction: str,
+            input_schema: str,
+            output_schema: str = None
+    ):
         super().__init__()
         self.op_name = op_name
         self.op = op_mapping[op_name]()
         self.user_instruction = user_instruction
+        self.input_schema = input_schema
+        self.output_schema = output_schema
     
     def add_child(self, node: LineageNode):
         self._child.append(node)
@@ -70,7 +89,10 @@ class LineageMixin:
                 return ""
             
             if len(node.parent) == 0:
-                return f"({node.op_name}, {node.user_instruction})\n"
+                output_info = f"->{node.output_schema}" if node.output_schema else "\n"
+                return (
+                    f"{node.op_name}({node.user_instruction}): {node.input_schema}{output_info}"
+                )
             
             op_info = ""
             for parent_node in node.parent:
@@ -79,7 +101,10 @@ class LineageMixin:
                 logical_plan.append(op_info)
             
             node.is_visited = True
-            return f"({node.op_name}, {node.user_instruction})\n"
+            output_info = f"->{node.output_schema}" if node.output_schema else "\n"
+            return (
+                f"{node.op_name}({node.user_instruction}): {node.input_schema}{output_info}"
+            )
         
         op_info = _print_op(self.last_op)
         if op_info:

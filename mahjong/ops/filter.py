@@ -4,18 +4,24 @@ Filter: remove data that violates NL predicates.
 import functools
 from typing import Any, Iterable
 from dataclasses import dataclass
+import pandas as pd
 
 from mahjong.ops.base import BaseOperation
 from mahjong.prompt_templates.filter_prompter import FilterPrompter
 
 
 def filter_helper(
-    processed_data: Iterable[Any], user_instruction: str, strategy: str = None, **kwargs
+    input_data: pd.DataFrame, 
+    user_instruction: str, 
+    input_schema: str,
+    strategy: str = None, 
+    **kwargs
 ):
     filter_op = FilterOperation()
     outputs = filter_op.execute(
-        processed_data=processed_data,
+        input_data=input_data,
         user_instruction=user_instruction,
+        input_schema=input_schema,
         strategy=strategy,
         **kwargs
     )
@@ -67,8 +73,9 @@ class FilterOperation(BaseOperation):
 
     def execute(
             self, 
-            processed_data: Iterable[Any],
+            input_data: pd.DataFrame,
             user_instruction: str,
+            input_schema: str,
             strategy: str = None,
             *args, 
             **kwargs
@@ -81,6 +88,7 @@ class FilterOperation(BaseOperation):
         else:
             raise NotImplementedError(f"Strategy {strategy} is not implemented.")
         
+        processed_data = input_data[input_schema]
         outputs = execution_func(processed_data, user_instruction)
         
         outputs = self._postprocess_llm_outputs(outputs)

@@ -19,5 +19,5 @@ def test_image_data():
         "logos": logo_imgs
     })
     
-    outputs = mjg.ops.filter(df["logos"], "Whether the logo is about a software or not?", strategy="plain_llm")
+    outputs = mjg.ops.filter(df, "Whether the image is a software logo?", input_schema="logos", strategy="plain_llm")
     return outputs

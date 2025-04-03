@@ -241,17 +241,21 @@ class Tile(LineageMixin):
         super().__init__()
         self._obj = pandas_obj
 
-    def semantic_map(self, user_instruction):
+    def semantic_map(self, user_instruction, input_schema, output_schema, materialize: bool = False):
         self.add_operator(op_name="map",
-                          user_instruction=user_instruction)
+                          user_instruction=user_instruction,
+                          input_schema=input_schema,
+                          output_schema=output_schema)
         
-    def semantic_filter(self, user_instruction):
+    def semantic_filter(self, user_instruction, input_schema, materialize: bool = False):
         self.add_operator(op_name="filter",
-                          user_instruction=user_instruction)
+                          user_instruction=user_instruction,
+                          input_schema=input_schema)
         
-    def semantic_reduce(self, user_instruction):
+    def semantic_reduce(self, user_instruction, input_schema, materialize: bool = False):
         self.add_operator(op_name="reduce",
-                          user_instruction=user_instruction)
+                          user_instruction=user_instruction,
+                          input_schema=input_schema)
         
     def execute(self):
         self.optimize()

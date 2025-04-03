@@ -3,6 +3,7 @@ Reduce: aggregate multiple data based on NL predicates
 """
 from typing import Any, Iterable
 from dataclasses import dataclass
+import pandas as pd
 
 from mahjong.ops.base import BaseOperation
 from mahjong.prompt_templates.reduce_prompter import ReducePrompter
@@ -43,11 +44,13 @@ class ReduceOperation(BaseOperation):
 
     def execute(
             self,
-            processed_data: Iterable[Any],
+            input_data: pd.DataFrame,
             user_instruction: str,
+            input_schema: str,
             *args,
             **kwargs
     ):
+        processed_data = input_data[input_schema]
         full_prompt = self.prompter.generate_prompt(processed_data, user_instruction)
         outputs = self.llm(full_prompt, "output")
         return ReduceOpOuputs(**outputs)

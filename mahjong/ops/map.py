@@ -4,19 +4,25 @@ Map: Perform a projecton on target data based on NL predicates
 import functools
 from typing import Any, Iterable
 from dataclasses import dataclass
+import pandas as pd
 
 from mahjong.ops.base import BaseOperation
 from mahjong.prompt_templates.map_prompter import MapPrompter
 
 
 def map_helper(
-    processed_data: Iterable[Any], user_instruction: str, target_schema: str = None, strategy: str = None, **kwargs
+    input_data: pd.DataFrame, 
+    user_instruction: str, 
+    input_schema: str,
+    output_schema: str = None, 
+    strategy: str = None, **kwargs
 ):
     map_op = MapOperation()
     outputs = map_op.execute(
-        processed_data=processed_data,
+        input_data=input_data,
         user_instruction=user_instruction,
-        target_schema=target_schema,
+        input_schema=input_schema,
+        output_schema=output_schema,
         strategy=strategy,
         **kwargs
     )
@@ -58,9 +64,10 @@ class MapOperation(BaseOperation):
 
     def execute(
             self, 
-            processed_data: Iterable[Any],
+            input_data: pd.DataFrame,
             user_instruction: str,
-            target_schema: str = None,
+            input_schema: str,
+            output_schema: str = None,
             strategy: str = None,
             *args, 
             **kwargs
@@ -84,7 +91,7 @@ class MapOperation(BaseOperation):
             ValueError: If `target_schema` is None.
             NotImplementedError: If the specified `strategy` is not supported.
         """
-        if target_schema is None:
+        if output_schema is None:
             raise ValueError("Field name for the output is required.")
         
         if strategy == "plain_llm":
@@ -95,8 +102,9 @@ class MapOperation(BaseOperation):
         else:
             raise NotImplementedError(f"Strategy {strategy} is not implemented.")
         
+        processed_data = input_data[input_schema]
         outputs = execution_func(processed_data, user_instruction)
         return MapOpOutputs(
-            field_name=target_schema,
+            field_name=output_schema,
             output=outputs
         )
