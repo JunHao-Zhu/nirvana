@@ -2,7 +2,7 @@
 Record the OP lineage (operator and its user instruction) for optimizing operator orchestration.
 """
 
-from typing import List
+from typing import List, Union
 
 from mahjong.ops.map import MapOperation
 from mahjong.ops.filter import FilterOperation
@@ -46,7 +46,7 @@ class LineageOpNode(LineageNode):
     def __init__(
             self, 
             op_name: str, 
-            user_instruction: str,
+            user_instruction: Union[str, List[str]],
             input_schema: str,
             output_schema: str = None
     ):

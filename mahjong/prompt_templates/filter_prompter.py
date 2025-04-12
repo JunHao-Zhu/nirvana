@@ -1,5 +1,5 @@
 import mahjong as mjg
-from typing import Any, List, Dict
+from typing import Any, List, Dict, Union
 
 
 class FilterPrompter:
@@ -7,7 +7,7 @@ class FilterPrompter:
         self.system_instruction = (
             "You are a helpful assistant helping the user make sense of their data. "
             "You are performing a filter operation (one input: True or False) to "
-            "determine whether the given data satisfies the user's instruction. "
+            "determine whether the given data satisfies all the given conditions. "
             "The answer should strictly be either True or False.\n"
             "Output the result of the filter operation concisely in the following format.\n"
             "<output> Your final answer from [True, False] </output>\n"
@@ -15,13 +15,13 @@ class FilterPrompter:
 
     def generate_prompt(
             self, 
-            user_instruction: str,
+            user_instruction: Union[str, List[str]],
             data: Any,
     ):
         # 1. Prepare system message
         sys_message = [{"role": "system", "content": self.system_instruction}]
 
-        # 2. Prepare user message
+        # 2. Prepare data
         if isinstance(data, str):
             user_content = [{"type": "text", "text": data}]
         elif isinstance(data, mjg.ImageDtype):
@@ -30,6 +30,15 @@ class FilterPrompter:
             ]
         else:
             raise ValueError(f"Data type {type(data)} is not supported.")
+        
+        # 3. Prepare the given condition
+        if isinstance(user_instruction, str):
+            conditions = f"condition: {user_instruction}"
+        elif isinstance(user_instruction, list):
+            conditions = [f"condition {idx}: {cond}" for idx, cond in enumerate(user_instruction)]
+            conditions = "\n".join(conditions)
+        user_content.append({"type": "text", "text": conditions})
+        
         user_content.append({"type": "text", "text": user_instruction})
         user_message = [{"role": "user", "content": user_content}]
 
