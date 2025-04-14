@@ -49,3 +49,12 @@ class OpFusion:
                     c.parent.remove(op)
                     c.parent.append(new_op)
             pass
+
+
+class FilterPushdown:
+    
+    def rewrite_op(self, op: LineageOpNode):
+        if op.op_name != "filter":
+            return
+        
+        
