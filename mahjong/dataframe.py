@@ -237,25 +237,29 @@ def _compare_images(img1, img2) -> bool:
 
 @pd.api.extensions.register_dataframe_accessor("tile")
 class Tile(LineageMixin):
-    def __init__(self, pandas_obj):
+    def __init__(self, pandas_obj: pd.DataFrame):
         super().__init__()
         self._obj = pandas_obj
+        self.columns = list(pandas_obj.columns)
 
-    def semantic_map(self, user_instruction, input_schema, output_schema, materialize: bool = False):
+    def semantic_map(self, user_instruction, input_column, output_column, materialize: bool = False):
         self.add_operator(op_name="map",
                           user_instruction=user_instruction,
-                          input_schema=input_schema,
-                          output_schema=output_schema)
+                          input_column=input_column,
+                          output_column=output_column,
+                          fields=self.columns)
         
-    def semantic_filter(self, user_instruction, input_schema, materialize: bool = False):
+    def semantic_filter(self, user_instruction, input_column, materialize: bool = False):
         self.add_operator(op_name="filter",
                           user_instruction=user_instruction,
-                          input_schema=input_schema)
+                          input_column=input_column,
+                          fields=self.columns)
         
-    def semantic_reduce(self, user_instruction, input_schema, materialize: bool = False):
+    def semantic_reduce(self, user_instruction, input_column, materialize: bool = False):
         self.add_operator(op_name="reduce",
                           user_instruction=user_instruction,
-                          input_schema=input_schema)
+                          input_column=input_column,
+                          fields=self.columns)
         
     def execute(self):
         self.optimize()

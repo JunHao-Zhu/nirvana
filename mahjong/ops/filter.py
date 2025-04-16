@@ -13,7 +13,7 @@ from mahjong.prompt_templates.filter_prompter import FilterPrompter
 def filter_helper(
     input_data: pd.DataFrame, 
     user_instruction: str, 
-    input_schema: str,
+    input_column: str,
     strategy: str = None, 
     **kwargs
 ):
@@ -21,7 +21,7 @@ def filter_helper(
     outputs = filter_op.execute(
         input_data=input_data,
         user_instruction=user_instruction,
-        input_schema=input_schema,
+        input_column=input_column,
         strategy=strategy,
         **kwargs
     )
@@ -75,7 +75,7 @@ class FilterOperation(BaseOperation):
             self, 
             input_data: pd.DataFrame,
             user_instruction: str,
-            input_schema: str,
+            input_column: str,
             strategy: str = None,
             *args, 
             **kwargs
@@ -88,7 +88,7 @@ class FilterOperation(BaseOperation):
         else:
             raise NotImplementedError(f"Strategy {strategy} is not implemented.")
         
-        processed_data = input_data[input_schema]
+        processed_data = input_data[input_column]
         outputs = execution_func(processed_data, user_instruction)
         
         outputs = self._postprocess_llm_outputs(outputs)

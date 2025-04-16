@@ -13,16 +13,16 @@ from mahjong.prompt_templates.map_prompter import MapPrompter
 def map_helper(
     input_data: pd.DataFrame, 
     user_instruction: str, 
-    input_schema: str,
-    output_schema: str = None, 
+    input_column: str,
+    output_column: str = None, 
     strategy: str = None, **kwargs
 ):
     map_op = MapOperation()
     outputs = map_op.execute(
         input_data=input_data,
         user_instruction=user_instruction,
-        input_schema=input_schema,
-        output_schema=output_schema,
+        input_column=input_column,
+        output_column=output_column,
         strategy=strategy,
         **kwargs
     )
@@ -66,8 +66,8 @@ class MapOperation(BaseOperation):
             self, 
             input_data: pd.DataFrame,
             user_instruction: str,
-            input_schema: str,
-            output_schema: str = None,
+            input_column: str,
+            output_column: str = None,
             strategy: str = None,
             *args, 
             **kwargs
@@ -91,7 +91,7 @@ class MapOperation(BaseOperation):
             ValueError: If `target_schema` is None.
             NotImplementedError: If the specified `strategy` is not supported.
         """
-        if output_schema is None:
+        if output_column is None:
             raise ValueError("Field name for the output is required.")
         
         if strategy == "plain_llm":
@@ -102,9 +102,9 @@ class MapOperation(BaseOperation):
         else:
             raise NotImplementedError(f"Strategy {strategy} is not implemented.")
         
-        processed_data = input_data[input_schema]
+        processed_data = input_data[input_column]
         outputs = execution_func(processed_data, user_instruction)
         return MapOpOutputs(
-            field_name=output_schema,
+            field_name=output_column,
             output=outputs
         )

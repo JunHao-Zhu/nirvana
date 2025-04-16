@@ -24,7 +24,7 @@ def reduce_helper(
 
 
 @dataclass
-class ReduceOpOuputs:
+class ReduceOpOutputs:
     output: Any = None
 
 
@@ -46,11 +46,11 @@ class ReduceOperation(BaseOperation):
             self,
             input_data: pd.DataFrame,
             user_instruction: str,
-            input_schema: str,
+            input_column: str,
             *args,
             **kwargs
     ):
-        processed_data = input_data[input_schema]
+        processed_data = input_data[input_column]
         full_prompt = self.prompter.generate_prompt(processed_data, user_instruction)
         outputs = self.llm(full_prompt, "output")
-        return ReduceOpOuputs(**outputs)
+        return ReduceOpOutputs(**outputs)

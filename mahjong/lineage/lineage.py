@@ -3,11 +3,13 @@ Record the OP lineage (operator and its user instruction) for optimizing operato
 """
 
 from typing import List, Union
+import pandas as pd
 
-from mahjong.ops.map import MapOperation
-from mahjong.ops.filter import FilterOperation
-from mahjong.ops.reduce import ReduceOperation
+from mahjong.ops.map import MapOperation, MapOpOutputs
+from mahjong.ops.filter import FilterOperation, FilterOpOutputs
+from mahjong.ops.reduce import ReduceOperation, ReduceOpOutputs
 
+OpOutputsType = Union[MapOpOutputs, FilterOpOutputs, ReduceOpOutputs]
 
 op_mapping = {
     "map": MapOperation,
@@ -30,16 +32,35 @@ class LineageNode:
     def child(self):
         return self._child
     
-
-class LineageDataNode(LineageNode):
-    def __init__(self):
-        super().__init__()
-    
-    def add_child(self, node: LineageNode):
+    def add_child(self, node: "LineageNode"):
         self._child.append(node)
 
-    def add_parent(self, node: LineageNode):
+    def add_parent(self, node: "LineageNode"):
         self._parent.append(node)
+    
+
+class LineageDataNode(LineageNode):
+    def __init__(
+            self, 
+            columns: List[str], 
+            new_field: Union[str, None] = None, 
+            materialized: bool = False
+    ):
+        super().__init__()
+        self.columns = columns
+        self.new_field = new_field
+        self.materialized = materialized
+
+    def run(self, input_data: pd.DataFrame, last_op_output: OpOutputsType) -> pd.DataFrame:
+        if hasattr(last_op_output, "field_name"):
+            self.new_field = last_op_output.field_name
+            input_data[self.new_field] = last_op_output.output
+            return input_data
+        if isinstance(last_op_output, FilterOpOutputs):
+            input_data = input_data[last_op_output.output]
+            return input_data
+        if isinstance(last_op_output, ReduceOpOutputs):
+            return pd.DataFrame({"reduce_result": last_op_output.output})
 
 
 class LineageOpNode(LineageNode):
@@ -47,42 +68,80 @@ class LineageOpNode(LineageNode):
             self, 
             op_name: str, 
             user_instruction: Union[str, List[str]],
-            input_schema: str,
-            output_schema: str = None
+            input_column: str,
+            output_column: str = None
     ):
         super().__init__()
         self.op_name = op_name
         self.op = op_mapping[op_name]()
         self.user_instruction = user_instruction
-        self.input_schema = input_schema
-        self.output_schema = output_schema
-    
-    def add_child(self, node: LineageNode):
-        self._child.append(node)
+        self.input_column = input_column
+        self.output_column = output_column
 
-    def add_parent(self, node: LineageNode):
-        self._parent.append(node)
+    def run(self, input_data: pd.DataFrame) -> OpOutputsType:
+        return self.op.execute(
+            input_data=input_data,
+            input_column=self.input_column,
+            user_instruction=self.user_instruction,
+            output_column=self.output_column
+        )
 
 
 class LineageMixin:
     def __init__(self):
-        self.last_op = None
+        self.last_node = None
 
-    def add_operator(self, op_name, user_instruction):
-        op_node = LineageOpNode(op_name, user_instruction)
-        if self.last_op is None:
-            self.last_op = op_node
+    def add_operator(self, op_name, user_instruction, input_column, output_column=None, fields=None):
+        op_node = LineageOpNode(
+            op_name, user_instruction, input_column, output_column
+        )
+        if self.last_node is None:
+            data_node = LineageDataNode(columns=fields, new_field=output_column)
+            op_node.add_child(data_node)
+            data_node.add_parent(op_node)
+            self.last_node = data_node
         else:
-            op_node.add_parent(self.last_op)
-            self.last_op.add_child(op_node)
-            self.last_op = op_node
+            columns_from_last_node = (
+                self.last_node.columns 
+                if self.last_node.new_field is None else 
+                self.last_node.columns + [self.last_node.new_field]
+            )
+            data_node = LineageDataNode(columns=columns_from_last_node, new_field=output_column)
+            op_node.add_child(data_node)
+            data_node.add_parent(op_node)
+
+            op_node.add_parent(self.last_node)
+            self.last_node.add_child(op_node)
+            self.last_node = data_node
 
     def optimize(self):
         pass
 
-    def print_logical_plan(self):
-        print("Logical Plan:")
+    def execute(self, input_data: pd.DataFrame):
+        dataframe_from_last_node = input_data.copy()
+        output_from_last_node = None
+        def _run_node(node: LineageNode):
+            # if the node is the first operator, run it on input data
+            if len(node.parent) == 0:
+                assert isinstance(node, LineageOpNode), "The first node should be an operator."
+                output_from_last_node = node.run(dataframe_from_last_node)
+                return
+            # run the parent nodes
+            for parent_node in node.parent:
+                _run_node(parent_node)
 
+            if isinstance(node, LineageDataNode):
+                dataframe_from_last_node = node.run(dataframe_from_last_node, output_from_last_node)
+                return
+
+            if isinstance(node, LineageOpNode):
+                output_from_last_node = node.run(dataframe_from_last_node)
+                return
+        
+        _run_node(self.last_node)
+        return dataframe_from_last_node
+
+    def print_logical_plan(self):
         logical_plan = []
         def _print_op(node: LineageNode):
             if node.is_visited:
@@ -100,18 +159,21 @@ class LineageMixin:
             if op_info:
                 logical_plan.append(op_info)
             
+            if isinstance(node, LineageDataNode):
+                return ""
+            
             node.is_visited = True
             output_info = f"->{node.output_schema}" if node.output_schema else "\n"
             return (
                 f"{node.op_name}({node.user_instruction}): {node.input_schema}{output_info}"
             )
         
-        op_info = _print_op(self.last_op)
+        op_info = _print_op(self.last_node)
         if op_info:
             logical_plan.append(op_info)
 
         logical_plan = "=>".join(logical_plan)
-        print(logical_plan)
+        print(f"Logical Plan:\n{logical_plan}")
 
         def _clear_visited_flag(node: LineageNode):
             if not node.is_visited:
@@ -122,4 +184,4 @@ class LineageMixin:
                 _clear_visited_flag(parent_node)
             return
 
-        _clear_visited_flag(self.last_op)
+        _clear_visited_flag(self.last_node)
