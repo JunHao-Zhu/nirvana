@@ -1,4 +1,4 @@
-from mahjong.lineage.lineage import LineageNode, LineageOpNode, LineageDataNode
+from mahjong.lineage.abstractions import LineageNode, LineageOpNode, LineageDataNode
 
 
 def get_last_op_node(node: LineageNode):
@@ -41,27 +41,26 @@ class OpFusion:
     
     @classmethod
     def rewrite_op(cls, op: LineageOpNode):
-        if len(op.parent) > 1:
-            return None
-        
         # rule 1: combine two filter ops into one
         if op.op_name == "filter":
             last_op = get_last_op_node(op)[0]
             if last_op.op_name == "filter":
                 new_op = cls()._fuse_filter_ops(op, last_op)
                 if new_op is None:
-                    return
-                new_op.child = op.child
-                new_op.parent = last_op.parent
+                    return None
+                new_op.set_child(op.child)
+                new_op.set_parent(last_op.parent)
                 for p in last_op.parent:
-                    p.child.remove(last_op)
+                    p.remove_child(last_op)
                     p.add_child(new_op)
                 for c in op.child:
-                    c.parent.remove(op)
-                    c.add_child(new_op)
+                    c.remove_parent(op)
+                    c.add_parent(new_op)
                 del last_op
                 del op
                 return new_op
+            
+        return None
 
 
 class FilterPushdown:
@@ -82,18 +81,18 @@ class FilterPushdown:
         # exchange the columns in the last data node and current data node
         curr_data.columns = last_data.columns
 
-        # exchange the parent-child relationship between current node and last node
-        last_data.child = curr_data.child
-        curr_data.child = [last_op]
-        op.parent = last_op.parent
-        last_op.parent = [curr_data]
-
         # rewire the parent-child relationship for nodes before last node and nodes after curr node
         for p in last_op.parent:
-            p.child.remove(last_op)
+            p.remove_child(last_op)
             p.add_child(op)
         for c in curr_data.child:
-            c.parent.remove(curr_data)
+            c.remove_parent(curr_data)
             c.add_parent(last_data)
+
+        # exchange the parent-child relationship between current node and last node
+        last_data.set_child(curr_data.child)
+        curr_data.set_child([last_op])
+        op.set_parent(last_op.parent)
+        last_op.set_parent([curr_data])
 
         return last_op
