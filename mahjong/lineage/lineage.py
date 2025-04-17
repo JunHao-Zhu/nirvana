@@ -8,6 +8,7 @@ import pandas as pd
 from mahjong.ops.map import MapOperation, MapOpOutputs
 from mahjong.ops.filter import FilterOperation, FilterOpOutputs
 from mahjong.ops.reduce import ReduceOperation, ReduceOpOutputs
+from mahjong.lineage.plan_rewrite import OpFusion, FilterPushdown
 
 OpOutputsType = Union[MapOpOutputs, FilterOpOutputs, ReduceOpOutputs]
 
@@ -115,7 +116,28 @@ class LineageMixin:
             self.last_node = data_node
 
     def optimize(self):
-        pass
+        def _optimize_node(node: LineageNode):
+            if isinstance(node, LineageDataNode):
+                for p in node.parent:
+                    _optimize_node(p)
+            
+            if len(node.parent) == 0:
+                return
+            
+            # apply op fusion
+            optimized_node = OpFusion.rewrite_op(node)
+            if optimized_node is not None:
+                _optimize_node(optimized_node)
+
+            # apply filter pushdown
+            optimized_node = FilterPushdown.rewrite_op(node)
+            if optimized_node is not None:
+                _optimize_node(optimized_node)
+
+            for p in node.parent:
+                _optimize_node(p)
+        
+        _optimize_node(self.last_node)
 
     def execute(self, input_data: pd.DataFrame):
         dataframe_from_last_node = input_data.copy()

@@ -261,9 +261,10 @@ class Tile(LineageMixin):
                           input_column=input_column,
                           fields=self.columns)
         
-    def execute(self):
+    def optimize_and_execute(self):
         self.optimize()
-        pass
+        output = self.execute(self._obj)
+        return output
 
 
 class DataFrame:
