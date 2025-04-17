@@ -33,7 +33,7 @@ import pandas as pd
 from pandas.api.extensions import ExtensionDtype, ExtensionArray
 from PIL import Image
 
-from mahjong.lineage.lineage import LineageMixin
+from mahjong.lineage.mixin import LineageMixin
 
 
 def fetch_image(image: Union[str, np.ndarray, Image.Image, None], image_type: str = "Image") -> Union[Image.Image, str, None]:
