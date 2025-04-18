@@ -1,7 +1,7 @@
 """
 Record the OP lineage (operator and its user instruction) for optimizing operator orchestration.
 """
-
+import copy
 import pandas as pd
 
 from mahjong.lineage.abstractions import LineageNode, LineageDataNode, LineageOpNode
@@ -130,3 +130,17 @@ class LineageMixin:
             return
 
         _clear_visited_flag(self.last_node)
+
+    def empty_lineage(self):
+        temp_node = copy.copy(self.last_node)
+        self.last_node = None
+        def _delete_node(node: LineageNode):
+            if len(node.parent) == 0:
+                del node
+                return
+            for p in node.parent:
+                _delete_node(p)
+            del node
+            return
+        _delete_node(temp_node)
+        del temp_node
