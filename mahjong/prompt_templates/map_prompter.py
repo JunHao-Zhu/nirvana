@@ -14,8 +14,8 @@ class MapPrompter:
 
     def generate_prompt(
             self, 
-            user_instruction: str,
             data: Any,
+            user_instruction: str,
     ):
         """
         Generates a prompt message for LLMs based on user instructions 

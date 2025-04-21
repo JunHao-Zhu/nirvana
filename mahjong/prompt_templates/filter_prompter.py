@@ -14,9 +14,9 @@ class FilterPrompter:
         )
 
     def generate_prompt(
-            self, 
-            user_instruction: Union[str, List[str]],
+            self,
             data: Any,
+            user_instruction: Union[str, List[str]],
     ):
         # 1. Prepare system message
         sys_message = [{"role": "system", "content": self.system_instruction}]
@@ -39,7 +39,6 @@ class FilterPrompter:
             conditions = "\n".join(conditions)
         user_content.append({"type": "text", "text": conditions})
         
-        user_content.append({"type": "text", "text": user_instruction})
         user_message = [{"role": "user", "content": user_content}]
 
         messages = sys_message + user_message
