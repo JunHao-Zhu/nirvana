@@ -1,39 +1,12 @@
-"""
-DataFrame class for handling data in a tabular format.
-To begin, DataFrame is a combination of regular pandas DataFrame and additional unstructured data types (e.g., text, images, and audio).
-Example:
-| location | house price | comment | house picture |
-|----------|-------------|---------|---------------|
-|161 Auburn St. Unit 161, Cambridge, MA 02139| $1,000,000 | "Great location!" | ![house](house.jpg) (a link to the house image) |
-|...|...|...|...|
-
-A simple version that directly uses pandas DataFrame and supports image data type through pandas api extension, like lotus.
-Later, we will implement an independent DataFrame of pandas DataFrame. The usage will be like:
-```python
-import mahjong as mjg
-
-df = mjg.DataFrame({
-    'location': ['161 Auburn St. Unit 161, Cambridge, MA 02139'],
-    'house price': ['$1,000,000'],
-    'comment': ['Great location!'],
-    'house picture': [mjg.Image('house.jpg')]
-})
-```
-Moreover, in the future, we consider reading data from data lake storages (e.g, S3, Delta Lake, etc.)
-"""
-
 import sys
 import base64
 import requests # type: ignore
 from io import BytesIO
 from typing import Union, Sequence
-
 import numpy as np
 import pandas as pd
-from pandas.api.extensions import ExtensionDtype, ExtensionArray
 from PIL import Image
-
-from mahjong.lineage.mixin import LineageMixin
+from pandas.api.extensions import ExtensionDtype, ExtensionArray
 
 
 def fetch_image(image: Union[str, np.ndarray, Image.Image, None], image_type: str = "Image") -> Union[Image.Image, str, None]:
@@ -84,6 +57,19 @@ def fetch_image(image: Union[str, np.ndarray, Image.Image, None], image_type: st
     return image_obj
 
 
+def compare_images(img1, img2) -> bool:
+    if img1 is None or img2 is None:
+        return img1 is img2
+
+    # Only fetch images when actually comparing
+    if isinstance(img1, Image.Image) or isinstance(img2, Image.Image):
+        img1 = fetch_image(img1)
+        img2 = fetch_image(img2)
+        return img1.size == img2.size and img1.mode == img2.mode and img1.tobytes() == img2.tobytes()
+    else:
+        return img1 == img2
+
+
 class ImageDtype(ExtensionDtype):
     name = 'image'
     type = Image.Image
@@ -92,7 +78,7 @@ class ImageDtype(ExtensionDtype):
     @classmethod
     def construct_array_type(cls):
         return ImageArray
-    
+
 
 class ImageArray(ExtensionArray):
     def __init__(self, values):
@@ -182,13 +168,13 @@ class ImageArray(ExtensionArray):
 
     def __eq__(self, other) -> np.ndarray:  # type: ignore
         if isinstance(other, ImageArray):
-            return np.array([_compare_images(img1, img2) for img1, img2 in zip(self._data, other._data)], dtype=bool)
+            return np.array([compare_images(img1, img2) for img1, img2 in zip(self._data, other._data)], dtype=bool)
 
         if hasattr(other, "__iter__") and not isinstance(other, str):
             if len(other) != len(self):
                 return np.repeat(False, len(self))
-            return np.array([_compare_images(img1, img2) for img1, img2 in zip(self._data, other)], dtype=bool)
-        return np.array([_compare_images(img, other) for img in self._data], dtype=bool)
+            return np.array([compare_images(img1, img2) for img1, img2 in zip(self._data, other)], dtype=bool)
+        return np.array([compare_images(img, other) for img in self._data], dtype=bool)
 
     @property
     def dtype(self) -> ImageDtype:
@@ -220,80 +206,3 @@ class ImageArray(ExtensionArray):
     def __array__(self, dtype=None) -> np.ndarray:
         """Numpy array interface."""
         return self.to_numpy(dtype=dtype)
-
-
-def _compare_images(img1, img2) -> bool:
-    if img1 is None or img2 is None:
-        return img1 is img2
-
-    # Only fetch images when actually comparing
-    if isinstance(img1, Image.Image) or isinstance(img2, Image.Image):
-        img1 = fetch_image(img1)
-        img2 = fetch_image(img2)
-        return img1.size == img2.size and img1.mode == img2.mode and img1.tobytes() == img2.tobytes()
-    else:
-        return img1 == img2
-    
-
-@pd.api.extensions.register_dataframe_accessor("tile")
-class Tile(LineageMixin):
-    def __init__(self, pandas_obj: pd.DataFrame):
-        super().__init__()
-        self._obj = pandas_obj
-        self.columns = list(pandas_obj.columns)
-
-    def semantic_map(self, user_instruction, input_column, output_column, materialize: bool = False):
-        self.add_operator(op_name="map",
-                          user_instruction=user_instruction,
-                          input_column=input_column,
-                          output_column=output_column,
-                          fields=self.columns)
-        
-    def semantic_filter(self, user_instruction, input_column, materialize: bool = False):
-        self.add_operator(op_name="filter",
-                          user_instruction=user_instruction,
-                          input_column=input_column,
-                          fields=self.columns)
-        
-    def semantic_reduce(self, user_instruction, input_column, materialize: bool = False):
-        self.add_operator(op_name="reduce",
-                          user_instruction=user_instruction,
-                          input_column=input_column,
-                          fields=self.columns)
-        
-    def optimize_and_execute(self):
-        self.optimize()
-        output = self.execute(self._obj)
-        return output
-
-
-class DataFrame:
-    def __init__(
-            self,
-            data: Union[dict, list] = None,
-            primary_key: Union[str, bool] = None,
-            *args,
-            **kwargs
-    ):
-        self.primary_key = None if primary_key is False else primary_key
-        self.data = data
-
-    def __len__(self):
-        _len = self.nrows
-        return _len
-    
-    def __contains__(self, item):
-        return self.columns.__contains__(item)
-    
-    @property
-    def columns(self):
-        return list(self.data.keys())
-    
-    @property
-    def primary_key(self):
-        return self._primary_key
-    
-    @property
-    def nrows(self):
-        return len(self.data[self.primary_key])
-        

@@ -1,7 +1,8 @@
 from typing import Union
 import pandas as pd
 
-from mahjong.dataframe import ImageDtype, ImageArray
+from mahjong.dataframe.frame import DataFrame
+from mahjong.dataframe.arrays.image import ImageArray, ImageDtype
 from mahjong.utils import configure_llm_backbone
 
 pd.api.extensions.register_extension_dtype(ImageDtype)
@@ -20,6 +21,7 @@ def convert_to_base_data(data: Union[pd.Series, list]) -> list:
     return data
 
 __all__ = [
+    "DataFrame",
     "ImageDtype", 
     "ImageArray", 
     "convert_to_base_data", 
