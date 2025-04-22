@@ -5,7 +5,7 @@ import mahjong as mjg
 from mahjong.ops.base import BaseOperation
 
 
-def select_helper(**kwargs):
+def select_wrapper(**kwargs):
     pass
 
 

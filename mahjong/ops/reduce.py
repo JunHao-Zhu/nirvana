@@ -9,15 +9,17 @@ from mahjong.ops.base import BaseOperation
 from mahjong.prompt_templates.reduce_prompter import ReducePrompter
 
 
-def reduce_helper(
+def reduce_wrapper(
         processed_data: Iterable[Any],
         user_instruction: str,
+        input_column: str,
         **kwargs
 ):
     reduce_op = ReduceOperation()
     outputs = reduce_op.execute(
         processed_data=processed_data,
         user_instruction=user_instruction,
+        input_column=input_column,
         **kwargs
     )
     return outputs

@@ -5,7 +5,7 @@ Rank: Rank data according to NL predicates.
 from mahjong.ops.base import BaseOperation
 
 
-def rank_helper(**kwargs):
+def rank_wrapper(**kwargs):
     pass
 
 

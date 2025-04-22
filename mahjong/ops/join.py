@@ -9,7 +9,7 @@ from mahjong.ops.base import BaseOperation
 from mahjong.prompt_templates.join_prompter import JoinPrompter
 
 
-def join_helper(
+def join_wrapper(
     left_data: pd.DataFrame,
     right_data: pd.DataFrame, 
     user_instruction: str,

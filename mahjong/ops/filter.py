@@ -10,7 +10,7 @@ from mahjong.ops.base import BaseOperation
 from mahjong.prompt_templates.filter_prompter import FilterPrompter
 
 
-def filter_helper(
+def filter_wrapper(
     input_data: pd.DataFrame, 
     user_instruction: str, 
     input_column: str,

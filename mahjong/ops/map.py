@@ -10,7 +10,7 @@ from mahjong.ops.base import BaseOperation
 from mahjong.prompt_templates.map_prompter import MapPrompter
 
 
-def map_helper(
+def map_wrapper(
     input_data: pd.DataFrame, 
     user_instruction: str, 
     input_column: str,

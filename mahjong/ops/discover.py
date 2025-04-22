@@ -4,7 +4,7 @@ Later to implement.
 """
 
 
-def discover_helper(**kwargs):
+def discover_wrapper(**kwargs):
     pass
 
 
