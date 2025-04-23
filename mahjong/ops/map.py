@@ -50,7 +50,7 @@ class MapOperation(BaseOperation):
         outputs = []
         for data in processed_data:
             full_prompt = self.prompter.generate_prompt(user_instruction, data)
-            output = self.llm(full_prompt, "output")
+            output = self.llm(full_prompt, parse_tags=True, tags="output")
             outputs.append(output["output"])
         return outputs
 
@@ -58,7 +58,7 @@ class MapOperation(BaseOperation):
         outputs = []
         for data in processed_data:
             full_prompt = self.prompter.generate_cot_prompt(user_instruction, data, demos)
-            output = self.llm(full_prompt, "output")
+            output = self.llm(full_prompt, parse_tags=True, tags = "output")
             outputs.append(output["output"])
         return outputs
 

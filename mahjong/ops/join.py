@@ -51,7 +51,7 @@ class JoinOperation(BaseOperation):
         outputs = []
         for left_value, right_value in zip(left_data, right_data):
             full_prompt = self.prompter.generate_prompt(left_value, right_value, user_instruction)
-            output = self.llm(full_prompt, "output")
+            output = self.llm(full_prompt, parse_tags=True, tags="output")
             outputs.append(output["output"])
         return outputs
     

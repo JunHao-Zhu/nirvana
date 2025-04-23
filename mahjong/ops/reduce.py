@@ -54,5 +54,7 @@ class ReduceOperation(BaseOperation):
     ):
         processed_data = input_data[input_column]
         full_prompt = self.prompter.generate_prompt(processed_data, user_instruction)
-        outputs = self.llm(full_prompt, "output")
-        return ReduceOpOutputs(**outputs)
+        outputs = self.llm(full_prompt, parse_tags=True, tags="output")
+        return ReduceOpOutputs(
+            output=outputs["output"]
+        )
