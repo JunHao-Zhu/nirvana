@@ -47,24 +47,20 @@ class LLMClient:
             messages=messages,
             max_tokens=self.config.max_tokens,
             temperature=self.config.temperature,
-            **kwargs
         )
-        llm_ouput = response.choices[0].message.content
-        input_tokens = response.usage.input_tokens
-        output_tokens = response.usage.output_tokens
+        llm_output = response.choices[0].message.content
+        input_tokens = response.usage.prompt_tokens
+        output_tokens = response.usage.completion_tokens
         # according to pricing policies from OpenAI, DeepSeek and QWen, cost_per_output_token = 4 * cost_per_input_token
         token_cost = input_tokens + 4 * output_tokens
 
         outputs = dict()
         if parse_tags:
-            tags = kwargs["tags"]
-            if isinstance(tags, str):
-                outputs[tags] = self._extract_xml(llm_ouput, parse_tags)
-            else:
-                for tag in tags:
-                    outputs[tag] = self._extract_xml(llm_ouput, tag)
+            tags: List[str] = kwargs["tags"]
+            for tag in tags:
+                outputs[tag] = self._extract_xml(llm_output, tag)
         elif parse_code:
-            code = self._extract_code(llm_ouput, lang=kwargs["lang"])
+            code = self._extract_code(llm_output, lang=kwargs["lang"])
             outputs["output"] = code
         else:
             raise ValueError("Specify parsing type for llm outputs: either parsing tags or code.")

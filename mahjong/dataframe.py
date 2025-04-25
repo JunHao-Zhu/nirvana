@@ -34,6 +34,7 @@ from pandas.api.extensions import ExtensionDtype, ExtensionArray
 from PIL import Image
 
 from mahjong.lineage.mixin import LineageMixin
+from mahjong.optimizers.optimizer import Optimizer
 
 
 def fetch_image(image: Union[str, np.ndarray, Image.Image, None], image_type: str = "Image") -> Union[Image.Image, str, None]:
@@ -238,9 +239,10 @@ def _compare_images(img1, img2) -> bool:
 @pd.api.extensions.register_dataframe_accessor("tile")
 class Tile(LineageMixin):
     def __init__(self, pandas_obj: pd.DataFrame):
-        super().__init__()
         self._obj = pandas_obj
         self.columns = list(pandas_obj.columns)
+        self.last_node = None
+        self.optimizer = Optimizer(self._obj.sample(n=10))
 
     def semantic_map(self, user_instruction, input_column, output_column, materialize: bool = False):
         self.add_operator(op_name="map",
