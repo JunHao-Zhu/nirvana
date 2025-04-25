@@ -5,7 +5,7 @@ from typing import Any, Iterable
 from dataclasses import dataclass
 import pandas as pd
 
-from mahjong.ops.base import BaseOperation
+from mahjong.ops.base import BaseOpOutputs, BaseOperation
 from mahjong.prompt_templates.reduce_prompter import ReducePrompter
 
 
@@ -26,7 +26,7 @@ def reduce_wrapper(
 
 
 @dataclass
-class ReduceOpOutputs:
+class ReduceOpOutputs(BaseOpOutputs):
     output: Any = None
 
 
@@ -52,9 +52,13 @@ class ReduceOperation(BaseOperation):
             *args,
             **kwargs
     ):
+        if input_data.empty:
+            return ReduceOpOutputs(output="No data to process.")
+
         processed_data = input_data[input_column]
         full_prompt = self.prompter.generate_prompt(processed_data, user_instruction)
-        outputs = self.llm(full_prompt, parse_tags=True, tags="output")
+        outputs = self.llm(full_prompt, parse_tags=True, tags=["output"])
         return ReduceOpOutputs(
-            output=outputs["output"]
+            output=outputs["output"],
+            cost=outputs["cost"]
         )
