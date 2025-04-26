@@ -1,4 +1,3 @@
-import mahjong as mjg
 from typing import Any, Iterable
 
 
@@ -21,21 +20,22 @@ class ReducePrompter:
             self, 
             data_set: Iterable[Any],
             user_instruction: str,
+            dtype: str = "str",
     ):
         # 1. Prepare system message
         sys_message = [{"role": "system", "content": self.system_instruction}]
 
         # 2. Prepare user message
         for ctr, data in enumerate(data_set):
-            if isinstance(data, str):
-                user_content = [{"type": "text", "text": f"Data {ctr}: {data}"}]
-            elif isinstance(data, mjg.ImageDtype):
+            if dtype == "str":
+                user_content = [{"type": "text", "text": f"Data {ctr}: {str(data)}"}]
+            elif dtype == "image":
                 user_content = [
                     {"type": "text", "text": f"Data {ctr}: "},
                     {"type": "image", "image_url": {"url": data}}
                 ]
             else:
-                raise ValueError(f"Data type {type(data)} is not supported.")
+                raise ValueError(f"Data type {dtype} is not supported.")
         user_content.append({"type": "text", "text": user_instruction})
         user_message = [{"role": "user", "content": user_content}]
 

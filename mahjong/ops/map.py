@@ -6,6 +6,7 @@ from typing import Any, Iterable
 from dataclasses import dataclass
 import pandas as pd
 
+from mahjong.dataframe.arrays.image import ImageDtype
 from mahjong.ops.base import BaseOpOutputs, BaseOperation
 from mahjong.prompt_templates.map_prompter import MapPrompter
 
@@ -46,21 +47,21 @@ class MapOperation(BaseOperation):
         super().__init__("map", *args, **kwargs)
         self.prompter = MapPrompter()
     
-    def _plain_llm_execute(self, processed_data: Iterable[Any], user_instruction: str):
+    def _plain_llm_execute(self, processed_data: Iterable[Any], user_instruction: str, dtype: str):
         outputs = []
         total_cost = 0
         for data in processed_data:
-            full_prompt = self.prompter.generate_prompt(user_instruction, data)
+            full_prompt = self.prompter.generate_prompt(data, user_instruction, dtype)
             output = self.llm(full_prompt, parse_tags=True, tags=["output"])
             outputs.append(output["output"])
             total_cost += output["cost"]
         return outputs, total_cost
 
-    def _llm_cot_execute(self, processed_data: Iterable[Any], user_instruction: str, demos):
+    def _llm_cot_execute(self, processed_data: Iterable[Any], user_instruction: str, dtype: str, demos):
         outputs = []
         total_cost = 0
         for data in processed_data:
-            full_prompt = self.prompter.generate_cot_prompt(user_instruction, data, demos)
+            full_prompt = self.prompter.generate_cot_prompt(data, user_instruction, dtype, demos)
             output = self.llm(full_prompt, parse_tags=True, tags=["output"])
             outputs.append(output["output"])
             total_cost += output["cost"]
@@ -101,15 +102,19 @@ class MapOperation(BaseOperation):
         if input_data.empty:
             return MapOpOutputs(field_name=output_column, output=None)
         
+        processed_data = input_data[input_column]
+        if isinstance(processed_data.dtype, ImageDtype):
+            dtype = "image"
+        else:
+            dtype = "str"
         if strategy == "plain_llm":
-            execution_func = functools.partial(self._plain_llm_execute)
+            execution_func = functools.partial(self._plain_llm_execute, dtype=dtype)
         elif strategy == "cot":
             demos = kwargs.get("demos", None)
-            execution_func = functools.partial(self._llm_cot_execute, demos=demos)
+            execution_func = functools.partial(self._llm_cot_execute, dtype=dtype, demos=demos)
         else:
             raise NotImplementedError(f"Strategy {strategy} is not implemented.")
         
-        processed_data = input_data[input_column]
         outputs, cost = execution_func(processed_data, user_instruction)
         return MapOpOutputs(
             field_name=output_column,

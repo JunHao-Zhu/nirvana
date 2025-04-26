@@ -5,6 +5,7 @@ from typing import Any, Iterable
 from dataclasses import dataclass
 import pandas as pd
 
+from mahjong.dataframe.arrays.image import ImageDtype
 from mahjong.ops.base import BaseOpOutputs, BaseOperation
 from mahjong.prompt_templates.reduce_prompter import ReducePrompter
 
@@ -56,7 +57,11 @@ class ReduceOperation(BaseOperation):
             return ReduceOpOutputs(output="No data to process.")
 
         processed_data = input_data[input_column]
-        full_prompt = self.prompter.generate_prompt(processed_data, user_instruction)
+        if isinstance(processed_data.dtype, ImageDtype):
+            dtype = "image"
+        else:
+            dtype = "str"
+        full_prompt = self.prompter.generate_prompt(processed_data, user_instruction, dtype)
         outputs = self.llm(full_prompt, parse_tags=True, tags=["output"])
         return ReduceOpOutputs(
             output=outputs["output"],
