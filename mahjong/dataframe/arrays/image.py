@@ -72,7 +72,7 @@ def compare_images(img1, img2) -> bool:
 
 class ImageDtype(ExtensionDtype):
     name = 'image'
-    type = Image.Image
+    type = str
     na_value = None
 
     @classmethod

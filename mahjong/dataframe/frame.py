@@ -25,20 +25,20 @@ from typing import Union
 import pandas as pd
 
 from mahjong.lineage.mixin import LineageMixin
+from mahjong.optimization.optimizer import Optimizer
 
 
 class DataFrame(LineageMixin):
     def __init__(
             self,
-            data: Union[dict, list] = None,
-            primary_key: Union[str, bool] = None,
+            data: pd.DataFrame = None,
             *args,
             **kwargs
     ):
-        super().__init__()
-        self._primary_key = None if primary_key is False else primary_key
-        if data is not None:
-            self._data = pd.DataFrame(data)
+        self._data = data
+        self.columns = list(data.columns)
+        self.last_node = None
+        self.optimizer = Optimizer(self._data.sample(n=10))
 
     def __len__(self):
         _len = self.nrows
@@ -50,6 +50,10 @@ class DataFrame(LineageMixin):
     @property
     def columns(self):
         return list(self._data.columns)
+    
+    @columns.setter
+    def columns(self, columns):
+        self._data.columns = columns
     
     @property
     def primary_key(self):
@@ -85,6 +89,5 @@ class DataFrame(LineageMixin):
         
     def optimize_and_execute(self):
         self.optimize()
-        output = self.execute(self._data)
-        return output
-        
+        output, cost = self.execute(self._data)
+        return output, cost
