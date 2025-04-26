@@ -4,7 +4,7 @@ from typing import Union
 
 from mahjong.models.llm_backbone import LLMClient
 from mahjong.ops.base import BaseOperation
-from mahjong.optimizers.optimizer import Optimizer
+from mahjong.optimization.optimizer import Optimizer
 
     
 def configure_llm_backbone(

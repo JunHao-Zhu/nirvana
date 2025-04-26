@@ -1,7 +1,7 @@
 import pandas as pd
 
 from mahjong.models.llm_backbone import LLMClient
-from mahjong.optimizers.optimize_prompt import RESULT_EVALUATE_PROMPT
+from mahjong.optimization.optimize_prompt import RESULT_EVALUATE_PROMPT
 
 
 def table_serialize(df: pd.DataFrame) -> str:

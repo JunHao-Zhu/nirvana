@@ -34,7 +34,7 @@ from pandas.api.extensions import ExtensionDtype, ExtensionArray
 from PIL import Image
 
 from mahjong.lineage.mixin import LineageMixin
-from mahjong.optimizers.optimizer import Optimizer
+from mahjong.optimization.optimizer import Optimizer
 
 
 def fetch_image(image: Union[str, np.ndarray, Image.Image, None], image_type: str = "Image") -> Union[Image.Image, str, None]:
