@@ -1,6 +1,12 @@
+from dataclasses import dataclass
 from abc import ABC, abstractmethod
 
 from mahjong.models.llm_backbone import LLMClient
+
+
+@dataclass
+class BaseOpOutputs:
+    cost: int = 0
 
 
 class BaseOperation(ABC):

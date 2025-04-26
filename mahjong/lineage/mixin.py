@@ -8,9 +8,39 @@ from mahjong.lineage.abstractions import LineageNode, LineageDataNode, LineageOp
 from mahjong.lineage.plan_rewrite import OpFusion, FilterPushdown
 
 
+def execute_plan(last_node: LineageNode, input_data: pd.DataFrame):
+    execute_output = {
+        "dataframe_from_last_node": input_data.copy(),
+        "output_from_last_node": None,
+        "total_token_cost": 0,
+    }
+    def _run_node(node: LineageNode):
+        # if the node is the first operator, run it on input data
+        if len(node.parent) == 0:
+            assert isinstance(node, LineageOpNode), "The first node should be an operator."
+            output_from_last_node = node.run(execute_output["dataframe_from_last_node"])
+            execute_output["output_from_last_node"] = output_from_last_node
+            execute_output["total_token_cost"] += output_from_last_node.cost
+            return
+        # run the parent nodes
+        for parent_node in node.parent:
+            _run_node(parent_node)
+
+        if isinstance(node, LineageDataNode):
+            dataframe_from_last_node = node.run(execute_output["dataframe_from_last_node"], execute_output["output_from_last_node"])
+            execute_output["dataframe_from_last_node"] = dataframe_from_last_node
+            return
+
+        if isinstance(node, LineageOpNode):
+            output_from_last_node = node.run(execute_output["dataframe_from_last_node"])
+            execute_output["output_from_last_node"] = output_from_last_node
+            execute_output["total_token_cost"] += output_from_last_node.cost
+            return
+    _run_node(last_node)
+    return execute_output["dataframe_from_last_node"], execute_output["total_token_cost"]
+
+
 class LineageMixin:
-    def __init__(self):
-        self.last_node = None
 
     def add_operator(self, op_name, user_instruction, input_column, output_column=None, fields=None):
         op_node = LineageOpNode(
@@ -36,56 +66,40 @@ class LineageMixin:
             self.last_node = data_node
 
     def optimize(self):
-        def _optimize_node(node: LineageNode):
-            self.print_logical_plan()
-            if isinstance(node, LineageDataNode):
-                for p in node.parent:
-                    _optimize_node(p)
-                return
-            
-            if len(node.parent) == 0:
-                return
-            
-            # apply op fusion
-            optimized_node = OpFusion.rewrite_op(node)
-            if optimized_node is not None:
-                _optimize_node(optimized_node)
-                return
+        if self.last_node is None:
+            raise RuntimeError("No operations have been added to the DataFrame.")
+        self.last_node = self.optimizer.optimize(self.last_node, "df", self.columns)
 
-            # apply filter pushdown
-            optimized_node = FilterPushdown.rewrite_op(node)
-            if optimized_node is not None:
-                _optimize_node(optimized_node)
-                return
+    # def optimize(self):
+    #     def _optimize_node(node: LineageNode):
+    #         self.print_logical_plan()
+    #         if isinstance(node, LineageDataNode):
+    #             for p in node.parent:
+    #                 _optimize_node(p)
+    #             return
+            
+    #         if len(node.parent) == 0:
+    #             return
+            
+    #         # apply op fusion
+    #         optimized_node = OpFusion.rewrite_op(node)
+    #         if optimized_node is not None:
+    #             _optimize_node(optimized_node)
+    #             return
 
-            for p in node.parent:
-                _optimize_node(p)
+    #         # apply filter pushdown
+    #         optimized_node = FilterPushdown.rewrite_op(node)
+    #         if optimized_node is not None:
+    #             _optimize_node(optimized_node)
+    #             return
+
+    #         for p in node.parent:
+    #             _optimize_node(p)
         
-        _optimize_node(self.last_node)
+    #     _optimize_node(self.last_node)
 
     def execute(self, input_data: pd.DataFrame):
-        dataframe_from_last_node = input_data.copy()
-        output_from_last_node = None
-        def _run_node(node: LineageNode):
-            # if the node is the first operator, run it on input data
-            if len(node.parent) == 0:
-                assert isinstance(node, LineageOpNode), "The first node should be an operator."
-                output_from_last_node = node.run(dataframe_from_last_node)
-                return
-            # run the parent nodes
-            for parent_node in node.parent:
-                _run_node(parent_node)
-
-            if isinstance(node, LineageDataNode):
-                dataframe_from_last_node = node.run(dataframe_from_last_node, output_from_last_node)
-                return
-
-            if isinstance(node, LineageOpNode):
-                output_from_last_node = node.run(dataframe_from_last_node)
-                return
-        
-        _run_node(self.last_node)
-        return dataframe_from_last_node
+        return execute_plan(self.last_node, input_data)
 
     def print_logical_plan(self):
         logical_plan = []
@@ -123,13 +137,13 @@ class LineageMixin:
         logical_plan = "=>\n".join(logical_plan)
         print(f"Logical Plan:\n{logical_plan}")
 
-        def _clear_visited_flag(node: LineageNode):
-            node.is_visited = False
-            for parent_node in node.parent:
-                _clear_visited_flag(parent_node)
-            return
+        self._clear_visited_flag(self.last_node)
 
-        _clear_visited_flag(self.last_node)
+    def _clear_visited_flag(self, node: LineageNode):
+        node.is_visited = False
+        for parent_node in node.parent:
+            self._clear_visited_flag(parent_node)
+        return
 
     def empty_lineage(self):
         temp_node = copy.copy(self.last_node)

@@ -62,13 +62,17 @@ class LineageDataNode(LineageNode):
     def run(self, input_data: pd.DataFrame, last_op_output: OpOutputsType) -> pd.DataFrame:
         if hasattr(last_op_output, "field_name"):
             self.new_field = last_op_output.field_name
+            if last_op_output.output is None:
+                return input_data
             input_data[self.new_field] = last_op_output.output
             return input_data
         if isinstance(last_op_output, FilterOpOutputs):
+            if last_op_output.output is None:
+                return input_data
             input_data = input_data[last_op_output.output]
             return input_data
         if isinstance(last_op_output, ReduceOpOutputs):
-            return pd.DataFrame({"reduce_result": last_op_output.output})
+            return pd.DataFrame({"reduce_result": [last_op_output.output]})
 
 
 class LineageOpNode(LineageNode):

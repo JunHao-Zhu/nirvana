@@ -38,7 +38,8 @@ class LLMClient:
     def __call__(
             self,
             messages: List[Dict[str, str]],
-            parse_tags: Union[List[str], str] = None,
+            parse_tags: bool = False,
+            parse_code: bool = False,
             **kwargs,
     ) -> Dict[str, Any]:
         response = self.client.chat.completions.create(
@@ -46,18 +47,31 @@ class LLMClient:
             messages=messages,
             max_tokens=self.config.max_tokens,
             temperature=self.config.temperature,
-            **kwargs
         )
-        llm_ouput = response.choices[0].message.content
+        llm_output = response.choices[0].message.content
+        input_tokens = response.usage.prompt_tokens
+        output_tokens = response.usage.completion_tokens
+        # according to pricing policies from OpenAI, DeepSeek and QWen, cost_per_output_token = 4 * cost_per_input_token
+        token_cost = input_tokens + 4 * output_tokens
 
         outputs = dict()
-        if isinstance(parse_tags, str):
-            outputs[parse_tags] = self._extract_xml(llm_ouput, parse_tags)
+        if parse_tags:
+            tags: List[str] = kwargs["tags"]
+            for tag in tags:
+                outputs[tag] = self._extract_xml(llm_output, tag)
+        elif parse_code:
+            code = self._extract_code(llm_output, lang=kwargs["lang"])
+            outputs["output"] = code
         else:
-            for tag in parse_tags:
-                outputs[tag] = self._extract_xml(llm_ouput, tag)
+            raise ValueError("Specify parsing type for llm outputs: either parsing tags or code.")
+        outputs["cost"] = token_cost
         return outputs
 
     def _extract_xml(self, text: str, tag: str):
         match = re.search(f"<{tag}>(.*?)</{tag}>", text, re.DOTALL)
+        return match.group(1).strip() if match else None
+    
+    def _extract_code(self, text: str, lang: str = "python"):
+        pattern = rf"```{lang}(.*?)```"
+        match = re.search(pattern, text, re.DOTALL)
         return match.group(1).strip() if match else None

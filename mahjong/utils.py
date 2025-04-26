@@ -4,6 +4,7 @@ from typing import Union
 
 from mahjong.models.llm_backbone import LLMClient
 from mahjong.ops.base import BaseOperation
+from mahjong.optimization.optimizer import Optimizer
 
     
 def configure_llm_backbone(
@@ -28,3 +29,4 @@ def configure_llm_backbone(
     """
     llm_client = LLMClient.configure(model_name, api_key, base_url)
     BaseOperation.set_llm(deepcopy(llm_client))
+    Optimizer.set_agent(deepcopy(llm_client))

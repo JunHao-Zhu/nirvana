@@ -1,4 +1,4 @@
-# Mahjong: Revolutionize Multi-modal Data Analytics with LLMs
+# Mahjong: Extend Data Analytics to Multi-modal Data with Agentic Orchestration
 
 From zero to hero
 
@@ -73,6 +73,26 @@ For example, `semantic_filter` creates an operator node in the data lineage of d
 Data lineage includes two core abstrations: `LineageOpNode` and `LineageDataNode`. `LineageOpNode` serves the operator optimization and execution. `LineageDataNode` serves the optimizations from perspective of data, like materializing the intermediate result and reusing it. By default, no `LineageDataNode` is included in data lineage, and it is created by setting `materialize` parameter `True` when necessary.
 ```python
 >>> df.tile.semantic_filter("Whether the image is a software logo?", input_schema="logos", strategy="plain_llm", materialize=True)
+```
+
+### Logical plan optimization
+An agentic optimization workflow starts after the initial logical plan given and an optimize task
+invoked. A usage example of logical plan optimization is shown as follow.
+```python
+>>> df = pd.read_csv("/testdata/imdb_top_1000.csv").sample(n=200).drop("Genre", axis=1)
+>>> df.tile.semantic_map(user_instruction="According to the movie overview, extract the genre of each movie.", input_column="Overview", output_column="Genre")
+>>> df.tile.semantic_filter(user_instruction="The rating is higher than 7.", input_column="IMDB_Rating")
+>>> df.tile.semantic_filter(user_instruction="The rating is lower than 8.", input_column="IMDB_Rating")
+>>> df.tile.semantic_reduce(user_instruction="Count the number of crime movies.", input_column="Genre")
+>>> res_before_optim, token_cost_before_optim = df.tile.execute(df)
+>>> print(token_cost_before_optim)
+... 40235
+>>> res_after_optim, token_cost_after_optim = df.tile.optimize_and_optimize()
+... Plan optimization is finished, here are some statistics:"
+... initial plan cost: 4088 -> optimized plan cost: 3199
+... initial plan accuracy: 1.0 -> optimized plan accuracy: 1.0
+>>> print(token_cost_after_optim)
+... 28864
 ```
 
 ## TODO

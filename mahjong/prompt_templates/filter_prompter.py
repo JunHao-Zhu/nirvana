@@ -10,36 +10,37 @@ class FilterPrompter:
             "determine whether the given data satisfies all the given conditions. "
             "The answer should strictly be either True or False.\n"
             "Output the result of the filter operation concisely in the following format.\n"
-            "<output> Your final answer from [True, False] </output>\n"
+            "<output> True or False </output>\n"
         )
 
     def generate_prompt(
-            self, 
-            user_instruction: Union[str, List[str]],
+            self,
             data: Any,
+            user_instruction: Union[str, List[str]],
     ):
         # 1. Prepare system message
         sys_message = [{"role": "system", "content": self.system_instruction}]
 
         # 2. Prepare data
+        user_content = []
         if isinstance(data, str):
-            user_content = [{"type": "text", "text": data}]
+            user_content.append({"type": "text", "text": data})
         elif isinstance(data, mjg.ImageDtype):
-            user_content = [
+            user_content.append(
                 {"type": "image", "image_url": {"url": data}}
-            ]
+            )
         else:
             raise ValueError(f"Data type {type(data)} is not supported.")
         
         # 3. Prepare the given condition
         if isinstance(user_instruction, str):
             conditions = f"condition: {user_instruction}"
+            user_content.append({"type": "text", "text": conditions})
         elif isinstance(user_instruction, list):
             conditions = [f"condition {idx}: {cond}" for idx, cond in enumerate(user_instruction)]
             conditions = "\n".join(conditions)
-        user_content.append({"type": "text", "text": conditions})
+            user_content.append({"type": "text", "text": conditions})
         
-        user_content.append({"type": "text", "text": user_instruction})
         user_message = [{"role": "user", "content": user_content}]
 
         messages = sys_message + user_message
