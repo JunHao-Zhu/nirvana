@@ -9,15 +9,16 @@ from PIL import Image
 from pandas.api.extensions import ExtensionDtype, ExtensionArray
 
 
-def fetch_image(image: Union[str, np.ndarray, Image.Image, None], image_type: str = "Image") -> Union[Image.Image, str, None]:
+def fetch_image(image: Union[str, bytes, Image.Image, None], image_type: str = "base64") -> Union[Image.Image, str, None]:
     if image is None:
         return None
 
     image_obj = None
     if isinstance(image, Image.Image):
         image_obj = image
-    elif isinstance(image, np.ndarray):
-        image_obj = Image.fromarray(image.astype("uint8"))
+    elif isinstance(image, bytes):
+        buffered = BytesIO(image)
+        image_obj = Image.open(buffered)
     elif image.startswith("http://") or image.startswith("https://"):
         image_obj = Image.open(requests.get(image, stream=True).raw)
     elif image.startswith("file://"):
@@ -71,7 +72,7 @@ def compare_images(img1, img2) -> bool:
 
 
 class ImageDtype(ExtensionDtype):
-    name = 'image'
+    name = "image"
     type = str
     na_value = None
 
@@ -121,7 +122,7 @@ class ImageArray(ExtensionArray):
             if (idx, image_type) in self._cached_images:
                 del self._cached_images[(idx, image_type)]
 
-    def get_image(self, idx: int, image_type: str = "Image") -> Union[Image.Image, str, None]:
+    def get_image(self, idx: int, image_type: str = "base64") -> Union[Image.Image, str, None]:
         """Explicit method to fetch and return the actual image"""
         if (idx, image_type) not in self._cached_images:
             image_result = fetch_image(self._data[idx], image_type)
