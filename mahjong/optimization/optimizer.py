@@ -1,5 +1,7 @@
-import re
+import logging
 from typing import List
+import re
+import time
 import numpy as np
 
 from mahjong.models.llm_backbone import LLMClient
@@ -7,6 +9,8 @@ from mahjong.lineage.abstractions import LineageNode, LineageOpNode, LineageData
 from mahjong.lineage.mixin import execute_plan
 from mahjong.optimization.optimize_prompt import PLAN_OPIMIZE_PROMPT
 from mahjong.optimization.evaluator import Evaluator
+
+logger = logging.getLogger(__name__)
 
 
 class PlanCost:
@@ -139,9 +143,10 @@ class Optimizer:
 
     def optimize(self, initial_plan: LineageNode, input_dataset_name: str, columns: List[str]):
         round = 0
+        optimize_start_time = time.time()
         # 1. get the data processing ground truth by executing the initial plan on the validation set
-        ground_truth_on_valid_set, token_cost = execute_plan(initial_plan, self.valid_set)
-        init_plan_cost = PlanCost(initial_plan, 1.0, token_cost, 0.0)
+        ground_truth_on_valid_set, token_cost, runtime = execute_plan(initial_plan, self.valid_set)
+        init_plan_cost = PlanCost(initial_plan, 1.0, token_cost, runtime)
         self.candidate_logical_plan.append(init_plan_cost)
 
         # 2. optimize the plan
@@ -162,20 +167,18 @@ class Optimizer:
             optimized_plan = self._build_plan_from_code(code, columns)
 
             # 2.3. compare the results with the ground truth
-            results_on_valid_set, token_cost = execute_plan(optimized_plan, self.valid_set)
+            results_on_valid_set, token_cost, runtime = execute_plan(optimized_plan, self.valid_set)
             accuracy_score = Evaluator.evaluate(ground_truth_on_valid_set, results_on_valid_set, self.agent)
-            plan_cost = PlanCost(optimized_plan, accuracy_score, token_cost, 0.0)
-            if plan_cost > init_plan_cost:
-                # if the optimized plan is worse than the initial plan, 
-                # the plan wouldn't be added to the candidate list
-                round += 1
-                continue
+            plan_cost = PlanCost(optimized_plan, accuracy_score, token_cost, runtime)
             self.candidate_logical_plan.append(plan_cost)
             round += 1
 
         # 3. select the best plan from the candidate list
         best_plan = sorted(self.candidate_logical_plan)[0]
-        print(f"Plan optimization is finished, here are some statistics:")
-        print(f"initial plan cost: {init_plan_cost.cost} -> optimized plan cost: {best_plan.cost}")
-        print(f"initial plan accuracy: {init_plan_cost.accuracy} -> optimized plan accuracy: {best_plan.accuracy}")
+        optimize_end_time = time.time()
+        optimize_time = optimize_end_time - optimize_start_time
+        logger.info(f"Plan optimization is finished, taking {optimize_time:.2f} seconds. Here are some statistics:")
+        logger.info(f"initial plan cost: {init_plan_cost.cost} -> optimized plan cost: {best_plan.cost}")
+        logger.info(f"initial plan runtime: {init_plan_cost.runtime} -> optimized plan runtime: {best_plan.runtime}")
+        logger.info(f"initial plan accuracy: {init_plan_cost.accuracy} -> optimized plan accuracy: {best_plan.accuracy}")
         return best_plan.plan

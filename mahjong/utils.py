@@ -1,3 +1,4 @@
+import logging
 from copy import deepcopy
 from pathlib import Path
 from typing import Union
@@ -6,7 +7,7 @@ from mahjong.models.llm_backbone import LLMClient
 from mahjong.ops.base import BaseOperation
 from mahjong.optimization.optimizer import Optimizer
 
-    
+
 def configure_llm_backbone(
         model_name: str = None, api_key: Union[str, Path] = None, base_url=None
 ):

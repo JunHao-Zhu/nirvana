@@ -1,3 +1,4 @@
+import logging
 from typing import Union
 import pandas as pd
 
@@ -6,6 +7,11 @@ from mahjong.dataframe.arrays.image import ImageArray, ImageDtype
 from mahjong.utils import configure_llm_backbone
 
 pd.api.extensions.register_extension_dtype(ImageDtype)
+
+
+logging.basicConfig(format="[\033[34m%(asctime)s\033[0m] %(message)s", datefmt="%Y-%m-%d %H:%M:%S", level=logging.INFO)
+logger = logging.getLogger(__name__)
+
 
 def convert_to_base_data(data: Union[pd.Series, list]) -> list:
     """
@@ -21,6 +27,7 @@ def convert_to_base_data(data: Union[pd.Series, list]) -> list:
     return data
 
 __all__ = [
+    "logger",
     "DataFrame",
     "ImageDtype", 
     "ImageArray", 
