@@ -80,7 +80,7 @@ Data lineage includes two core abstrations: `LineageOpNode` and `LineageDataNode
 An agentic optimization workflow starts after the initial logical plan given and an optimize task
 invoked. A usage example of logical plan optimization is shown as follow.
 ```python
->>> df = mjh.DataFrame(pd.read_csv("/testdata/imdb_top_1000.csv").sample(n=200).drop("Genre", axis=1))
+>>> df = mjg.DataFrame(pd.read_csv("/testdata/imdb_top_1000.csv").sample(n=200).drop("Genre", axis=1))
 >>> df.semantic_map(user_instruction="According to the movie overview, extract the genre of each movie.", input_column="Overview", output_column="Genre")
 >>> df.semantic_filter(user_instruction="The rating is higher than 7.", input_column="IMDB_Rating")
 >>> df.semantic_filter(user_instruction="The rating is lower than 8.", input_column="IMDB_Rating")
@@ -93,13 +93,13 @@ map: [Overview]->[Genre] (According to the movie overview, extract the genre of 
 filter: [IMDB_Rating]->[Bool] (The rating is higher than 7.) =>
 filter: [IMDB_Rating]->[Bool] (The rating is lower than 8.) =>
 reduce: [Genre] (Count the number of crime movies.)
->>> res_before_optim, token_cost_before_optim = df.tile.execute(df)
+>>> res_before_optim, token_cost_before_optim = df.execute()
 >>> print(token_cost_before_optim)
 84542
 ```
 After logical plan optimization, the new logical plan and its cost are like,
 ```python
->>> res_after_optim, token_cost_after_optim = df.tile.optimize_and_optimize()
+>>> res_after_optim, token_cost_after_optim = df.optimize_and_execute()
 Plan optimization is finished, here are some statistics:
 initial plan cost: 4289 -> optimized plan cost: 2572
 initial plan accuracy: 1.0 -> optimized plan accuracy: 1.0
