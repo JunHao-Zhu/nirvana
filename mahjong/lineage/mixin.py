@@ -2,6 +2,7 @@
 Record the OP lineage (operator and its user instruction) for optimizing operator orchestration.
 """
 import copy
+import time
 import pandas as pd
 
 from mahjong.lineage.abstractions import LineageNode, LineageDataNode, LineageOpNode
@@ -36,8 +37,11 @@ def execute_plan(last_node: LineageNode, input_data: pd.DataFrame):
             execute_output["output_from_last_node"] = output_from_last_node
             execute_output["total_token_cost"] += output_from_last_node.cost
             return
+    execution_start_time = time.time()
     _run_node(last_node)
-    return execute_output["dataframe_from_last_node"], execute_output["total_token_cost"]
+    execution_end_time = time.time()
+    execution_time = execution_end_time - execution_start_time
+    return execute_output["dataframe_from_last_node"], execute_output["total_token_cost"], execution_time
 
 
 class LineageMixin:
@@ -98,10 +102,15 @@ class LineageMixin:
         
     #     _optimize_node(self.last_node)
 
-    def execute(self, input_data: pd.DataFrame):
+    def execute(self, input_data: pd.DataFrame = None):
+        if input_data is None:
+            return execute_plan(self.last_node, self._data)
         return execute_plan(self.last_node, input_data)
 
     def print_logical_plan(self):
+        if self.last_node is None:
+            print("No operations have been added to the DataFrame.")
+            return
         logical_plan = []
         def _print_op(node: LineageNode):
             if node.is_visited:

@@ -38,7 +38,7 @@ class DataFrame(LineageMixin):
         self._data = data
         self.columns = list(data.columns)
         self.last_node = None
-        self.optimizer = Optimizer(self._data.sample(n=10))
+        self.optimizer = Optimizer(self._data.sample(n=10), max_round=3)
 
     def __len__(self):
         _len = self.nrows
@@ -89,5 +89,5 @@ class DataFrame(LineageMixin):
         
     def optimize_and_execute(self):
         self.optimize()
-        output, cost = self.execute(self._data)
-        return output, cost
+        output, cost, runtime = self.execute(self._data)
+        return output, cost, runtime

@@ -5,6 +5,8 @@ from mahjong.optimization.optimize_prompt import RESULT_EVALUATE_PROMPT
 
 
 def table_serialize(df: pd.DataFrame) -> str:
+    if df.empty:
+        return "No data in the output."
     return df.to_json(orient="records", lines=True).strip()
 
 
