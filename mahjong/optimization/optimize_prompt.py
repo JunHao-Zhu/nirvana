@@ -21,14 +21,16 @@ The supported operators and their required arguments are as follows.
 - input_column: the name of column on which the operation is performed
 
 The available transformation rules are as follows.
-1. Operator fusion: Fuse multiple operators into one operator. To keep semantically equivalent, you are required to rewrite the instruction for the new operator.
-2. Filter pushdown: Move a filter operator that does not rely on results of prior operator to occur before the prior operator.
+- Operator fusion: Fuse multiple operators into one operator. To keep semantically equivalent, you are required to rewrite the instruction for the new operator.
+- Filter pushdown: Move a filter operator that does not rely on results of prior operator to occur before the prior operator.
 
 Now, you are given a dataset with columns: {columns}, and a logical plan:
+```python
 {logical_plan}
+```
 
-Optimize the plan by applying the given transformation rules. Note that **at most one rule can be applied at a time**, **any modification to the pre-defined operator interfaces is not allowed**, and **the argument `input_column` for the current operation can only be selected from the dataset's columns or `output_column` of previous operations.
-The optimized plan is output as executable python code. If no further optimization proposed, return an empty code block. Only one code block can be contained in the output.
+Optimize the logical plan by applying as many transformation rules from the given ones as possible. Note that **any modification to the pre-defined operator interfaces is not allowed**, and **the argument input_column for the current operation can only be selected from the dataset's columns or output_column of previous operations.**
+The optimized plan is output as executable python code (each line is an operation). If no further optimization proposed, return an empty code block. ONLY ONE code block can be contained in the output.
 """
 
 
