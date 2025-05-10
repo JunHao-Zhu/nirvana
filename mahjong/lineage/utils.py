@@ -3,6 +3,30 @@ import pandas as pd
 
 from mahjong.lineage.abstractions import LineageNode, LineageDataNode, LineageOpNode
 
+schema_mapping = {
+    "map": "[{input_column}]->[{output_column}]",
+    "filter": "[{input_column}]->[Bool]",
+    "reduce": "[{input_column}]->[Aggregated Result]",
+}
+
+
+def collect_op_metadata(op_node: LineageOpNode, print_info: bool = False):
+    op_name = op_node.op_name
+    user_instr = op_node.user_instruction
+    input_col = op_node.input_column
+    output_col = op_node.output_column
+    has_func = True if op_node.func else False
+    if print_info:
+        op_signature = (
+            f"{schema_mapping[op_name].format(input_column=input_col, output_column=output_col)} ({user_instr})"
+        )
+        return op_signature
+    else:
+        metadata = (
+            op_name, user_instr, input_col, output_col, has_func
+        )
+        return metadata
+
 
 def execute_plan(last_node: LineageNode, input_data: pd.DataFrame):
     execute_output = {

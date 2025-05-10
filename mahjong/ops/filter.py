@@ -2,7 +2,7 @@
 Filter: remove data that violates NL predicates.
 """
 import functools
-from typing import Any, Iterable
+from typing import Any, Union, Iterable, Callable
 from dataclasses import dataclass
 import pandas as pd
 
@@ -13,8 +13,9 @@ from mahjong.prompt_templates.filter_prompter import FilterPrompter
 
 def filter_wrapper(
     input_data: pd.DataFrame, 
-    user_instruction: str, 
-    input_column: str,
+    user_instruction: str = None,
+    func: Callable = None, 
+    input_column: str = None,
     strategy: str = None, 
     **kwargs
 ):
@@ -22,6 +23,7 @@ def filter_wrapper(
     outputs = filter_op.execute(
         input_data=input_data,
         user_instruction=user_instruction,
+        func=func,
         input_column=input_column,
         strategy=strategy,
         **kwargs
@@ -45,29 +47,22 @@ class FilterOperation(BaseOperation):
         super().__init__("filter", *args, **kwargs)
         self.prompter = FilterPrompter()
     
-    def _plain_llm_execute(self, processed_data: Iterable[Any], user_instruction: str, dtype: str):
-        outputs = []
-        total_cost = 0
-        for data in processed_data:
-            full_prompt = self.prompter.generate_prompt(data, user_instruction, dtype)
-            output = self.llm(full_prompt, parse_tags=True, tags=["output"])
-            outputs.append(output["output"])
-            total_cost += output["cost"]
-        return outputs, total_cost
+    def _plain_llm_execute(self, data: Any, user_instruction: str, dtype: str):
+        full_prompt = self.prompter.generate_prompt(data, user_instruction, dtype)
+        output = self.llm(full_prompt, parse_tags=True, tags=["output"])
+        return output["output"], output["cost"]
 
-    def _llm_cot_execute(self, processed_data: Iterable[Any], user_instruction: str, dtype: str, demos):
-        outputs = []
-        total_cost = 0
-        for data in processed_data:
-            full_prompt = self.prompter.generate_cot_prompt(data, user_instruction, dtype, demos)
-            output = self.llm(full_prompt, parse_tags=True, tags=["output"])
-            outputs.append(output["output"])
-            total_cost += output["cost"]
-        return outputs, total_cost
+    def _llm_cot_execute(self, data: Any, user_instruction: str, dtype: str, demos):
+        full_prompt = self.prompter.generate_cot_prompt(data, user_instruction, dtype, demos)
+        output = self.llm(full_prompt, parse_tags=True, tags=["output"])
+        return output["output"], output["cost"]
     
-    def _postprocess_llm_outputs(self, llm_outputs: Iterable[str]):
+    def _postprocess_filter_outputs(self, llm_outputs: Iterable[Union[str, bool]]):
         outputs = []
         for output in llm_outputs:
+            if isinstance(output, bool):
+                outputs.append(output)
+                continue
             if "True" in output:
                 outputs.append(True)
             elif "False" in output:
@@ -79,12 +74,16 @@ class FilterOperation(BaseOperation):
     def execute(
             self, 
             input_data: pd.DataFrame,
-            user_instruction: str,
-            input_column: str,
+            user_instruction: str = None,
+            func: Callable = None,
+            input_column: str = None,
             strategy: str = "plain_llm",
             *args, 
             **kwargs
     ):
+        if user_instruction is None and func is None:
+            raise ValueError("Neither `user_instruction` nor `func` is given.")
+        
         if input_data.empty:
             return FilterOpOutputs()
         
@@ -101,10 +100,21 @@ class FilterOperation(BaseOperation):
         else:
             raise NotImplementedError(f"Strategy {strategy} is not implemented.")
         
-        outputs, cost = execution_func(processed_data, user_instruction)
+        filter_outputs, token_cost = [], 0
+        for data in processed_data:
+            if func is not None:
+                try:
+                    output = func(data)
+                    cost = 0
+                except Exception as e:
+                    output, cost = execution_func(data, user_instruction)
+            else:
+                output, cost = execution_func(data, user_instruction)
+            filter_outputs.append(output)
+            token_cost += cost
         
-        outputs = self._postprocess_llm_outputs(outputs)
+        filter_outputs = self._postprocess_filter_outputs(filter_outputs)
         return FilterOpOutputs(
-            output=outputs,
-            cost=cost
+            output=filter_outputs,
+            cost=token_cost
         )

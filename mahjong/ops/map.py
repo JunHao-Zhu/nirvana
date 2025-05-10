@@ -2,7 +2,7 @@
 Map: Perform a projecton on target data based on NL predicates
 """
 import functools
-from typing import Any, Iterable
+from typing import Any, Iterable, Callable
 from dataclasses import dataclass
 import pandas as pd
 
@@ -13,8 +13,9 @@ from mahjong.prompt_templates.map_prompter import MapPrompter
 
 def map_wrapper(
     input_data: pd.DataFrame, 
-    user_instruction: str, 
-    input_column: str,
+    user_instruction: str = None,
+    func: Callable = None, 
+    input_column: str = None,
     output_column: str = None, 
     strategy: str = None, **kwargs
 ):
@@ -47,57 +48,29 @@ class MapOperation(BaseOperation):
         super().__init__("map", *args, **kwargs)
         self.prompter = MapPrompter()
     
-    def _plain_llm_execute(self, processed_data: Iterable[Any], user_instruction: str, dtype: str):
-        outputs = []
-        total_cost = 0
-        for data in processed_data:
-            full_prompt = self.prompter.generate_prompt(data, user_instruction, dtype)
-            output = self.llm(full_prompt, parse_tags=True, tags=["output"])
-            outputs.append(output["output"])
-            total_cost += output["cost"]
-        return outputs, total_cost
+    def _plain_llm_execute(self, data: Any, user_instruction: str, dtype: str):
+        full_prompt = self.prompter.generate_prompt(data, user_instruction, dtype)
+        output = self.llm(full_prompt, parse_tags=True, tags=["output"])
+        return output["output"], output["cost"]
 
-    def _llm_cot_execute(self, processed_data: Iterable[Any], user_instruction: str, dtype: str, demos):
-        outputs = []
-        total_cost = 0
-        for data in processed_data:
-            full_prompt = self.prompter.generate_cot_prompt(data, user_instruction, dtype, demos)
-            output = self.llm(full_prompt, parse_tags=True, tags=["output"])
-            outputs.append(output["output"])
-            total_cost += output["cost"]
-        return outputs, total_cost
+    def _llm_cot_execute(self, data: Any, user_instruction: str, dtype: str, demos):
+        full_prompt = self.prompter.generate_cot_prompt(data, user_instruction, dtype, demos)
+        output = self.llm(full_prompt, parse_tags=True, tags=["output"])
+        return output["output"], output["cost"]
 
     def execute(
             self, 
             input_data: pd.DataFrame,
-            user_instruction: str,
-            input_column: str,
+            user_instruction: str = None,
+            func: Callable = None,
+            input_column: str = None,
             output_column: str = None,
             strategy: str = "plain_llm",
             *args, 
             **kwargs
-    ):
-        """
-        Executes a mapping operation on the provided data using the specified strategy.
-        Args:
-            processed_data (Iterable[Any]): The input data to be processed.
-            user_instruction (str): The instruction provided by the user to guide the operation.
-            target_schema (str, optional): The name of the field for the output. 
-                This is required and must not be None.
-            strategy (str, optional): The strategy to use for execution. Supported values are:
-                - "plain_llm": Executes using a plain language model.
-                - "cot": Executes using a chain-of-thought approach.
-            *args: Additional positional arguments.
-            **kwargs: Additional keyword arguments. For the "cot" strategy, this may include:
-                - demos: Examples or demonstrations to guide the chain-of-thought execution.
-        Returns:
-            MapOpOutputs: An object containing the field name and the processed output.
-        Raises:
-            ValueError: If `target_schema` is None.
-            NotImplementedError: If the specified `strategy` is not supported.
-        """
-        if output_column is None:
-            raise ValueError("Field name for the output is required.")
+    ):  
+        if user_instruction is None and func is None:
+            raise ValueError("Neither `user_instruction` nor `func` is given.")
         
         if input_data.empty:
             return MapOpOutputs(field_name=output_column, output=None)
@@ -115,9 +88,21 @@ class MapOperation(BaseOperation):
         else:
             raise NotImplementedError(f"Strategy {strategy} is not implemented.")
         
-        outputs, cost = execution_func(processed_data, user_instruction)
+        map_results, token_cost = [], 0
+        for data in processed_data:
+            if func is not None:
+                try:
+                    output = func(data)
+                    cost = 0
+                except Exception as e:
+                    output, cost = execution_func(data, user_instruction)
+            else:
+                output, cost = execution_func(data, user_instruction)
+            map_results.append(output)
+            token_cost += cost
+        
         return MapOpOutputs(
             field_name=output_column,
-            output=outputs,
-            cost=cost
+            output=map_results,
+            cost=token_cost
         )

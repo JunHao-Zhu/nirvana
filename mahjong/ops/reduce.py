@@ -1,7 +1,7 @@
 """
 Reduce: aggregate multiple data based on NL predicates
 """
-from typing import Any, Iterable
+from typing import Any, Iterable, Callable
 from dataclasses import dataclass
 import pandas as pd
 
@@ -11,15 +11,17 @@ from mahjong.prompt_templates.reduce_prompter import ReducePrompter
 
 
 def reduce_wrapper(
-        processed_data: Iterable[Any],
-        user_instruction: str,
-        input_column: str,
+        input_data: Iterable[Any],
+        user_instruction: str = None,
+        func: Callable = None,
+        input_column: str = None,
         **kwargs
 ):
     reduce_op = ReduceOperation()
     outputs = reduce_op.execute(
-        processed_data=processed_data,
+        input_data=input_data,
         user_instruction=user_instruction,
+        func=func,
         input_column=input_column,
         **kwargs
     )
@@ -45,25 +47,50 @@ class ReduceOperation(BaseOperation):
         super().__init__("reduce", *args, **kwargs)
         self.prompter = ReducePrompter()
 
+    def _plain_llm_execute(self, processed_data: Iterable[Any], user_instruction: str, dtype: str):
+        full_prompt = self.prompter.generate_prompt(processed_data, user_instruction, dtype)
+        output = self.llm(full_prompt, parse_tags=True, tags=["output"])
+        return output["output"], output["cost"]
+
     def execute(
             self,
             input_data: pd.DataFrame,
-            user_instruction: str,
-            input_column: str,
+            user_instruction: str = None,
+            func: Callable = None,
+            input_column: str = None,
             *args,
             **kwargs
     ):
+        if user_instruction is None and func is None:
+            raise ValueError("Neither `user_instruction` nor `func` is given.")
+        
         if input_data.empty:
             return ReduceOpOutputs(output="No data to process.")
+        
+        if func is not None:
+            processed_data = input_data[input_column].agg(func)
+            return ReduceOpOutputs(
+                output=processed_data,
+                cost=0
+            )
 
         processed_data = input_data[input_column]
         if isinstance(processed_data.dtype, ImageDtype):
             dtype = "image"
         else:
             dtype = "str"
-        full_prompt = self.prompter.generate_prompt(processed_data, user_instruction, dtype)
-        outputs = self.llm(full_prompt, parse_tags=True, tags=["output"])
+
+        reduce_results, token_cost = None, 0
+        if func is not None:
+            try:
+                reduce_results = processed_data.agg(func)
+                token_cost = 0
+            except Exception as e:
+                reduce_results, token_cost = self._plain_llm_execute(processed_data, user_instruction, dtype)
+        else:
+            reduce_results, token_cost = self._plain_llm_execute(processed_data, user_instruction, dtype)
+
         return ReduceOpOutputs(
-            output=outputs["output"],
-            cost=outputs["cost"]
+            output=reduce_results,
+            cost=token_cost
         )

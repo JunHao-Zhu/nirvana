@@ -1,4 +1,4 @@
-from typing import List, Union
+from typing import List, Union, Callable
 import pandas as pd
 
 from mahjong.ops.map import MapOperation, MapOpOutputs
@@ -79,14 +79,19 @@ class LineageOpNode(LineageNode):
     def __init__(
             self, 
             op_name: str, 
-            user_instruction: Union[str, List[str]],
-            input_column: str,
+            user_instruction: str = None,
+            func: Callable = None,
+            input_column: str = None,
             output_column: str = None
     ):
         super().__init__()
         self.op_name = op_name
         self.op = op_mapping[op_name]()
         self.user_instruction = user_instruction
+        self.func = func
+
+        if input_column is None:
+            raise ValueError("The argument `input_column` must be given.")
         self.input_column = input_column
         self.output_column = output_column
 
@@ -95,5 +100,6 @@ class LineageOpNode(LineageNode):
             input_data=input_data,
             input_column=self.input_column,
             user_instruction=self.user_instruction,
+            func=self.func,
             output_column=self.output_column
         )

@@ -5,14 +5,14 @@ import copy
 import pandas as pd
 
 from mahjong.lineage.abstractions import LineageNode, LineageDataNode, LineageOpNode
-from mahjong.lineage.utils import execute_plan
+from mahjong.lineage.utils import execute_plan, collect_op_metadata
 
 
 class LineageMixin:
 
     def add_operator(self, op_name, user_instruction, input_column, output_column=None, fields=None):
         op_node = LineageOpNode(
-            op_name, user_instruction, input_column, output_column
+            op_name, user_instruction, None, input_column, output_column
         )
         if self.last_node is None:
             data_node = LineageDataNode(columns=fields, new_field=output_column)
@@ -38,34 +38,6 @@ class LineageMixin:
             raise RuntimeError("No operations have been added to the DataFrame.")
         self.last_node = self.optimizer.optimize(self.last_node, "df", self.columns)
 
-    # def optimize(self):
-    #     def _optimize_node(node: LineageNode):
-    #         self.print_logical_plan()
-    #         if isinstance(node, LineageDataNode):
-    #             for p in node.parent:
-    #                 _optimize_node(p)
-    #             return
-            
-    #         if len(node.parent) == 0:
-    #             return
-            
-    #         # apply op fusion
-    #         optimized_node = OpFusion.rewrite_op(node)
-    #         if optimized_node is not None:
-    #             _optimize_node(optimized_node)
-    #             return
-
-    #         # apply filter pushdown
-    #         optimized_node = FilterPushdown.rewrite_op(node)
-    #         if optimized_node is not None:
-    #             _optimize_node(optimized_node)
-    #             return
-
-    #         for p in node.parent:
-    #             _optimize_node(p)
-        
-    #     _optimize_node(self.last_node)
-
     def execute(self, input_data: pd.DataFrame = None):
         if input_data is None:
             return execute_plan(self.last_node, self._data)
@@ -81,11 +53,8 @@ class LineageMixin:
                 return ""
             
             if len(node.parent) == 0:
-                output_schema_info = f"{node.output_column}" if node.output_column else "Bool"
-                schema_info = f"[{node.input_column}]->[{output_schema_info}]"
-                return (
-                    f"{node.op_name}: {schema_info} ({node.user_instruction})"
-                )
+                op_info = collect_op_metadata(node, print_info=True)
+                return op_info
             
             op_info = ""
             for parent_node in node.parent:
@@ -97,11 +66,8 @@ class LineageMixin:
                 return ""
             
             node.is_visited = True
-            output_schema_info = f"{node.output_column}" if node.output_column else "Bool"
-            schema_info = f"[{node.input_column}]->[{output_schema_info}]"
-            return (
-                f"{node.op_name}: {schema_info} ({node.user_instruction})"
-            )
+            op_info = collect_op_metadata(node, print_info=True)
+            return op_info
         
         op_info = _print_op(self.last_node)
         if op_info:
@@ -119,6 +85,7 @@ class LineageMixin:
         return
 
     def empty_lineage(self):
+        self.optimizer.clear()
         temp_node = copy.copy(self.last_node)
         self.last_node = None
         def _delete_node(node: LineageNode):

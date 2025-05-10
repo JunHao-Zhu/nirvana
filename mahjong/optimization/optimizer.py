@@ -1,11 +1,13 @@
 import logging
 from typing import List
+from collections import defaultdict, Counter
 import re
 import time
 import numpy as np
 
 from mahjong.models.llm_backbone import LLMClient
 from mahjong.lineage.abstractions import LineageNode, LineageOpNode, LineageDataNode
+from mahjong.lineage.utils import collect_op_metadata
 from mahjong.optimization.optimize_prompt import PLAN_OPIMIZE_PROMPT
 
 logger = logging.getLogger(__name__)
@@ -59,7 +61,10 @@ class Optimizer:
     def set_agent(cls, client: LLMClient):
         cls.agent = client
 
-    def _sample_from_candidates(self, lambda_=0.4):
+    def clear(self):
+        self.candidate_logical_plan = []
+
+    def _sample_from_candidates(self, lambda_=0.2):
         token_costs = np.array([plan.cost for plan in self.candidate_logical_plan])
         token_costs = (np.max(token_costs) - token_costs) / (np.max(token_costs) - np.min(token_costs) + 1e-6)
         costs_prob = np.exp(token_costs) / np.exp(token_costs).sum()
@@ -71,17 +76,12 @@ class Optimizer:
 
     def _build_code_from_plan(self, last_node_in_plan: LineageNode, input_dataset_name: str):
         logical_plan = []
-        plan_statistics = []
-        def _collect_op_statistics(node: LineageOpNode):
-            op_name = node.op_name
-            user_instruction = node.user_instruction
-            input_column = node.input_column
-            plan_statistics.append((op_name, user_instruction, input_column))
+        plan_stats = []
             
         def _build_op(node: LineageNode):
             if len(node.parent) == 0:
                 node: LineageOpNode = node
-                _collect_op_statistics(node)
+                plan_stats.append(collect_op_metadata(node, print_info=False))
                 if node.output_column:
                     code = f"{input_dataset_name}.semantic_{node.op_name}(user_instruction=\"{node.user_instruction}\", input_column=\"{node.input_column}\", output_column=\"{node.output_column}\")"
                 else:
@@ -97,7 +97,7 @@ class Optimizer:
             if isinstance(node, LineageDataNode):
                 return ""
             
-            _collect_op_statistics(node)
+            plan_stats.append(collect_op_metadata(node, print_info=False))
             if node.output_column:
                 code = f"{input_dataset_name}.semantic_{node.op_name}(user_instruction=\"{node.user_instruction}\", input_column=\"{node.input_column}\", output_column=\"{node.output_column}\")"
             else:
@@ -106,29 +106,42 @@ class Optimizer:
         
         _build_op(last_node_in_plan)
         code = "\n".join(logical_plan)
-        return code, plan_statistics
+        return code, plan_stats
     
-    def _build_plan_from_code(self, code: str, columns: List[str]) -> LineageDataNode:
+    def _extract_op_name_and_args(self, code: str):
+        code_pattern = r"\w+\.semantic_(\w+)\(([^)]*)\)"
+        match = re.match(code_pattern, code)
+        if match:
+            op_name = match.group(1)
+            args = match.group(2)
+            user_instruction = re.search(r'user_instruction="([^"]*)"', args)
+            input_column = re.search(r'input_column="([^"]*)"', args)
+            func = re.search(r'func=([^,]+)', args)
+            output_column = re.search(r'output_column="([^"]*)"', args)
+            return {
+                "op_name": op_name,
+                "user_instruction": user_instruction.group(1) if user_instruction else None,
+                "input_column": input_column.group(1) if input_column else None,
+                "func": eval(func.group(1)) if func else None,
+                "output_column": output_column.group(1) if output_column else None,
+            }
+        return None
+    
+    def _build_plan_from_code(self, code: str, columns: List[str]):
         last_node_in_plan = None
+        plan_stats = []
         operations = code.split("\n")
         for operation in operations:
             # define the regex pattern and match the operation string
-            pattern = (
-                r"\w+\.semantic_(?P<op_name>\w+)\(user_instruction=\"(?P<user_instruction>[^\"]+)\", input_column=\"(?P<input_column>[^\"]+)\"(?:, output_column=\"(?P<output_column>[^\"]+)\")?\)"
-            )
-            match = re.match(pattern, operation)
-            if match is None:
+            op_kwargs = self._extract_op_name_and_args(operation)
+            if op_kwargs is None:
                 continue
 
-            op_name = match.group("op_name")
-            user_instruction = match.group("user_instruction")
-            input_column = match.group("input_column")
-            output_column = match.group("output_column")
-
-            op_node = LineageOpNode(op_name, user_instruction, input_column, output_column)
+            op_node = LineageOpNode(**op_kwargs)
+            plan_stats.append(collect_op_metadata(op_node, print_info=False))
             
             if last_node_in_plan is None:
-                data_node = LineageDataNode(columns=columns, new_field=output_column)
+                data_node = LineageDataNode(columns=columns, new_field=op_kwargs["output_column"])
                 op_node.add_child(data_node)
                 data_node.add_parent(op_node)
                 last_node_in_plan = data_node
@@ -138,7 +151,7 @@ class Optimizer:
                     if last_node_in_plan.new_field is None else 
                     last_node_in_plan.columns + [last_node_in_plan.new_field]
                 )
-                data_node = LineageDataNode(columns=columns_from_last_node, new_field=output_column)
+                data_node = LineageDataNode(columns=columns_from_last_node, new_field=op_kwargs["output_column"])
                 op_node.add_child(data_node)
                 data_node.add_parent(op_node)
 
@@ -147,35 +160,39 @@ class Optimizer:
                 last_node_in_plan = data_node
         if last_node_in_plan is None:
             raise RuntimeError("The operation string does not match the expected format.")
-        return last_node_in_plan
+        return last_node_in_plan, plan_stats
     
     def _naive_estimate_plan_cost(self, init_plan_stats: list, new_plan_stats: list = None):
         accuracy_score, token_cost, selectivity = 1.0, 0.0, 1.0
         # only estimate the cost of initial plan when new plan is None
         if new_plan_stats is None:
-            for op_name, user_instruction, input_column in init_plan_stats:
+            for op_name, user_instr, input_col, output_col, has_func in init_plan_stats:
                 if op_name == "map":
-                    token_cost += selectivity * len(user_instruction)
+                    token_cost += selectivity * len(user_instr)
                 elif op_name == "filter":
-                    token_cost += selectivity * len(user_instruction)
+                    token_cost += selectivity * len(user_instr)
                     selectivity *= 0.5
                 elif op_name == "reduce":
-                    token_cost += len(user_instruction) # TODO: need to consider the size of reducer input
+                    token_cost += len(user_instr) # TODO: need to consider the size of reducer input
             return accuracy_score, token_cost
         
-        columns_in_init_plan = set([op[2] for op in init_plan_stats])
-        columns_in_new_plan = set([op[2] for op in new_plan_stats])
-        if columns_in_init_plan != columns_in_new_plan:
+        ops_on_columns_init, ops_on_columns_new = defaultdict(Counter), defaultdict(Counter)
+        for op_info in init_plan_stats:
+            ops_on_columns_init[op_info[2]].update([op_info[0]])
+        for op_info in new_plan_stats:
+            ops_on_columns_new[op_info[2]].update([op_info[0]])
+
+        if ops_on_columns_new.keys() != ops_on_columns_init.keys():
             return 0.0, 0.0
-        for op_name, user_instruction, input_column in new_plan_stats:
+        for op_name, user_instr, input_col, output_col, has_func in new_plan_stats:
             if op_name == "map":
-                token_cost += selectivity * len(user_instruction)
+                token_cost += 0.0 if has_func else selectivity * len(user_instr)
             elif op_name == "filter":
-                replaced_filters = [op for op in init_plan_stats if op[0] == "filter" and op[2] == input_column]
-                token_cost += selectivity * len(user_instruction)
-                selectivity *= 0.5 ** len(replaced_filters)
+                num_diff = ops_on_columns_init[input_col]["filter"] - ops_on_columns_new[input_col]["filter"] + 1
+                token_cost += 0.0 if has_func else selectivity * len(user_instr)
+                selectivity *= 0.5 ** num_diff
             elif op_name == "reduce":
-                token_cost += len(user_instruction)
+                token_cost += 0.0 if has_func else len(user_instr)
         return accuracy_score, token_cost
 
     def optimize(self, initial_plan: LineageNode, input_dataset_name: str, columns: List[str]):
@@ -202,8 +219,7 @@ class Optimizer:
             if optimized_code == "":
                 round += 1
                 continue
-            optimized_plan = self._build_plan_from_code(optimized_code, columns)
-            optimized_code, plan_stats = self._build_code_from_plan(optimized_plan, input_dataset_name=input_dataset_name)
+            optimized_plan, plan_stats = self._build_plan_from_code(optimized_code, columns)
 
             # 2.3. compare the results with the ground truth
             # results_on_valid_set, token_cost, runtime = execute_plan(optimized_plan, self.valid_set)
