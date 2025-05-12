@@ -9,7 +9,7 @@ from mahjong.optimization.optimizer import Optimizer
 
 
 def configure_llm_backbone(
-        model_name: str = None, api_key: Union[str, Path] = None, base_url=None
+        model_name: str = None, api_key: Union[str, Path] = None, **kwargs
 ):
     """
     Configures the LLM (Large Language Model) backbone by initializing and setting it 
@@ -28,6 +28,6 @@ def configure_llm_backbone(
         >>> mjg.configure_llm_backbone(model_name="gpt-3.5-turbo", api_key="your-api-key")
         ```
     """
-    llm_client = LLMClient.configure(model_name, api_key, base_url)
+    llm_client = LLMClient.configure(model_name, api_key, **kwargs)
     BaseOperation.set_llm(deepcopy(llm_client))
     Optimizer.set_agent(deepcopy(llm_client))

@@ -13,7 +13,7 @@ def _get_api_key_from_file(file):
 
 def _create_client(api_key, **kwargs):
     assert api_key != "", "API key is required."
-    client = OpenAI(api_key=api_key, base_url=kwargs["base_url"])
+    client = OpenAI(api_key=api_key, **kwargs)
     return client
 
 
@@ -29,10 +29,10 @@ class LLMClient:
     config: LLMArguments = LLMArguments()
 
     @classmethod
-    def configure(cls, model_name: str = None, api_key: Union[str, Path] = None, base_url=None):
+    def configure(cls, model_name: str = None, api_key: Union[str, Path] = None, **kwargs):
         cls.model = model_name
         api_key = api_key if isinstance(api_key, str) else _get_api_key_from_file(api_key)
-        cls.client = _create_client(api_key, base_url=base_url)
+        cls.client = _create_client(api_key, **kwargs)
         return cls()
     
     def __call__(
