@@ -6,7 +6,7 @@ from typing import Any, List, Iterable
 from dataclasses import dataclass
 
 from mahjong.ops.base import BaseOpOutputs, BaseOperation
-from mahjong.prompt_templates.join_prompter import JoinPrompter
+from mahjong.ops.prompt_templates.join_prompter import JoinPrompter
 
 
 def join_wrapper(

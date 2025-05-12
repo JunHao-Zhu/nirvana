@@ -8,7 +8,7 @@ class MapPrompter:
             "You are performing a map operation (one input: one output) to "
             "project the given data based on the user's instruction.\n"
             "Output the result of the map operation concisely in the following format.\n"
-            "<output> The result of the map operation </output>\n"
+            "<output> LLM output </output>\n"
         )
 
     def generate_prompt(
@@ -40,7 +40,7 @@ class MapPrompter:
 
         # 2. Prepare user message
         if dtype == "str":
-            user_content = [{"type": "text", "text": str(data)}]
+            user_content = [{"type": "text", "text": data}]
         elif dtype == "image":
             user_content = [
                 {"type": "image", "image_url": {"url": data}}

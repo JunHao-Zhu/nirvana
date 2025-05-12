@@ -8,7 +8,7 @@ import pandas as pd
 
 from mahjong.dataframe.arrays.image import ImageDtype
 from mahjong.ops.base import BaseOpOutputs, BaseOperation
-from mahjong.prompt_templates.map_prompter import MapPrompter
+from mahjong.ops.prompt_templates.map_prompter import MapPrompter
 
 
 def map_wrapper(
@@ -48,12 +48,16 @@ class MapOperation(BaseOperation):
         super().__init__("map", *args, **kwargs)
         self.prompter = MapPrompter()
     
-    def _plain_llm_execute(self, data: Any, user_instruction: str, dtype: str):
+    def _plain_llm_execute(self, data: Any, user_instruction: str, dtype: str, **kwargs):
+        if dtype == "str":
+            data = f"{kwargs['field_name']}: {str(data)}"
         full_prompt = self.prompter.generate_prompt(data, user_instruction, dtype)
         output = self.llm(full_prompt, parse_tags=True, tags=["output"])
         return output["output"], output["cost"]
 
-    def _llm_cot_execute(self, data: Any, user_instruction: str, dtype: str, demos):
+    def _llm_cot_execute(self, data: Any, user_instruction: str, dtype: str, demos, **kwargs):
+        if dtype == "str":
+            data = f"{kwargs['field_name']}: {str(data)}"
         full_prompt = self.prompter.generate_cot_prompt(data, user_instruction, dtype, demos)
         output = self.llm(full_prompt, parse_tags=True, tags=["output"])
         return output["output"], output["cost"]
@@ -81,10 +85,10 @@ class MapOperation(BaseOperation):
         else:
             dtype = "str"
         if strategy == "plain_llm":
-            execution_func = functools.partial(self._plain_llm_execute, dtype=dtype)
+            execution_func = functools.partial(self._plain_llm_execute, dtype=dtype, field_name=input_column)
         elif strategy == "cot":
             demos = kwargs.get("demos", None)
-            execution_func = functools.partial(self._llm_cot_execute, dtype=dtype, demos=demos)
+            execution_func = functools.partial(self._llm_cot_execute, dtype=dtype, demos=demos, field_name=input_column)
         else:
             raise NotImplementedError(f"Strategy {strategy} is not implemented.")
         

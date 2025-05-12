@@ -7,7 +7,7 @@ import pandas as pd
 
 from mahjong.dataframe.arrays.image import ImageDtype
 from mahjong.ops.base import BaseOpOutputs, BaseOperation
-from mahjong.prompt_templates.reduce_prompter import ReducePrompter
+from mahjong.ops.prompt_templates.reduce_prompter import ReducePrompter
 
 
 def reduce_wrapper(

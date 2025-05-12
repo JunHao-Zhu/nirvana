@@ -24,7 +24,7 @@ class FilterPrompter:
         # 2. Prepare data
         user_content = []
         if dtype == "str":
-            user_content.append({"type": "text", "text": str(data)})
+            user_content.append({"type": "text", "text": data})
         elif dtype == "image":
             user_content.append(
                 {"type": "image", "image_url": {"url": data}}

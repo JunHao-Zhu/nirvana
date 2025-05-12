@@ -13,7 +13,7 @@ class ReducePrompter:
             "You are performing a reduce operation (multiple inputs: one output) to "
             "aggregate the given data based on the user's instruction.\n"
             "Output the result of the reduce operation concisely in the following format.\n"
-            "<output> The aggregation result of the given data </output>\n"
+            "<output> LLM output </output>\n"
         )
 
     def generate_prompt(
