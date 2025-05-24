@@ -25,7 +25,6 @@ from typing import Union
 import pandas as pd
 
 from mahjong.lineage.mixin import LineageMixin
-from mahjong.optimization.optimizer import Optimizer
 
 
 class DataFrame(LineageMixin):
@@ -38,7 +37,6 @@ class DataFrame(LineageMixin):
         self._data = data
         self.columns = list(data.columns)
         self.last_node = None
-        self.optimizer = Optimizer(self._data.sample(n=10), max_round=3)
 
     def __len__(self):
         _len = self.nrows
@@ -87,7 +85,15 @@ class DataFrame(LineageMixin):
                           input_column=input_column,
                           fields=self.columns)
         
-    def optimize_and_execute(self):
-        self.optimize()
-        output, cost, runtime = self.execute(self._data)
+    def optimize_and_execute(self, optim_config = None):
+        self.create_plan_optimizer(optim_config)
+        if self.optimizer.config.do_logical_optimization:
+            self.last_node = self.optimizer.optimize_logical_plan(self.last_node, "df", self.columns)
+        if self.optimizer.config.do_physical_optimization:
+            output, cost, runtime = self.optimizer.optimize_physical_plan(
+                self.last_node,
+                self._data,
+            )
+        else:
+            output, cost, runtime = self.execute(self._data)
         return output, cost, runtime

@@ -6,6 +6,7 @@ import pandas as pd
 
 from mahjong.lineage.abstractions import LineageNode, LineageDataNode, LineageOpNode
 from mahjong.lineage.utils import execute_plan, collect_op_metadata
+from mahjong.optim.optimizer import PlanOptimizer, OptimizeConfig
 
 
 class LineageMixin:
@@ -33,10 +34,8 @@ class LineageMixin:
             self.last_node.add_child(op_node)
             self.last_node = data_node
 
-    def optimize(self):
-        if self.last_node is None:
-            raise RuntimeError("No operations have been added to the DataFrame.")
-        self.last_node = self.optimizer.optimize(self.last_node, "df", self.columns)
+    def create_plan_optimizer(self, config: OptimizeConfig = None):
+        self.optimizer = PlanOptimizer(config)
 
     def execute(self, input_data: pd.DataFrame = None):
         if input_data is None:

@@ -94,12 +94,21 @@ class LineageOpNode(LineageNode):
             raise ValueError("The argument `input_column` must be given.")
         self.input_column = input_column
         self.output_column = output_column
+        self.exec_model = None
+
+    def set_exec_model(self, model_name: str):
+        self.exec_model = model_name
 
     def run(self, input_data: pd.DataFrame) -> OpOutputsType:
+        op_kwargs = {
+            "input_column": self.input_column,
+            "user_instruction": self.user_instruction,
+            "func": self.func,
+            "output_column": self.output_column,
+        }
+        if self.exec_model is not None:
+            op_kwargs["model"] = self.exec_model
         return self.op.execute(
             input_data=input_data,
-            input_column=self.input_column,
-            user_instruction=self.user_instruction,
-            func=self.func,
-            output_column=self.output_column
+            **op_kwargs
         )

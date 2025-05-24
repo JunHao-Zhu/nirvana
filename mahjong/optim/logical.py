@@ -8,7 +8,7 @@ import numpy as np
 from mahjong.models.llm_backbone import LLMClient
 from mahjong.lineage.abstractions import LineageNode, LineageOpNode, LineageDataNode
 from mahjong.lineage.utils import collect_op_metadata
-from mahjong.optimization.optimize_prompt import PLAN_OPIMIZE_PROMPT
+from mahjong.optim.optimize_prompt import PLAN_OPIMIZE_PROMPT
 
 logger = logging.getLogger(__name__)
 
@@ -49,17 +49,11 @@ class PlanCost:
         return False
 
 
-class Optimizer:
-    agent: LLMClient = None
-
-    def __init__(self, valid_set, max_round: int = 5):
-        self.valid_set = valid_set
+class LogicalOptimizer:
+    def __init__(self, max_round: int = 5, agent: LLMClient = None):
+        self.agent = agent
         self.max_round = max_round
         self.candidate_logical_plan = []
-
-    @classmethod
-    def set_agent(cls, client: LLMClient):
-        cls.agent = client
 
     def clear(self):
         self.candidate_logical_plan = []
@@ -77,7 +71,7 @@ class Optimizer:
     def _build_code_from_plan(self, last_node_in_plan: LineageNode, input_dataset_name: str):
         logical_plan = []
         plan_stats = []
-            
+        
         def _build_op(node: LineageNode):
             if len(node.parent) == 0:
                 node: LineageOpNode = node
@@ -151,6 +145,8 @@ class Optimizer:
                     if last_node_in_plan.new_field is None else 
                     last_node_in_plan.columns + [last_node_in_plan.new_field]
                 )
+                if op_kwargs["input_column"] not in columns_from_last_node:
+                    return None, None
                 data_node = LineageDataNode(columns=columns_from_last_node, new_field=op_kwargs["output_column"])
                 op_node.add_child(data_node)
                 data_node.add_parent(op_node)
@@ -199,7 +195,6 @@ class Optimizer:
         round = 0
         optimize_start_time = time.time()
         # 1. get the data processing ground truth by executing the initial plan on the validation set
-        # ground_truth_on_valid_set, token_cost, runtime = execute_plan(initial_plan, self.valid_set)
         init_code, init_plan_stats = self._build_code_from_plan(initial_plan, input_dataset_name=input_dataset_name)
         accuracy_score, token_cost = self._naive_estimate_plan_cost(init_plan_stats)
         init_plan_cost = PlanCost(initial_plan, init_code, accuracy_score, token_cost, 0.0)
@@ -220,9 +215,11 @@ class Optimizer:
                 round += 1
                 continue
             optimized_plan, plan_stats = self._build_plan_from_code(optimized_code, columns)
+            if optimized_plan is None:
+                round += 1
+                continue
 
             # 2.3. compare the results with the ground truth
-            # results_on_valid_set, token_cost, runtime = execute_plan(optimized_plan, self.valid_set)
             accuracy_score, token_cost = self._naive_estimate_plan_cost(init_plan_stats, plan_stats)
             # accuracy_score = Evaluator.evaluate(ground_truth_on_valid_set, results_on_valid_set, self.agent)
             plan_cost = PlanCost(optimized_plan, optimized_code, accuracy_score, token_cost, 0.0)

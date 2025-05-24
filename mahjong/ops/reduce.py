@@ -32,6 +32,12 @@ def reduce_wrapper(
 class ReduceOpOutputs(BaseOpOutputs):
     output: Any = None
 
+    def __add__(self, other: "ReduceOpOutputs"):
+        return ReduceOpOutputs(
+            output=self.output + other.output,
+            cost=self.cost + other.cost
+        )
+
 
 class ReduceOperation(BaseOperation):
     """
@@ -47,9 +53,9 @@ class ReduceOperation(BaseOperation):
         super().__init__("reduce", *args, **kwargs)
         self.prompter = ReducePrompter()
 
-    def _plain_llm_execute(self, processed_data: Iterable[Any], user_instruction: str, dtype: str):
+    def _plain_llm_execute(self, processed_data: Iterable[Any], user_instruction: str, dtype: str, **kwargs):
         full_prompt = self.prompter.generate_prompt(processed_data, user_instruction, dtype)
-        output = self.llm(full_prompt, parse_tags=True, tags=["output"])
+        output = self.llm(full_prompt, parse_tags=True, tags=["output"], **kwargs)
         return output["output"], output["cost"]
 
     def execute(
@@ -86,9 +92,9 @@ class ReduceOperation(BaseOperation):
                 reduce_results = processed_data.agg(func)
                 token_cost = 0
             except Exception as e:
-                reduce_results, token_cost = self._plain_llm_execute(processed_data, user_instruction, dtype)
+                reduce_results, token_cost = self._plain_llm_execute(processed_data, user_instruction, dtype, **kwargs)
         else:
-            reduce_results, token_cost = self._plain_llm_execute(processed_data, user_instruction, dtype)
+            reduce_results, token_cost = self._plain_llm_execute(processed_data, user_instruction, dtype, **kwargs)
 
         return ReduceOpOutputs(
             output=reduce_results,

@@ -35,6 +35,12 @@ def filter_wrapper(
 class FilterOpOutputs(BaseOpOutputs):
     output: Iterable[bool] = None
 
+    def __add__(self, other: "FilterOpOutputs"):
+        return FilterOpOutputs(
+            output=self.output + other.output,
+            cost=self.cost + other.cost
+        )
+
 
 class FilterOperation(BaseOperation):
     """ TODO: Implement FilterOperation class """
@@ -51,14 +57,14 @@ class FilterOperation(BaseOperation):
         if dtype == "str":
             data = f"{kwargs['field_name']}: {str(data)}"
         full_prompt = self.prompter.generate_prompt(data, user_instruction, dtype)
-        output = self.llm(full_prompt, parse_tags=True, tags=["output"])
+        output = self.llm(full_prompt, parse_tags=True, tags=["output"], **kwargs)
         return output["output"], output["cost"]
 
     def _llm_cot_execute(self, data: Any, user_instruction: str, dtype: str, demos, **kwargs):
         if dtype == "str":
             data = f"{kwargs['field_name']}: {str(data)}"
         full_prompt = self.prompter.generate_cot_prompt(data, user_instruction, dtype, demos)
-        output = self.llm(full_prompt, parse_tags=True, tags=["output"])
+        output = self.llm(full_prompt, parse_tags=True, tags=["output"], **kwargs)
         return output["output"], output["cost"]
     
     def _postprocess_filter_outputs(self, llm_outputs: Iterable[Union[str, bool]]):
@@ -97,10 +103,10 @@ class FilterOperation(BaseOperation):
         else:
             dtype = "str" 
         if strategy == "plain_llm":
-            execution_func = functools.partial(self._plain_llm_execute, dtype=dtype, field_name=input_column)
+            execution_func = functools.partial(self._plain_llm_execute, dtype=dtype, field_name=input_column, **kwargs)
         elif strategy == "cot":
             demos = kwargs.get("demos", None)
-            execution_func = functools.partial(self._llm_cot_execute, dtype=dtype, demos=demos, field_name=input_column)
+            execution_func = functools.partial(self._llm_cot_execute, dtype=dtype, demos=demos, field_name=input_column, **kwargs)
         else:
             raise NotImplementedError(f"Strategy {strategy} is not implemented.")
         

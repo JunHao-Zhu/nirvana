@@ -1,10 +1,14 @@
+import logging
 import re
 from pathlib import Path
 from typing import Union, Optional, List, Dict, Any
 from dataclasses import dataclass, field
+import numpy as np
 from openai import OpenAI
 
-    
+logger = logging.getLogger(__name__)
+
+
 def _get_api_key_from_file(file):
     with open(file, 'r') as api_file:
         api_key = api_file.readline()
@@ -21,19 +25,26 @@ def _create_client(api_key, **kwargs):
 class LLMArguments:
     max_tokens: int = field(default=512, metadata={"help": "The maximum number of tokens to generate."})
     temperature: float = field(default=0.1, metadata={"help": "The sampling temperature."})
+    max_timeouts: int = field(default=3, metadata={"help": "The maximum number of timeouts."})
 
 
 class LLMClient:
-    model: Optional[str] = None
+    default_model: Optional[str] = None
     client = None
     config: LLMArguments = LLMArguments()
 
     @classmethod
     def configure(cls, model_name: str = None, api_key: Union[str, Path] = None, **kwargs):
-        cls.model = model_name
+        cls.default_model = model_name
         api_key = api_key if isinstance(api_key, str) else _get_api_key_from_file(api_key)
         cls.client = _create_client(api_key, **kwargs)
         return cls()
+
+    def create_embedding(self, text: Union[list[str], str], embed_model: str = "text-embedding-3-large"):
+        response = self.client.embeddings.create(
+            input=text, model=embed_model
+        )
+        return np.array([data.embedding for data in response.data]).squeeze()
     
     def __call__(
             self,
@@ -42,17 +53,25 @@ class LLMClient:
             parse_code: bool = False,
             **kwargs,
     ) -> Dict[str, Any]:
-        response = self.client.chat.completions.create(
-            model=self.model,
-            messages=messages,
-            max_tokens=self.config.max_tokens,
-            temperature=self.config.temperature,
-        )
-        llm_output = response.choices[0].message.content
-        input_tokens = response.usage.prompt_tokens
-        output_tokens = response.usage.completion_tokens
-        # according to pricing policies from OpenAI, DeepSeek and QWen, cost_per_output_token = 4 * cost_per_input_token
-        token_cost = input_tokens + 4 * output_tokens
+        timeout = 0
+        success = False
+        while not success and timeout < self.config.max_timeouts:
+            timeout += 1
+            try:
+                response = self.client.chat.completions.create(
+                    model=self.default_model if "model" not in kwargs else kwargs["model"],
+                    messages=messages,
+                    max_tokens=self.config.max_tokens,
+                    temperature=self.config.temperature,
+                )
+                llm_output = response.choices[0].message.content
+                input_tokens = response.usage.prompt_tokens
+                output_tokens = response.usage.completion_tokens
+                # according to pricing policies from OpenAI, DeepSeek and QWen, cost_per_output_token = 4 * cost_per_input_token
+                token_cost = input_tokens + 4 * output_tokens
+                success = True
+            except Exception as e:
+                logger.error(f"Timeout errors.")
 
         outputs = dict()
         if parse_tags:
