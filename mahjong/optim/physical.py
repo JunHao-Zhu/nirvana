@@ -60,6 +60,7 @@ class PhysicalOptimizer:
                     better_model = ORDERED_MODELS[model_id]
                     node.set_exec_model(better_model)
                     better_output = node.run(data_samples)
+                    node_output.cost += better_output.cost
                     subworst_output = np.array(better_output.output)
                     mismatch_idx_worst2subworst = np.array(worst_output.output) != subworst_output
                     mismatch_record_ratio = sum(mismatch_idx_worst2subworst) / len(worst_output.output)
@@ -69,6 +70,7 @@ class PhysicalOptimizer:
                     better_model = ORDERED_MODELS[model_id]
                     node.set_exec_model(better_model)
                     better_output = node.run(data_samples)
+                    node_output.cost += better_output.cost
                     subbest_output = np.array(better_output.output)
                     mismatch_idx_subworst2subbest = subworst_output != subbest_output
                     if mismatch_idx_worst2subworst.all():
@@ -86,6 +88,7 @@ class PhysicalOptimizer:
                     all_matched_idx = ~mismatch_idx_subworst2subbest & ~mismatch_idx_worst2subworst
                     if all_matched_idx.any():
                         better_output = node.run(data_samples.iloc[all_matched_idx])
+                        node_output.cost += better_output.cost
                         best_output = np.array(better_output.output)
                         mismatch_idx_subbest2best = subbest_output != best_output
                         mismatch_ratio = mismatch_idx_subbest2best.sum() / all_matched_idx.sum()
@@ -104,12 +107,13 @@ class PhysicalOptimizer:
 
                 if improve_score_list[-1] - improve_score_list[-2] > improve_margin:
                     exec_model = better_model
-                    node_output = better_output
+                    node_output.output = better_output.output
 
         else:
             worst_output = node.run(data_samples)
             node_output = worst_output
-            worst_output_embeds = self.agent.create_embedding(worst_output.output)
+            worst_output_embeds, embed_cost = self.agent.create_embedding(worst_output.output)
+            node_output.cost += embed_cost
 
             improve_score_list = [0.0]
             mismatch_idx_worst2subworst = None
@@ -119,8 +123,10 @@ class PhysicalOptimizer:
                     better_model = ORDERED_MODELS[model_id]
                     node.set_exec_model(better_model)
                     better_output = node.run(data_samples)
+                    node_output.cost += better_output.cost
                     subworst_output = np.array(better_output.output)
-                    subworst_output_embeds = self.agent.create_embedding(better_output.output)
+                    subworst_output_embeds, embed_cost = self.agent.create_embedding(better_output.output)
+                    node_output.cost += embed_cost
                     cos_sim = cosine_similarity(worst_output_embeds, subworst_output_embeds)
                     mismatch_idx_worst2subworst = cos_sim < 0.5
                     mismatch_ratio = sum(mismatch_idx_worst2subworst) / len(worst_output.output)
@@ -130,8 +136,10 @@ class PhysicalOptimizer:
                     better_model = ORDERED_MODELS[model_id]
                     node.set_exec_model(better_model)
                     better_output = node.run(data_samples)
+                    node_output.cost += better_output.cost
                     subbest_output = np.array(better_output.output)
-                    subbest_output_embeds = self.agent.create_embedding(better_output.output)
+                    subbest_output_embeds, embed_cost = self.agent.create_embedding(better_output.output)
+                    node_output.cost += embed_cost
                     cos_sim = cosine_similarity(subworst_output_embeds, subbest_output_embeds)
                     mismatch_idx_subworst2subbest = cos_sim < 0.5
                     if mismatch_idx_worst2subworst.all():
@@ -149,8 +157,10 @@ class PhysicalOptimizer:
                     all_matched_idx = ~mismatch_idx_subworst2subbest & ~mismatch_idx_worst2subworst
                     if all_matched_idx.any():
                         better_output = node.run(data_samples.iloc[all_matched_idx])
+                        node_output.cost += better_output.cost
                         best_output = np.array(better_output.output)
-                        best_output_embeds = self.agent.create_embedding(better_output.output)
+                        best_output_embeds, embed_cost = self.agent.create_embedding(better_output.output)
+                        node_output.cost += embed_cost
                         cos_sim = cosine_similarity(subbest_output_embeds[all_matched_idx], best_output_embeds)
                         mismatch_idx_subbest2best = cos_sim < 0.5
                         mismatch_ratio = mismatch_idx_subbest2best.sum() / all_matched_idx.sum()
@@ -169,7 +179,7 @@ class PhysicalOptimizer:
 
                 if improve_score_list[-1] - improve_score_list[-2] > improve_margin:
                     exec_model = better_model
-                    node_output = better_output
+                    node_output.output = better_output.output
 
         node.set_exec_model(exec_model)
         rest_output = node.run(input_data.iloc[num_samples:])
@@ -201,6 +211,7 @@ class PhysicalOptimizer:
                 better_model = ORDERED_MODELS[model_id]
                 node.set_exec_model(better_model)
                 better_output = node.run(data_samples)
+                node_output.cost += better_output.cost
                 mismatch_record_idx = np.array(worst_output.output) != np.array(better_output.output)
                 mismatch_record_ratio = sum(mismatch_record_idx) / len(worst_output.output)
 
@@ -209,24 +220,29 @@ class PhysicalOptimizer:
                 else:
                     node.set_exec_model(best_model)
                     best_output = node.run(data_samples.iloc[mismatch_record_idx])
+                    node_output.cost += best_output.cost
                     matched_record_idx = np.array(better_output.output) == np.array(best_output.output)
                     matched_record_ratio = sum(matched_record_idx) / len(best_output.output)
                     improve_score = matched_record_ratio * mismatch_record_ratio
                 
                 if (improve_score - curr_improve_score) > improve_margin:
                     exec_model = better_model
-                    node_output = better_output
+                    node_output.output = better_output.output
                     curr_improve_score = improve_score
 
         else:
             worst_output = node.run(data_samples)
-            worst_output_embeds = self.agent.create_embedding(worst_output.output)
+            node_output = worst_output
+            worst_output_embeds, embed_cost = self.agent.create_embedding(worst_output.output)
+            node_output.cost += embed_cost
             curr_improve_score = 0.0
             for model_id in range(1, len(ORDERED_MODELS)):
                 better_model = ORDERED_MODELS[model_id]
                 node.set_exec_model(better_model)
                 better_output = node.run(data_samples)
-                better_output_embeds = self.agent.create_embedding(better_output.output)
+                node_output.cost += better_output.cost
+                better_output_embeds, embed_cost = self.agent.create_embedding(better_output.output)
+                node_output.cost += embed_cost
                 cos_sim = cosine_similarity(worst_output_embeds, better_output_embeds)
                 mismatch_record_idx = cos_sim < 0.5
                 mismatch_record_ratio = sum(mismatch_record_idx) / len(worst_output_embeds)
@@ -236,7 +252,9 @@ class PhysicalOptimizer:
                 else:
                     node.set_exec_model(best_model)
                     best_output = node.run(data_samples.iloc[mismatch_record_idx])
-                    best_output_embeds = self.agent.create_embedding(best_output.output)
+                    node_output.cost += best_output.cost
+                    best_output_embeds, embed_cost = self.agent.create_embedding(best_output.output)
+                    node_output.cost += embed_cost
                     cos_sim = cosine_similarity(worst_output_embeds[mismatch_record_idx], best_output_embeds)
                     matched_record_idx = cos_sim > 0.5
                     matched_record_ratio = sum(matched_record_idx) / len(mismatch_record_idx)
@@ -244,10 +262,8 @@ class PhysicalOptimizer:
                 
                 if (improve_score - curr_improve_score) > improve_margin:
                     exec_model = better_model
-                    node_output = better_output
+                    node_output.output = better_output.output
                     curr_improve_score = improve_score
-                else:
-                    node_output = worst_output
 
         node.set_exec_model(exec_model)
         rest_output = node.run(input_data.iloc[num_samples:])

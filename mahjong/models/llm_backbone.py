@@ -9,6 +9,19 @@ from openai import OpenAI
 logger = logging.getLogger(__name__)
 
 
+MODEL_PRICING = { # pricing policies (dollars per token)
+    # models from OpenAI
+    "gpt-4.1-2025-04-14": {"Input": 2. / 100_000_000, "Output": 8.0 / 100_000_000},
+    "gpt-4.1-mini-2025-04-14": {"Input": 0.4 / 100_000_000, "Output": 1.6 / 100_000_000},
+    "gpt-4.1-nano-2025-04-14": {"Input": 0.1 / 100_000_000, "Output": 0.4 / 100_000_000},
+    "gpt-4o-2024-08-06": {"Input": 2.5 / 100_000_000, "Output": 10.0 / 100_000_000},
+    "gpt-4o-mini-2024-07-18": {"Input": 0.15 / 100_000_000, "Output": 0.6 / 100_000_000},
+    "text-embedding-3-large": {"Input": 0.13 / 100_000_000,},
+    # models from DeepSeek
+    "deepseek-chat": {"Input": 0.07 / 100_000_000, "Output": 1.1 / 100_000_000},
+}
+
+
 def _get_api_key_from_file(file):
     with open(file, 'r') as api_file:
         api_key = api_file.readline()
@@ -44,7 +57,8 @@ class LLMClient:
         response = self.client.embeddings.create(
             input=text, model=embed_model
         )
-        return np.array([data.embedding for data in response.data]).squeeze()
+        cost = response.usage.total_tokens * MODEL_PRICING[embed_model]["Input"]
+        return np.array([data.embedding for data in response.data]).squeeze(), cost
     
     def __call__(
             self,
@@ -53,13 +67,14 @@ class LLMClient:
             parse_code: bool = False,
             **kwargs,
     ) -> Dict[str, Any]:
+        model_name = kwargs.get("model", self.default_model)
         timeout = 0
         success = False
         while not success and timeout < self.config.max_timeouts:
             timeout += 1
             try:
                 response = self.client.chat.completions.create(
-                    model=self.default_model if "model" not in kwargs else kwargs["model"],
+                    model=model_name,
                     messages=messages,
                     max_tokens=self.config.max_tokens,
                     temperature=self.config.temperature,
@@ -68,7 +83,7 @@ class LLMClient:
                 input_tokens = response.usage.prompt_tokens
                 output_tokens = response.usage.completion_tokens
                 # according to pricing policies from OpenAI, DeepSeek and QWen, cost_per_output_token = 4 * cost_per_input_token
-                token_cost = input_tokens + 4 * output_tokens
+                token_cost = input_tokens * MODEL_PRICING[model_name]["Input"] + output_tokens * MODEL_PRICING[model_name]["Output"]
                 success = True
             except Exception as e:
                 logger.error(f"Timeout errors.")
