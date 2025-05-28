@@ -9,16 +9,16 @@ from openai import OpenAI
 logger = logging.getLogger(__name__)
 
 
-MODEL_PRICING = { # pricing policies (dollars per token)
+MODEL_PRICING = { # pricing policies (in US dollar per 1k tokens)
     # models from OpenAI
-    "gpt-4.1-2025-04-14": {"Input": 2. / 100_000_000, "Output": 8.0 / 100_000_000},
-    "gpt-4.1-mini-2025-04-14": {"Input": 0.4 / 100_000_000, "Output": 1.6 / 100_000_000},
-    "gpt-4.1-nano-2025-04-14": {"Input": 0.1 / 100_000_000, "Output": 0.4 / 100_000_000},
-    "gpt-4o-2024-08-06": {"Input": 2.5 / 100_000_000, "Output": 10.0 / 100_000_000},
-    "gpt-4o-mini-2024-07-18": {"Input": 0.15 / 100_000_000, "Output": 0.6 / 100_000_000},
-    "text-embedding-3-large": {"Input": 0.13 / 100_000_000,},
+    "gpt-4.1-2025-04-14": {"Input": 0.002, "Output": 0.008},
+    "gpt-4.1-mini-2025-04-14": {"Input": 0.0004, "Output": 0.0016},
+    "gpt-4.1-nano-2025-04-14": {"Input": 0.0001, "Output": 0.0004},
+    "gpt-4o-2024-08-06": {"Input": 0.0025, "Output": 0.01},
+    "gpt-4o-mini-2024-07-18": {"Input": 0.00015, "Output": 0.0006},
+    "text-embedding-3-large": {"Input": 0.00013,},
     # models from DeepSeek
-    "deepseek-chat": {"Input": 0.07 / 100_000_000, "Output": 1.1 / 100_000_000},
+    "deepseek-chat": {"Input": 0.00007, "Output": 0.0011},
 }
 
 
@@ -57,7 +57,7 @@ class LLMClient:
         response = self.client.embeddings.create(
             input=text, model=embed_model
         )
-        cost = response.usage.total_tokens * MODEL_PRICING[embed_model]["Input"]
+        cost = (response.usage.total_tokens / 1000) * MODEL_PRICING[embed_model]["Input"]
         return np.array([data.embedding for data in response.data]).squeeze(), cost
     
     def __call__(
@@ -80,10 +80,9 @@ class LLMClient:
                     temperature=self.config.temperature,
                 )
                 llm_output = response.choices[0].message.content
-                input_tokens = response.usage.prompt_tokens
-                output_tokens = response.usage.completion_tokens
-                # according to pricing policies from OpenAI, DeepSeek and QWen, cost_per_output_token = 4 * cost_per_input_token
-                token_cost = input_tokens * MODEL_PRICING[model_name]["Input"] + output_tokens * MODEL_PRICING[model_name]["Output"]
+                input_cost = (response.usage.prompt_tokens / 1000) * MODEL_PRICING[model_name]["Input"]
+                output_cost = (response.usage.completion_tokens / 1000) * MODEL_PRICING[model_name]["Output"]
+                token_cost = input_cost + output_cost
                 success = True
             except Exception as e:
                 logger.error(f"Timeout errors.")
