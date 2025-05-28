@@ -43,7 +43,7 @@ class MapPrompter:
             user_content = [{"type": "text", "text": data}]
         elif dtype == "image":
             user_content = [
-                {"type": "image", "image_url": {"url": data}}
+                {"type": "image_url", "image_url": {"url": data}}
             ]
         else:
             raise ValueError(f"Data type {type(data)} is not supported.")
@@ -92,7 +92,7 @@ class MapPrompter:
                 ]
             elif dtype == "image":
                 demo_content = [
-                    {"type": "image", "image_url": {"url": demo["data"]}},
+                    {"type": "image_url", "image_url": {"url": demo["data"]}},
                     {"type": "text", "text": user_instruction},
                     {"type": "text", "text": demo["answer"]}
                 ]
@@ -110,7 +110,7 @@ class MapPrompter:
             ]
         elif dtype == "image":
             user_content = [
-                {"type": "image", "image_url": {"url": data}},
+                {"type": "image_url", "image_url": {"url": data}},
                 {"type": "text", "text": user_instruction}
             ]
         else:

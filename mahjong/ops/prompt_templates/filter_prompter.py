@@ -27,7 +27,7 @@ class FilterPrompter:
             user_content.append({"type": "text", "text": data})
         elif dtype == "image":
             user_content.append(
-                {"type": "image", "image_url": {"url": data}}
+                {"type": "image_url", "image_url": {"url": data}}
             )
         else:
             raise ValueError(f"Data type {dtype} is not supported.")
@@ -63,7 +63,7 @@ class FilterPrompter:
                 ]
             elif dtype == "image":
                 demo_content = [
-                    {"type": "image", "image_url": {"url": demo["data"]}},
+                    {"type": "image_url", "image_url": {"url": demo["data"]}},
                     {"type": "text", "text": user_instruction},
                     {"type": "text", "text": demo["answer"]}
                 ]
@@ -81,7 +81,7 @@ class FilterPrompter:
             ]
         elif dtype == "image":
             user_content = [
-                {"type": "image", "image_url": {"url": data}},
+                {"type": "image_url", "image_url": {"url": data}},
                 {"type": "text", "text": user_instruction}
             ]
         else:

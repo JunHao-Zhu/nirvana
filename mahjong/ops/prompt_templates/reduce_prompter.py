@@ -32,7 +32,7 @@ class ReducePrompter:
             elif dtype == "image":
                 user_content = [
                     {"type": "text", "text": f"Data {ctr}: "},
-                    {"type": "image", "image_url": {"url": data}}
+                    {"type": "image_url", "image_url": {"url": data}}
                 ]
             else:
                 raise ValueError(f"Data type {dtype} is not supported.")
