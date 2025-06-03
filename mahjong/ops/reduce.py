@@ -72,13 +72,6 @@ class ReduceOperation(BaseOperation):
         
         if input_data.empty:
             return ReduceOpOutputs(output="No data to process.")
-        
-        if func is not None:
-            processed_data = input_data[input_column].agg(func)
-            return ReduceOpOutputs(
-                output=processed_data,
-                cost=0
-            )
 
         processed_data = input_data[input_column]
         if isinstance(processed_data.dtype, ImageDtype):
@@ -91,7 +84,7 @@ class ReduceOperation(BaseOperation):
             try:
                 reduce_results = processed_data.agg(func)
                 token_cost = 0
-            except Exception as e:
+            except:
                 reduce_results, token_cost = self._plain_llm_execute(processed_data, user_instruction, dtype, **kwargs)
         else:
             reduce_results, token_cost = self._plain_llm_execute(processed_data, user_instruction, dtype, **kwargs)

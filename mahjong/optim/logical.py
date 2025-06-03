@@ -24,22 +24,22 @@ class PlanCost:
         self.runtime = runtime
 
     def __lt__(self, other: "PlanCost") -> bool:
-        if self.accuracy / other.accuracy >= self.error_tolerance:
+        if self.accuracy / (other.accuracy + 1e-6) >= self.error_tolerance:
             return self.cost < other.cost
         return False
     
     def __le__(self, other: "PlanCost") -> bool:
-        if self.accuracy / other.accuracy >= self.error_tolerance:
+        if self.accuracy / (other.accuracy + 1e-6) >= self.error_tolerance:
             return self.cost <= other.cost
         return False
     
     def __gt__(self, other: "PlanCost") -> bool:
-        if self.accuracy / other.accuracy >= self.error_tolerance:
+        if self.accuracy / (other.accuracy + 1e-6) >= self.error_tolerance:
             return self.cost > other.cost
         return True
     
     def __ge__(self, other: "PlanCost") -> bool:
-        if self.accuracy / other.accuracy >= self.error_tolerance:
+        if self.accuracy / (other.accuracy + 1e-6) >= self.error_tolerance:
             return self.cost >= other.cost
         return True
     
@@ -103,8 +103,7 @@ class LogicalOptimizer:
         return code, plan_stats
     
     def _extract_op_name_and_args(self, code: str):
-        code_pattern = r"\w+\.semantic_(\w+)\(([^)]*)\)"
-        match = re.match(code_pattern, code)
+        match = re.search(r'\w+\.semantic_(\w+)\((.*)\)', code, flags=re.DOTALL)
         if match:
             op_name = match.group(1)
             args = match.group(2)
@@ -112,11 +111,22 @@ class LogicalOptimizer:
             input_column = re.search(r'input_column="([^"]*)"', args)
             func = re.search(r'func=([^,]+)', args)
             output_column = re.search(r'output_column="([^"]*)"', args)
+            try:
+                return {
+                    "op_name": op_name,
+                    "user_instruction": user_instruction.group(1) if user_instruction else None,
+                    "input_column": input_column.group(1) if input_column else None,
+                    "func": eval(func.group(1)) if func else None,
+                    "output_column": output_column.group(1) if output_column else None,
+                }
+            except Exception as e:
+                logger.debug(f"the `func` cannot be used: {e}")
+            
             return {
                 "op_name": op_name,
                 "user_instruction": user_instruction.group(1) if user_instruction else None,
                 "input_column": input_column.group(1) if input_column else None,
-                "func": eval(func.group(1)) if func else None,
+                "func": None,
                 "output_column": output_column.group(1) if output_column else None,
             }
         return None
@@ -130,7 +140,6 @@ class LogicalOptimizer:
             op_kwargs = self._extract_op_name_and_args(operation)
             if op_kwargs is None:
                 continue
-
             op_node = LineageOpNode(**op_kwargs)
             plan_stats.append(collect_op_metadata(op_node, print_info=False))
             
@@ -193,6 +202,7 @@ class LogicalOptimizer:
 
     def optimize(self, initial_plan: LineageNode, input_dataset_name: str, columns: List[str]):
         round = 0
+        optimize_cost = 0.0
         optimize_start_time = time.time()
         # 1. get the data processing ground truth by executing the initial plan on the validation set
         init_code, init_plan_stats = self._build_code_from_plan(initial_plan, input_dataset_name=input_dataset_name)
@@ -210,7 +220,9 @@ class LogicalOptimizer:
                 "role": "user",
                 "content": PLAN_OPIMIZE_PROMPT.format(columns=columns, logical_plan=cand_plan_cost.code)
             }]
-            optimized_code = self.agent(messages=optimize_prompt, parse_code=True, lang="python")["output"]
+            agent_output = self.agent(messages=optimize_prompt, parse_code=True, lang="python")
+            optimized_code, cost_per_optim = agent_output["output"], agent_output["cost"]
+            optimize_cost += cost_per_optim
             if optimized_code == "":
                 round += 1
                 continue
@@ -230,7 +242,7 @@ class LogicalOptimizer:
         best_plan = sorted(self.candidate_logical_plan)[0]
         optimize_end_time = time.time()
         optimize_time = optimize_end_time - optimize_start_time
-        logger.info(f"Plan optimization is finished, taking {optimize_time:.2f} seconds. Here are some statistics:")
+        logger.info(f"Plan optimization is finished, taking {optimize_time:.2f} seconds and ${optimize_cost:.2f}. Here are some statistics:")
         logger.info(f"initial plan cost: {init_plan_cost.cost} -> optimized plan cost: {best_plan.cost}")
         logger.info(f"initial plan runtime: {init_plan_cost.runtime} -> optimized plan runtime: {best_plan.runtime}")
         logger.info(f"initial plan accuracy: {init_plan_cost.accuracy} -> optimized plan accuracy: {best_plan.accuracy}")
