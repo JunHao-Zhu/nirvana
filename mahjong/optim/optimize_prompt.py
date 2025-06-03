@@ -26,7 +26,7 @@ The supported operators and their required arguments are as follows.
 The available transformation rules are as follows.
 - Filter pushdown: Move a filter operator that does not rely on results of prior operator to occur before the prior operator.
 - Operator fusion: Fuse multiple operators that are in the same category and work on the same column into one operator. To keep semantically equivalent, you are required to rewrite the instruction for the new operator.
-- Non-LLM operator replacement: Replace the natural language instruction with an equivalent compute function only when `user_instruction` can be converted to a straightforward `func`, like `func` is a simple lambda or built-in function. Note that the `user_instruction` should be preserved in the new operator.
+- Non-LLM operator replacement: Replace the natural language instruction with an equivalent compute function only when `user_instruction` can be converted to a straightforward `func` (`func` has to be a simple lambda or built-in function). Note that the `user_instruction` should be preserved in the new operator.
 
 Now, you are given a dataset with columns: {columns}, and a logical plan:
 ```python

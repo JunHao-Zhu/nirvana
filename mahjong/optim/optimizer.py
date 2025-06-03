@@ -1,5 +1,6 @@
 from typing import List, Optional
 from dataclasses import dataclass, field
+import json
 import pandas as pd
 
 from mahjong.models.llm_backbone import LLMClient
@@ -17,6 +18,21 @@ class OptimizeConfig:
     sample_size: Optional[int] = field(default=None, metadata={"help": "The number of data used for physical optimization."})
     improve_margin: float = field(default=0.2, metadata={"help": "The margin of improvement for physical optimization."})
     approx_mode: bool = field(default=True, metadata={"help": "Whether use approximation for physical optimization."})
+
+    def to_json(self):
+        return {
+            "do_logical_optimization": self.do_logical_optimization,
+            "do_physical_optimization": self.do_physical_optimization,
+            "max_round": self.max_round,
+            "sample_ratio": self.sample_ratio,
+            "sample_size": self.sample_size,
+            "improve_margin": self.improve_margin,
+            "approx_mode": self.approx_mode
+        }
+    
+    def __str__(self):
+        config_json = self.to_json()
+        return json.dumps(config_json, indent=2)
 
 
 class PlanOptimizer:
