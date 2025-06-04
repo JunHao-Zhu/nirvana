@@ -90,7 +90,7 @@ class PhysicalOptimizer:
                         better_output = node.run(data_samples.iloc[all_matched_idx])
                         node_output.cost += better_output.cost
                         best_output = np.array(better_output.output)
-                        mismatch_idx_subbest2best = subbest_output != best_output
+                        mismatch_idx_subbest2best = subbest_output[all_matched_idx] != best_output
                         mismatch_ratio = mismatch_idx_subbest2best.sum() / all_matched_idx.sum()
                         subbest_output[all_matched_idx] = best_output
                         better_output.output = subbest_output.tolist()

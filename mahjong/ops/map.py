@@ -109,6 +109,7 @@ class MapOperation(BaseOperation):
                     output, cost = execution_func(data, user_instruction)
             else:
                 output, cost = execution_func(data, user_instruction)
+            output = output if output is not None else "None"
             map_results.append(output)
             token_cost += cost
         

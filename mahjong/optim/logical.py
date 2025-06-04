@@ -163,8 +163,8 @@ class LogicalOptimizer:
                 op_node.add_parent(last_node_in_plan)
                 last_node_in_plan.add_child(op_node)
                 last_node_in_plan = data_node
-        if last_node_in_plan is None:
-            raise RuntimeError("The operation string does not match the expected format.")
+        # if last_node_in_plan is None:
+        #     raise RuntimeError("The operation string does not match the expected format.")
         return last_node_in_plan, plan_stats
     
     def _naive_estimate_plan_cost(self, init_plan_stats: list, new_plan_stats: list = None):

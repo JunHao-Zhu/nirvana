@@ -70,6 +70,9 @@ class FilterOperation(BaseOperation):
     def _postprocess_filter_outputs(self, llm_outputs: Iterable[Union[str, bool]]):
         outputs = []
         for output in llm_outputs:
+            if output is None:
+                outputs.append(False)
+                continue
             if isinstance(output, bool):
                 outputs.append(output)
                 continue
@@ -112,7 +115,9 @@ class FilterOperation(BaseOperation):
         
         filter_outputs, token_cost = [], 0
         for data in processed_data:
-            if func is not None:
+            if data is None:
+                output, cost = False, 0.0
+            elif func is not None:
                 try:
                     output = func(data)
                     cost = 0
