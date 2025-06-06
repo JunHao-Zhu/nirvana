@@ -242,7 +242,7 @@ class LogicalOptimizer:
         best_plan = sorted(self.candidate_logical_plan)[0]
         optimize_end_time = time.time()
         optimize_time = optimize_end_time - optimize_start_time
-        logger.info(f"Plan optimization is finished, taking {optimize_time:.2f} seconds and ${optimize_cost:.2f}. Here are some statistics:")
+        logger.info(f"Plan optimization is finished, taking {optimize_time:.4f} seconds and ${optimize_cost:.4f}. Here are some statistics:")
         logger.info(f"initial plan cost: {init_plan_cost.cost} -> optimized plan cost: {best_plan.cost}")
         logger.info(f"initial plan runtime: {init_plan_cost.runtime} -> optimized plan runtime: {best_plan.runtime}")
         logger.info(f"initial plan accuracy: {init_plan_cost.accuracy} -> optimized plan accuracy: {best_plan.accuracy}")

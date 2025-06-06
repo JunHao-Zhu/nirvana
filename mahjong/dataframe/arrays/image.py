@@ -19,7 +19,11 @@ def fetch_image(image: Union[str, np.ndarray, Image.Image, None], image_type: st
     elif isinstance(image, np.ndarray):
         image_obj = Image.fromarray(image.astype("uint8"))
     elif image.startswith("http://") or image.startswith("https://"):
-        image_obj = Image.open(requests.get(image, stream=True).raw)
+        resp = requests.get(image, stream=True)
+        if resp.status_code == requests.codes.ok:
+            image_obj = Image.open(resp.raw)
+        else:
+            return None
     elif image.startswith("file://"):
         image_obj = Image.open(image[7:])
     elif image.startswith("data:image"):

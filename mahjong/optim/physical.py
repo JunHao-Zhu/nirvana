@@ -31,8 +31,8 @@ class PhysicalOptimizer:
         self.agent = agent
 
     def optimize_exec_model_approx(self, node: LineageOpNode, input_data: pd.DataFrame, num_samples: int, improve_margin: float = 0.2):
-        if node.func is not None:
-            return node.run(input_data)
+        # if node.func is not None:
+        #     return node.run(input_data)
         if len(input_data) < 2 * num_samples:
             node.set_exec_model(ORDERED_MODELS[-1])
             return node.run(input_data)
