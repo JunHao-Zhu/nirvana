@@ -101,7 +101,9 @@ class MapOperation(BaseOperation):
         
         map_results, token_cost = [], 0
         for data in processed_data:
-            if func is not None:
+            if pd.isna(data):
+                output, cost = "None", 0.0
+            elif func is not None:
                 try:
                     output = func(data)
                     cost = 0

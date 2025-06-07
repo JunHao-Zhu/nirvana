@@ -115,7 +115,7 @@ class FilterOperation(BaseOperation):
         
         filter_outputs, token_cost = [], 0
         for data in processed_data:
-            if data is None:
+            if pd.isna(data):
                 output, cost = False, 0.0
             elif func is not None:
                 try:
