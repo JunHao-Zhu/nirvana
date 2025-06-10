@@ -9,7 +9,7 @@ from PIL import Image
 from pandas.api.extensions import ExtensionDtype, ExtensionArray
 
 
-def fetch_image(image: Union[str, np.ndarray, Image.Image, None], image_type: str = "Image") -> Union[Image.Image, str, None]:
+def fetch_image(image: Union[str, np.ndarray, Image.Image, bytes, None], image_type: str = "Image") -> Union[Image.Image, str, None]:
     if image is None:
         return None
 
@@ -18,6 +18,8 @@ def fetch_image(image: Union[str, np.ndarray, Image.Image, None], image_type: st
         image_obj = image
     elif isinstance(image, np.ndarray):
         image_obj = Image.fromarray(image.astype("uint8"))
+    elif isinstance(image, bytes):
+        image_obj = Image.open(BytesIO(image))
     elif image.startswith("http://") or image.startswith("https://"):
         resp = requests.get(image, stream=True)
         if resp.status_code == requests.codes.ok:
