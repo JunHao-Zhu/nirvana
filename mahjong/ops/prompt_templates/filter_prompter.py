@@ -41,7 +41,7 @@ class FilterPrompter:
         messages = sys_message + user_message
         return messages
     
-    def generate_cot_prompt(
+    def generate_fewshot_prompt(
             self,
             data: Any,
             user_instruction: str,

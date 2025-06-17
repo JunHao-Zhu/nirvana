@@ -2,7 +2,8 @@
 Filter: remove data that violates NL predicates.
 """
 import functools
-from typing import Any, Union, Iterable, Callable
+import asyncio
+from typing import Any, Union, Iterable, Callable, Tuple
 from dataclasses import dataclass
 import pandas as pd
 
@@ -20,14 +21,14 @@ def filter_wrapper(
     **kwargs
 ):
     filter_op = FilterOperation()
-    outputs = filter_op.execute(
+    outputs = asyncio.run(filter_op.execute(
         input_data=input_data,
         user_instruction=user_instruction,
         func=func,
         input_column=input_column,
         strategy=strategy,
         **kwargs
-    )
+    ))
     return outputs
 
 
@@ -52,24 +53,33 @@ class FilterOperation(BaseOperation):
     ):
         super().__init__("filter", *args, **kwargs)
         self.prompter = FilterPrompter()
-    
-    def _plain_llm_execute(self, data: Any, user_instruction: str, dtype: str, **kwargs):
-        if dtype == "str":
-            data = f"{kwargs['field_name']}: {str(data)}"
-        full_prompt = self.prompter.generate_prompt(data, user_instruction, dtype)
-        output = self.llm(full_prompt, parse_tags=True, tags=["output"], **kwargs)
-        return output["output"], output["cost"]
 
-    def _llm_cot_execute(self, data: Any, user_instruction: str, dtype: str, demos, **kwargs):
-        if dtype == "str":
-            data = f"{kwargs['field_name']}: {str(data)}"
-        full_prompt = self.prompter.generate_cot_prompt(data, user_instruction, dtype, demos)
-        output = self.llm(full_prompt, parse_tags=True, tags=["output"], **kwargs)
-        return output["output"], output["cost"]
+    async def _execute_by_plain_llm(self, data: Any, user_instruction: str, dtype: str, **kwargs):
+        async with self.semaphore:
+            if dtype == "str":
+                data = f"{kwargs['field_name']}: {str(data)}"
+            full_prompt = self.prompter.generate_prompt(data, user_instruction, dtype)
+            output = await self.llm(full_prompt, parse_tags=True, tags=["output"], **kwargs)
+            return output["output"], output["cost"]
+
+    async def _execute_by_fewshot_llm(self, data: Any, user_instruction: str, dtype: str, demos, **kwargs):
+        async with self.semaphore:
+            if dtype == "str":
+                data = f"{kwargs['field_name']}: {str(data)}"
+            full_prompt = self.prompter.generate_fewshot_prompt(data, user_instruction, dtype, demos)
+            output = await self.llm(full_prompt, parse_tags=True, tags=["output"], **kwargs)
+            return output["output"], output["cost"]
     
-    def _postprocess_filter_outputs(self, llm_outputs: Iterable[Union[str, bool]]):
-        outputs = []
-        for output in llm_outputs:
+    async def _execute_by_func(self, data: Any, user_instruction: str, func: Callable, llm_call: Callable, **kwargs):
+        try:
+            output = func(data)
+            return output, 0.0
+        except Exception as e:
+            return await llm_call(data, user_instruction)
+    
+    def _postprocess_filter_outputs(self, results: Iterable[Tuple[Any, float]]):
+        outputs, costs = [], 0.0
+        for output, cost in results:
             if output is None:
                 outputs.append(False)
                 continue
@@ -80,11 +90,10 @@ class FilterOperation(BaseOperation):
                 outputs.append(True)
             elif "False" in output:
                 outputs.append(False)
-            else:
-                raise ValueError("The llm outputs do not contain True or False.")
-        return outputs
+            costs += cost
+        return outputs, costs
 
-    def execute(
+    async def execute(
             self, 
             input_data: pd.DataFrame,
             user_instruction: str = None,
@@ -105,30 +114,30 @@ class FilterOperation(BaseOperation):
             dtype = "image"
         else:
             dtype = "str" 
+
         if strategy == "plain_llm":
-            execution_func = functools.partial(self._plain_llm_execute, dtype=dtype, field_name=input_column, **kwargs)
-        elif strategy == "cot":
+            execution_func = functools.partial(self._execute_by_plain_llm, dtype=dtype, field_name=input_column, **kwargs)
+        elif strategy == "fewshot":
             demos = kwargs.get("demos", None)
-            execution_func = functools.partial(self._llm_cot_execute, dtype=dtype, demos=demos, field_name=input_column, **kwargs)
+            execution_func = functools.partial(self._execute_by_fewshot_llm, dtype=dtype, demos=demos, field_name=input_column, **kwargs)
         else:
             raise NotImplementedError(f"Strategy {strategy} is not implemented.")
         
-        filter_outputs, token_cost = [], 0
+        # Create tasks for all data points
+        tasks = []
         for data in processed_data:
             if pd.isna(data):
-                output, cost = False, 0.0
+                tasks.append(asyncio.create_task(asyncio.sleep(0, result=(False, 0.0))))
             elif func is not None:
-                try:
-                    output = func(data)
-                    cost = 0
-                except Exception as e:
-                    output, cost = execution_func(data, user_instruction)
+                tasks.append(asyncio.create_task(self._execute_by_func(data, user_instruction, func, execution_func)))
             else:
-                output, cost = execution_func(data, user_instruction)
-            filter_outputs.append(output)
-            token_cost += cost
+                tasks.append(asyncio.create_task(execution_func(data, user_instruction)))
         
-        filter_outputs = self._postprocess_filter_outputs(filter_outputs)
+        # Wait for all tasks to complete
+        results = await asyncio.gather(*tasks)
+        
+        # Process results
+        filter_outputs, token_cost = self._postprocess_filter_outputs(results)
         return FilterOpOutputs(
             output=filter_outputs,
             cost=token_cost

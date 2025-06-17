@@ -1,6 +1,7 @@
 """
 Reduce: aggregate multiple data based on NL predicates
 """
+import asyncio
 from typing import Any, Iterable, Callable
 from dataclasses import dataclass
 import pandas as pd
@@ -18,13 +19,13 @@ def reduce_wrapper(
         **kwargs
 ):
     reduce_op = ReduceOperation()
-    outputs = reduce_op.execute(
+    outputs = asyncio.run(reduce_op.execute(
         input_data=input_data,
         user_instruction=user_instruction,
         func=func,
         input_column=input_column,
         **kwargs
-    )
+    ))
     return outputs
 
 
@@ -53,12 +54,20 @@ class ReduceOperation(BaseOperation):
         super().__init__("reduce", *args, **kwargs)
         self.prompter = ReducePrompter()
 
-    def _plain_llm_execute(self, processed_data: Iterable[Any], user_instruction: str, dtype: str, **kwargs):
-        full_prompt = self.prompter.generate_prompt(processed_data, user_instruction, dtype)
-        output = self.llm(full_prompt, parse_tags=True, tags=["output"], **kwargs)
-        return output["output"], output["cost"]
+    async def _execute_by_plain_llm(self, processed_data: Iterable[Any], user_instruction: str, dtype: str, **kwargs):
+        async with self.semaphore:
+            full_prompt = self.prompter.generate_prompt(processed_data, user_instruction, dtype)
+            output = await self.llm(full_prompt, parse_tags=True, tags=["output"], **kwargs)
+            return output["output"], output["cost"]
+    
+    async def _execute_by_func(self, processed_data: Iterable[Any], user_instruction: str, func: Callable, llm_call: Callable, dtype: str, **kwargs):
+        try:
+            reduce_results = processed_data.agg(func)
+            return reduce_results, 0
+        except:
+            return await llm_call(processed_data, user_instruction, dtype, **kwargs)
 
-    def execute(
+    async def execute(
             self,
             input_data: pd.DataFrame,
             user_instruction: str = None,
@@ -81,13 +90,9 @@ class ReduceOperation(BaseOperation):
 
         reduce_results, token_cost = None, 0
         if func is not None:
-            try:
-                reduce_results = processed_data.agg(func)
-                token_cost = 0
-            except:
-                reduce_results, token_cost = self._plain_llm_execute(processed_data, user_instruction, dtype, **kwargs)
+            reduce_results, token_cost = await self._execute_by_func(processed_data, user_instruction, func, self._execute_by_plain_llm, dtype, **kwargs)    
         else:
-            reduce_results, token_cost = self._plain_llm_execute(processed_data, user_instruction, dtype, **kwargs)
+            reduce_results, token_cost = await self._execute_by_plain_llm(processed_data, user_instruction, dtype, **kwargs)
 
         return ReduceOpOutputs(
             output=reduce_results,

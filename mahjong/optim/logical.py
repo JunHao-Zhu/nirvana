@@ -1,4 +1,5 @@
 import logging
+import asyncio
 from typing import List
 from collections import defaultdict, Counter
 import re
@@ -220,7 +221,7 @@ class LogicalOptimizer:
                 "role": "user",
                 "content": PLAN_OPIMIZE_PROMPT.format(columns=columns, logical_plan=cand_plan_cost.code)
             }]
-            agent_output = self.agent(messages=optimize_prompt, parse_code=True, lang="python")
+            agent_output = asyncio.run(self.agent(messages=optimize_prompt, parse_code=True, lang="python"))
             optimized_code, cost_per_optim = agent_output["output"], agent_output["cost"]
             optimize_cost += cost_per_optim
             if optimized_code == "":

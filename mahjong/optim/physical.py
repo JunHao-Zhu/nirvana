@@ -1,10 +1,14 @@
 import time
+import asyncio
+import logging
 import functools
 import numpy as np
 import pandas as pd
 
 from mahjong.models.llm_backbone import LLMClient
 from mahjong.lineage.abstractions import LineageNode, LineageDataNode, LineageOpNode, OpOutputsType
+
+logger = logging.getLogger(__name__)
 
 
 ORDERED_MODELS= [  # llm list ordered by speed and intelligence (weak but fast -> strong but slow)
@@ -30,13 +34,14 @@ class PhysicalOptimizer:
     def __init__(self, agent: LLMClient = None):
         self.agent = agent
 
-    def optimize_exec_model_approx(self, node: LineageOpNode, input_data: pd.DataFrame, num_samples: int, improve_margin: float = 0.2):
+    async def optimize_exec_model_approx(self, node: LineageOpNode, input_data: pd.DataFrame, num_samples: int, improve_margin: float = 0.2):
         # if node.func is not None:
         #     return node.run(input_data)
         if len(input_data) < 2 * num_samples:
             node.set_exec_model(ORDERED_MODELS[-1])
             return node.run(input_data)
 
+        optimize_start_time = time.time()
         data_samples = input_data.iloc[:num_samples]
         exec_model = ORDERED_MODELS[0]
         node.set_exec_model(exec_model)
@@ -112,7 +117,7 @@ class PhysicalOptimizer:
         else:
             worst_output = node.run(data_samples)
             node_output = worst_output
-            worst_output_embeds, embed_cost = self.agent.create_embedding(worst_output.output)
+            worst_output_embeds, embed_cost = await self.agent.create_embedding(worst_output.output)
             node_output.cost += embed_cost
 
             improve_score_list = [0.0]
@@ -125,7 +130,7 @@ class PhysicalOptimizer:
                     better_output = node.run(data_samples)
                     node_output.cost += better_output.cost
                     subworst_output = np.array(better_output.output)
-                    subworst_output_embeds, embed_cost = self.agent.create_embedding(better_output.output)
+                    subworst_output_embeds, embed_cost = await self.agent.create_embedding(better_output.output)
                     node_output.cost += embed_cost
                     cos_sim = cosine_similarity(worst_output_embeds, subworst_output_embeds)
                     mismatch_idx_worst2subworst = cos_sim < 0.5
@@ -138,7 +143,7 @@ class PhysicalOptimizer:
                     better_output = node.run(data_samples)
                     node_output.cost += better_output.cost
                     subbest_output = np.array(better_output.output)
-                    subbest_output_embeds, embed_cost = self.agent.create_embedding(better_output.output)
+                    subbest_output_embeds, embed_cost = await self.agent.create_embedding(better_output.output)
                     node_output.cost += embed_cost
                     cos_sim = cosine_similarity(subworst_output_embeds, subbest_output_embeds)
                     mismatch_idx_subworst2subbest = cos_sim < 0.5
@@ -159,7 +164,7 @@ class PhysicalOptimizer:
                         better_output = node.run(data_samples.iloc[all_matched_idx])
                         node_output.cost += better_output.cost
                         best_output = np.array(better_output.output)
-                        best_output_embeds, embed_cost = self.agent.create_embedding(better_output.output)
+                        best_output_embeds, embed_cost = await self.agent.create_embedding(better_output.output)
                         node_output.cost += embed_cost
                         cos_sim = cosine_similarity(subbest_output_embeds[all_matched_idx], best_output_embeds)
                         mismatch_idx_subbest2best = cos_sim < 0.5
@@ -180,17 +185,21 @@ class PhysicalOptimizer:
                 if improve_score_list[-1] - improve_score_list[-2] > improve_margin:
                     exec_model = better_model
                     node_output.output = better_output.output
+        
+        optimize_end_time = time.time()
+        logger.info(f"Physical Plan Optimization Time: {optimize_end_time - optimize_start_time:.4f} sec")
 
         node.set_exec_model(exec_model)
         rest_output = node.run(input_data.iloc[num_samples:])
         node_output = concate_output(node_output, rest_output)
         return node_output
 
-    def optimize_exec_model(self, node: LineageOpNode, input_data: pd.DataFrame, num_samples: int, improve_margin: float = 0.2):
+    async def optimize_exec_model(self, node: LineageOpNode, input_data: pd.DataFrame, num_samples: int, improve_margin: float = 0.2):
         if len(input_data) < 2 * num_samples:
             node.set_exec_model(ORDERED_MODELS[-1])
             return node.run(input_data)
         
+        optimize_start_time = time.time()
         data_samples = input_data.iloc[:num_samples]
         best_model = ORDERED_MODELS[-1]
         exec_model = ORDERED_MODELS[0]
@@ -233,7 +242,7 @@ class PhysicalOptimizer:
         else:
             worst_output = node.run(data_samples)
             node_output = worst_output
-            worst_output_embeds, embed_cost = self.agent.create_embedding(worst_output.output)
+            worst_output_embeds, embed_cost = await self.agent.create_embedding(worst_output.output)
             node_output.cost += embed_cost
             curr_improve_score = 0.0
             for model_id in range(1, len(ORDERED_MODELS)):
@@ -241,7 +250,7 @@ class PhysicalOptimizer:
                 node.set_exec_model(better_model)
                 better_output = node.run(data_samples)
                 node_output.cost += better_output.cost
-                better_output_embeds, embed_cost = self.agent.create_embedding(better_output.output)
+                better_output_embeds, embed_cost = await self.agent.create_embedding(better_output.output)
                 node_output.cost += embed_cost
                 cos_sim = cosine_similarity(worst_output_embeds, better_output_embeds)
                 mismatch_record_idx = cos_sim < 0.5
@@ -253,7 +262,7 @@ class PhysicalOptimizer:
                     node.set_exec_model(best_model)
                     best_output = node.run(data_samples.iloc[mismatch_record_idx])
                     node_output.cost += best_output.cost
-                    best_output_embeds, embed_cost = self.agent.create_embedding(best_output.output)
+                    best_output_embeds, embed_cost = await self.agent.create_embedding(best_output.output)
                     node_output.cost += embed_cost
                     cos_sim = cosine_similarity(worst_output_embeds[mismatch_record_idx], best_output_embeds)
                     matched_record_idx = cos_sim > 0.5
@@ -264,6 +273,9 @@ class PhysicalOptimizer:
                     exec_model = better_model
                     node_output.output = better_output.output
                     curr_improve_score = improve_score
+
+        optimize_end_time = time.time()
+        logger.info(f"Physical Plan Optimization Time: {optimize_end_time - optimize_start_time:.4f} sec")
 
         node.set_exec_model(exec_model)
         rest_output = node.run(input_data.iloc[num_samples:])
@@ -287,11 +299,14 @@ class PhysicalOptimizer:
             optimize_func = functools.partial(self.optimize_exec_model_approx, num_samples=num_samples, improve_margin=improve_margin)
         else:
             optimize_func = functools.partial(self.optimize_exec_model, num_samples=num_samples, improve_margin=improve_margin)
+
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
         
         def _optimize_node(node: LineageNode):
             if len(node.parent) == 0:
                 assert isinstance(node, LineageOpNode), "The first node should be an operator."
-                output_from_node = optimize_func(node, node_output["dataframe_from_node"])
+                output_from_node = loop.run_until_complete(optimize_func(node, node_output["dataframe_from_node"]))
                 node_output["output_from_node"] = output_from_node
                 node_output["total_token_cost"] += output_from_node.cost
                 return
@@ -304,7 +319,7 @@ class PhysicalOptimizer:
                 return
 
             if isinstance(node, LineageOpNode):
-                output_from_node = optimize_func(node, node_output["dataframe_from_node"])
+                output_from_node = loop.run_until_complete(optimize_func(node, node_output["dataframe_from_node"]))
                 node_output["output_from_node"] = output_from_node
                 node_output["total_token_cost"] += output_from_node.cost
                 return
@@ -313,4 +328,5 @@ class PhysicalOptimizer:
         _optimize_node(plan)
         execution_end_time = time.time()
         execution_time = execution_end_time - execution_start_time
+        loop.close()
         return node_output["dataframe_from_node"], node_output["total_token_cost"], execution_time

@@ -4,7 +4,7 @@ from pathlib import Path
 from typing import Union, Optional, List, Dict, Any
 from dataclasses import dataclass, field
 import numpy as np
-from openai import OpenAI
+from openai import AsyncOpenAI
 
 logger = logging.getLogger(__name__)
 
@@ -19,6 +19,8 @@ MODEL_PRICING = { # pricing policies (in US dollar per 1k tokens)
     "text-embedding-3-large": {"Input": 0.00013,},
     # models from DeepSeek
     "deepseek-chat": {"Input": 0.00007, "Output": 0.0011},
+    # models from Qwen
+    "qwen-max-latest": {"Input": 0.00033, "Output": 0.0013},
 }
 
 
@@ -30,7 +32,7 @@ def _get_api_key_from_file(file):
 
 def _create_client(api_key, **kwargs):
     assert api_key != "", "API key is required."
-    client = OpenAI(api_key=api_key, **kwargs)
+    client = AsyncOpenAI(api_key=api_key, **kwargs)
     return client
 
 
@@ -53,14 +55,14 @@ class LLMClient:
         cls.client = _create_client(api_key, **kwargs)
         return cls()
 
-    def create_embedding(self, text: Union[list[str], str], embed_model: str = "text-embedding-3-large"):
-        response = self.client.embeddings.create(
+    async def create_embedding(self, text: Union[list[str], str], embed_model: str = "text-embedding-3-large"):
+        response = await self.client.embeddings.create(
             input=text, model=embed_model
         )
         cost = (response.usage.total_tokens / 1000) * MODEL_PRICING[embed_model]["Input"]
         return np.array([data.embedding for data in response.data]).squeeze(), cost
-    
-    def __call__(
+
+    async def __call__(
             self,
             messages: List[Dict[str, str]],
             parse_tags: bool = False,
@@ -73,7 +75,7 @@ class LLMClient:
         while not success and timeout < self.config.max_timeouts:
             timeout += 1
             try:
-                response = self.client.chat.completions.create(
+                response = await self.client.chat.completions.create(
                     model=model_name,
                     messages=messages,
                     max_tokens=self.config.max_tokens,
@@ -85,6 +87,7 @@ class LLMClient:
                 token_cost = input_cost + output_cost
                 success = True
             except Exception as e:
+                print(e)
                 logger.error(f"Timeout errors.")
 
         outputs = dict()

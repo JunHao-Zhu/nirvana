@@ -1,3 +1,4 @@
+import asyncio
 from typing import List, Union, Callable
 import pandas as pd
 
@@ -108,7 +109,7 @@ class LineageOpNode(LineageNode):
         }
         if self.exec_model is not None:
             op_kwargs["model"] = self.exec_model
-        return self.op.execute(
+        return asyncio.run(self.op.execute(
             input_data=input_data,
             **op_kwargs
-        )
+        ))
