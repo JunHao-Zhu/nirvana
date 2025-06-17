@@ -1,4 +1,5 @@
 import time
+import asyncio
 import pandas as pd
 
 from mahjong.lineage.abstractions import LineageNode, LineageDataNode, LineageOpNode
@@ -38,7 +39,9 @@ def execute_plan(last_node: LineageNode, input_data: pd.DataFrame):
         # if the node is the first operator, run it on input data
         if len(node.parent) == 0:
             assert isinstance(node, LineageOpNode), "The first node should be an operator."
-            output_from_last_node = node.run(execute_output["dataframe_from_last_node"])
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+            output_from_last_node = loop.run_until_complete(node.run(execute_output["dataframe_from_last_node"]))
             execute_output["output_from_last_node"] = output_from_last_node
             execute_output["total_token_cost"] += output_from_last_node.cost
             return
@@ -52,7 +55,9 @@ def execute_plan(last_node: LineageNode, input_data: pd.DataFrame):
             return
 
         if isinstance(node, LineageOpNode):
-            output_from_last_node = node.run(execute_output["dataframe_from_last_node"])
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+            output_from_last_node = loop.run_until_complete(node.run(execute_output["dataframe_from_last_node"]))
             execute_output["output_from_last_node"] = output_from_last_node
             execute_output["total_token_cost"] += output_from_last_node.cost
             return

@@ -100,7 +100,7 @@ class LineageOpNode(LineageNode):
     def set_exec_model(self, model_name: str):
         self.exec_model = model_name
 
-    def run(self, input_data: pd.DataFrame) -> OpOutputsType:
+    async def run(self, input_data: pd.DataFrame) -> OpOutputsType:
         op_kwargs = {
             "input_column": self.input_column,
             "user_instruction": self.user_instruction,
@@ -109,7 +109,7 @@ class LineageOpNode(LineageNode):
         }
         if self.exec_model is not None:
             op_kwargs["model"] = self.exec_model
-        return asyncio.run(self.op.execute(
+        return await self.op.execute(
             input_data=input_data,
             **op_kwargs
-        ))
+        )
