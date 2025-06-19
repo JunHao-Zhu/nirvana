@@ -305,9 +305,7 @@ class PhysicalOptimizer:
         def _optimize_node(node: LineageNode):
             if len(node.parent) == 0:
                 assert isinstance(node, LineageOpNode), "The first node should be an operator."
-                loop = asyncio.new_event_loop()
-                asyncio.set_event_loop(loop)
-                output_from_node = loop.run_until_complete(optimize_func(node, node_output["dataframe_from_node"]))
+                output_from_node = asyncio.run(optimize_func(node, node_output["dataframe_from_node"]))
                 node_output["output_from_node"] = output_from_node
                 node_output["total_token_cost"] += output_from_node.cost
                 return
@@ -320,9 +318,7 @@ class PhysicalOptimizer:
                 return
 
             if isinstance(node, LineageOpNode):
-                loop = asyncio.new_event_loop()
-                asyncio.set_event_loop(loop)
-                output_from_node = loop.run_until_complete(optimize_func(node, node_output["dataframe_from_node"]))
+                output_from_node = asyncio.run(optimize_func(node, node_output["dataframe_from_node"]))
                 node_output["output_from_node"] = output_from_node
                 node_output["total_token_cost"] += output_from_node.cost
                 return
