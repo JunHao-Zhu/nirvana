@@ -87,8 +87,7 @@ class LLMClient:
                 token_cost = input_cost + output_cost
                 success = True
             except Exception as e:
-                print(e)
-                logger.error(f"Timeout errors.")
+                logger.error(f"An error occurs when creating a completion: {e}")
 
         outputs = dict()
         if parse_tags:
