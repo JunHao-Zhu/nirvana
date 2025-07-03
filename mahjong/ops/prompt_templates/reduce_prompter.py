@@ -26,14 +26,13 @@ class ReducePrompter:
         sys_message = [{"role": "system", "content": self.system_instruction}]
 
         # 2. Prepare user message
+        user_content = []
         for ctr, data in enumerate(data_set):
             if dtype == "str":
-                user_content = [{"type": "text", "text": f"Data {ctr}: {str(data)}"}]
+                user_content.append({"type": "text", "text": f"Data {ctr + 1}: {str(data)}"})
             elif dtype == "image":
-                user_content = [
-                    {"type": "text", "text": f"Data {ctr}: "},
-                    {"type": "image_url", "image_url": {"url": data}}
-                ]
+                user_content.append({"type": "text", "text": f"Data {ctr + 1}: "})
+                user_content.append({"type": "image_url", "image_url": {"url": data}})
             else:
                 raise ValueError(f"Data type {dtype} is not supported.")
         user_content.append({"type": "text", "text": user_instruction})
