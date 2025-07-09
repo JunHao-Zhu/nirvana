@@ -1,10 +1,8 @@
-"""
-Reduce: aggregate multiple data based on NL predicates
-"""
 import asyncio
 from typing import Any, Iterable, Callable
 from dataclasses import dataclass
 import pandas as pd
+from pandas.api.types import is_numeric_dtype
 
 from mahjong.dataframe.arrays.image import ImageDtype
 from mahjong.ops.base import BaseOpOutputs, BaseOperation
@@ -42,8 +40,10 @@ class ReduceOpOutputs(BaseOpOutputs):
 
 class ReduceOperation(BaseOperation):
     """
-    TODO: Simple implementation that does not consider the case where the input length exceeds the token limit.
-    The next step is to implement several optimizations, like `summarize and aggregate` and `incremental aggregation`
+    Reduce operator: Aggregates values in a column based on an NL-specified reduction function
+
+    NOTE: This is a simple implementation that does not consider the case where the input length exceeds the token limit. 
+          The next step is to implement several optimizations, like `summarize and aggregate` and `incremental aggregation`
     """
 
     def __init__(
@@ -85,11 +85,13 @@ class ReduceOperation(BaseOperation):
         processed_data = input_data[input_column]
         if isinstance(processed_data.dtype, ImageDtype):
             dtype = "image"
+        elif is_numeric_dtype(processed_data):
+            dtype = "numeric"
         else:
             dtype = "str"
 
         reduce_results, token_cost = None, 0
-        if func is not None:
+        if func is not None and dtype == "numeric":
             reduce_results, token_cost = await self._execute_by_func(processed_data, user_instruction, func, self._execute_by_plain_llm, dtype, **kwargs)    
         else:
             reduce_results, token_cost = await self._execute_by_plain_llm(processed_data, user_instruction, dtype, **kwargs)

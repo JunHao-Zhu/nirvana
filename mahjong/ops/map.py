@@ -1,6 +1,3 @@
-"""
-Map: Perform a projecton on target data based on NL predicates
-"""
 import functools
 import asyncio
 from typing import Any, Iterable, Callable, Tuple
@@ -47,7 +44,9 @@ class MapOpOutputs(BaseOpOutputs):
 
 
 class MapOperation(BaseOperation):
-    """ TODO: Implement MapOperation class """
+    """
+    Map operator: Applies an LLM to perform a transformation on a column, producing a new column as output
+    """
     
     def __init__(
             self,

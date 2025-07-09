@@ -1,6 +1,3 @@
-"""
-Filter: remove data that violates NL predicates.
-"""
 import functools
 import asyncio
 from typing import Any, Union, Iterable, Callable, Tuple
@@ -44,7 +41,9 @@ class FilterOpOutputs(BaseOpOutputs):
 
 
 class FilterOperation(BaseOperation):
-    """ TODO: Implement FilterOperation class """
+    """
+    Filter operator: Uses an LLM to evaluate a natural language predicate on a column
+    """
     
     def __init__(
             self,

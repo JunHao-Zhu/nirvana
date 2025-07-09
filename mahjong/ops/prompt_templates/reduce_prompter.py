@@ -28,7 +28,7 @@ class ReducePrompter:
         # 2. Prepare user message
         user_content = []
         for ctr, data in enumerate(data_set):
-            if dtype == "str":
+            if dtype == "str" or dtype == "numeric":
                 user_content.append({"type": "text", "text": f"Data {ctr + 1}: {str(data)}"})
             elif dtype == "image":
                 user_content.append({"type": "text", "text": f"Data {ctr + 1}: "})

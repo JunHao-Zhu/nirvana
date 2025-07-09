@@ -18,23 +18,24 @@ class JoinPrompter:
             left_data: Any,
             right_data: Any,
             user_instruction: Union[str, List[str]],
+            dtype: str = "str",
     ):
         # 1. Prepare system message
         sys_message = [{"role": "system", "content": self.system_instruction}]
 
         # 2. Prepare data
         user_content = []
-        if isinstance(left_data, str):
+        if dtype == "str":
             user_content.append({"type": "text", "text": f"Left data:\n{left_data}"})
-        elif isinstance(left_data, mjg.ImageDtype):
+        elif dtype == "image":
             user_content.append({"type": "text", "text": "Left data:"})
             user_content.append({"type": "image", "image_url": {"url": left_data}})
         else:
             raise ValueError(f"Data type of left data {type(left_data)} is not supported.")
 
-        if isinstance(right_data, str):
+        if dtype == "str":
             user_content.append({"type": "text", "text": f"Right data:\n{right_data}"})
-        elif isinstance(right_data, mjg.ImageDtype):
+        elif dtype == "image":
             user_content.append({"type": "text", "text": "Right data:"})
             user_content.append({"type": "image", "image_url": {"url": right_data}})
         else:
