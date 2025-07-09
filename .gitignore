@@ -6,5 +6,9 @@ assets/
 
 # experiments
 log/
-experiments/
-workloads/
+experiments/estate/
+experiments/imdb/
+experiments/steam/
+experiments/*.pdf
+experiments/*.svg
+experiments/*.ipynb
