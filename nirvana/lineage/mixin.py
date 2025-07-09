@@ -4,9 +4,9 @@ Record the OP lineage (operator and its user instruction) for optimizing operato
 import copy
 import pandas as pd
 
-from mahjong.lineage.abstractions import LineageNode, LineageDataNode, LineageOpNode
-from mahjong.lineage.utils import execute_plan, collect_op_metadata
-from mahjong.optim.optimizer import PlanOptimizer, OptimizeConfig
+from nirvana.lineage.abstractions import LineageNode, LineageDataNode, LineageOpNode
+from nirvana.lineage.utils import execute_plan, collect_op_metadata
+from nirvana.optim.optimizer import PlanOptimizer, OptimizeConfig
 
 
 class LineageMixin:

@@ -3,9 +3,9 @@ import pandas as pd
 from typing import Any, List, Iterable, Tuple
 from dataclasses import dataclass
 
-from mahjong.dataframe.arrays.image import ImageDtype
-from mahjong.ops.base import BaseOpOutputs, BaseOperation
-from mahjong.ops.prompt_templates.join_prompter import JoinPrompter
+from nirvana.dataframe.arrays.image import ImageDtype
+from nirvana.ops.base import BaseOpOutputs, BaseOperation
+from nirvana.ops.prompt_templates.join_prompter import JoinPrompter
 
 
 def join_wrapper(

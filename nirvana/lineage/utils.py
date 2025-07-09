@@ -2,7 +2,7 @@ import time
 import asyncio
 import pandas as pd
 
-from mahjong.lineage.abstractions import LineageNode, LineageDataNode, LineageOpNode
+from nirvana.lineage.abstractions import LineageNode, LineageDataNode, LineageOpNode
 
 schema_mapping = {
     "map": "[{input_column}]->[{output_column}]",

@@ -1,4 +1,3 @@
-import mahjong as mjg
 from typing import Any, List, Dict, Union
 
 

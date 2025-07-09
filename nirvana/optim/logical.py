@@ -6,10 +6,10 @@ import re
 import time
 import numpy as np
 
-from mahjong.models.llm_backbone import LLMClient
-from mahjong.lineage.abstractions import LineageNode, LineageOpNode, LineageDataNode
-from mahjong.lineage.utils import collect_op_metadata
-from mahjong.optim.optimize_prompt import PLAN_OPIMIZE_PROMPT
+from nirvana.models.llm_backbone import LLMClient
+from nirvana.lineage.abstractions import LineageNode, LineageOpNode, LineageDataNode
+from nirvana.lineage.utils import collect_op_metadata
+from nirvana.optim.optimize_prompt import PLAN_OPIMIZE_PROMPT
 
 logger = logging.getLogger(__name__)
 

@@ -2,9 +2,9 @@ import asyncio
 from typing import List, Union, Callable
 import pandas as pd
 
-from mahjong.ops.map import MapOperation, MapOpOutputs
-from mahjong.ops.filter import FilterOperation, FilterOpOutputs
-from mahjong.ops.reduce import ReduceOperation, ReduceOpOutputs
+from nirvana.ops.map import MapOperation, MapOpOutputs
+from nirvana.ops.filter import FilterOperation, FilterOpOutputs
+from nirvana.ops.reduce import ReduceOperation, ReduceOpOutputs
 
 OpOutputsType = Union[MapOpOutputs, FilterOpOutputs, ReduceOpOutputs]
 

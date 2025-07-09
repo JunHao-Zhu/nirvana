@@ -3,10 +3,10 @@ from dataclasses import dataclass, field
 import json
 import pandas as pd
 
-from mahjong.models.llm_backbone import LLMClient
-from mahjong.lineage.abstractions import LineageNode
-from mahjong.optim.logical import LogicalOptimizer
-from mahjong.optim.physical import PhysicalOptimizer
+from nirvana.models.llm_backbone import LLMClient
+from nirvana.lineage.abstractions import LineageNode
+from nirvana.optim.logical import LogicalOptimizer
+from nirvana.optim.physical import PhysicalOptimizer
 
 
 @dataclass

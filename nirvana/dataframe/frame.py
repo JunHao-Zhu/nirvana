@@ -24,7 +24,7 @@ Moreover, in the future, we consider reading data from data lake storages (e.g, 
 from typing import Union
 import pandas as pd
 
-from mahjong.lineage.mixin import LineageMixin
+from nirvana.lineage.mixin import LineageMixin
 
 
 class DataFrame(LineageMixin):

@@ -3,9 +3,9 @@ from copy import deepcopy
 from pathlib import Path
 from typing import Union
 
-from mahjong.models.llm_backbone import LLMClient
-from mahjong.ops.base import BaseOperation
-from mahjong.optim.optimizer import PlanOptimizer
+from nirvana.models.llm_backbone import LLMClient
+from nirvana.ops.base import BaseOperation
+from nirvana.optim.optimizer import PlanOptimizer
 
 
 def configure_llm_backbone(

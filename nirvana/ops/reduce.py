@@ -4,9 +4,9 @@ from dataclasses import dataclass
 import pandas as pd
 from pandas.api.types import is_numeric_dtype
 
-from mahjong.dataframe.arrays.image import ImageDtype
-from mahjong.ops.base import BaseOpOutputs, BaseOperation
-from mahjong.ops.prompt_templates.reduce_prompter import ReducePrompter
+from nirvana.dataframe.arrays.image import ImageDtype
+from nirvana.ops.base import BaseOpOutputs, BaseOperation
+from nirvana.ops.prompt_templates.reduce_prompter import ReducePrompter
 
 
 def reduce_wrapper(

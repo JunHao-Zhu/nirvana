@@ -5,8 +5,8 @@ import functools
 import numpy as np
 import pandas as pd
 
-from mahjong.models.llm_backbone import LLMClient
-from mahjong.lineage.abstractions import LineageNode, LineageDataNode, LineageOpNode, OpOutputsType
+from nirvana.models.llm_backbone import LLMClient
+from nirvana.lineage.abstractions import LineageNode, LineageDataNode, LineageOpNode, OpOutputsType
 
 logger = logging.getLogger(__name__)
 

@@ -2,9 +2,9 @@ import logging
 from typing import Union
 import pandas as pd
 
-from mahjong.dataframe.frame import DataFrame
-from mahjong.dataframe.arrays.image import ImageArray, ImageDtype
-from mahjong.utils import configure_llm_backbone
+from nirvana.dataframe.frame import DataFrame
+from nirvana.dataframe.arrays.image import ImageArray, ImageDtype
+from nirvana.utils import configure_llm_backbone
 
 pd.api.extensions.register_extension_dtype(ImageDtype)
 

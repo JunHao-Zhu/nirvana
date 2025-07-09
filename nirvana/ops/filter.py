@@ -1,29 +1,28 @@
 import functools
 import asyncio
-from typing import Any, Iterable, Callable, Tuple
+from typing import Any, Union, Iterable, Callable, Tuple
 from dataclasses import dataclass
 import pandas as pd
 
-from mahjong.dataframe.arrays.image import ImageDtype
-from mahjong.ops.base import BaseOpOutputs, BaseOperation
-from mahjong.ops.prompt_templates.map_prompter import MapPrompter
+from nirvana.dataframe.arrays.image import ImageDtype
+from nirvana.ops.base import BaseOpOutputs, BaseOperation
+from nirvana.ops.prompt_templates.filter_prompter import FilterPrompter
 
 
-def map_wrapper(
+def filter_wrapper(
     input_data: pd.DataFrame, 
     user_instruction: str = None,
     func: Callable = None, 
     input_column: str = None,
-    output_column: str = None, 
-    strategy: str = None,
+    strategy: str = None, 
     **kwargs
 ):
-    map_op = MapOperation()
-    outputs = asyncio.run(map_op.execute(
+    filter_op = FilterOperation()
+    outputs = asyncio.run(filter_op.execute(
         input_data=input_data,
         user_instruction=user_instruction,
+        func=func,
         input_column=input_column,
-        output_column=output_column,
         strategy=strategy,
         **kwargs
     ))
@@ -31,21 +30,19 @@ def map_wrapper(
 
 
 @dataclass
-class MapOpOutputs(BaseOpOutputs):
-    field_name: str = None
-    output: Iterable[Any] = None
+class FilterOpOutputs(BaseOpOutputs):
+    output: Iterable[bool] = None
 
-    def __add__(self, other: "MapOpOutputs"):
-        return MapOpOutputs(
-            field_name=self.field_name,
+    def __add__(self, other: "FilterOpOutputs"):
+        return FilterOpOutputs(
             output=self.output + other.output,
             cost=self.cost + other.cost
         )
 
 
-class MapOperation(BaseOperation):
+class FilterOperation(BaseOperation):
     """
-    Map operator: Applies an LLM to perform a transformation on a column, producing a new column as output
+    Filter operator: Uses an LLM to evaluate a natural language predicate on a column
     """
     
     def __init__(
@@ -53,9 +50,9 @@ class MapOperation(BaseOperation):
             *args,
             **kwargs,
     ):
-        super().__init__("map", *args, **kwargs)
-        self.prompter = MapPrompter()
-    
+        super().__init__("filter", *args, **kwargs)
+        self.prompter = FilterPrompter()
+
     async def _execute_by_plain_llm(self, data: Any, user_instruction: str, dtype: str, **kwargs):
         async with self.semaphore:
             if dtype == "str":
@@ -71,7 +68,7 @@ class MapOperation(BaseOperation):
             full_prompt = self.prompter.generate_fewshot_prompt(data, user_instruction, dtype, demos)
             output = await self.llm(full_prompt, parse_tags=True, tags=["output"], **kwargs)
             return output["output"], output["cost"]
-
+    
     async def _execute_by_func(self, data: Any, user_instruction: str, func: Callable, llm_call: Callable, **kwargs):
         try:
             output = func(data)
@@ -79,11 +76,19 @@ class MapOperation(BaseOperation):
         except Exception as e:
             return await llm_call(data, user_instruction)
     
-    def _postprocess_map_outputs(self, results: Iterable[Tuple[Any, float]]):
+    def _postprocess_filter_outputs(self, results: Iterable[Tuple[Any, float]]):
         outputs, costs = [], 0.0
         for output, cost in results:
-            output = output if output is not None else "None"
-            outputs.append(output)
+            if output is None:
+                outputs.append(False)
+                continue
+            if isinstance(output, bool):
+                outputs.append(output)
+                continue
+            if "True" in output:
+                outputs.append(True)
+            elif "False" in output:
+                outputs.append(False)
             costs += cost
         return outputs, costs
 
@@ -93,22 +98,22 @@ class MapOperation(BaseOperation):
             user_instruction: str = None,
             func: Callable = None,
             input_column: str = None,
-            output_column: str = None,
             strategy: str = "plain_llm",
             *args, 
             **kwargs
-    ):  
+    ):
         if user_instruction is None and func is None:
             raise ValueError("Neither `user_instruction` nor `func` is given.")
         
         if input_data.empty:
-            return MapOpOutputs(field_name=output_column, output=None)
+            return FilterOpOutputs()
         
         processed_data = input_data[input_column]
         if isinstance(processed_data.dtype, ImageDtype):
             dtype = "image"
         else:
-            dtype = "str"
+            dtype = "str" 
+
         if strategy == "plain_llm":
             execution_func = functools.partial(self._execute_by_plain_llm, dtype=dtype, field_name=input_column, **kwargs)
         elif strategy == "fewshot":
@@ -121,7 +126,7 @@ class MapOperation(BaseOperation):
         tasks = []
         for data in processed_data:
             if pd.isna(data):
-                tasks.append(asyncio.create_task(asyncio.sleep(0, result=("None", 0.0))))
+                tasks.append(asyncio.create_task(asyncio.sleep(0, result=(False, 0.0))))
             elif func is not None:
                 tasks.append(asyncio.create_task(self._execute_by_func(data, user_instruction, func, execution_func)))
             else:
@@ -131,9 +136,8 @@ class MapOperation(BaseOperation):
         results = await asyncio.gather(*tasks)
         
         # Process results
-        map_results, token_cost = self._postprocess_map_outputs(results)
-        return MapOpOutputs(
-            field_name=output_column,
-            output=map_results,
+        filter_outputs, token_cost = self._postprocess_filter_outputs(results)
+        return FilterOpOutputs(
+            output=filter_outputs,
             cost=token_cost
         )

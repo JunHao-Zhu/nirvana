@@ -4,9 +4,9 @@ from typing import Any, Iterable, Callable
 from dataclasses import dataclass
 import pandas as pd
 
-from mahjong.dataframe.arrays.image import ImageDtype
-from mahjong.ops.base import BaseOpOutputs, BaseOperation
-from mahjong.ops.prompt_templates.rank_prompter import RankPrompter
+from nirvana.dataframe.arrays.image import ImageDtype
+from nirvana.ops.base import BaseOpOutputs, BaseOperation
+from nirvana.ops.prompt_templates.rank_prompter import RankPrompter
 
 
 def rank_wrapper(**kwargs):
