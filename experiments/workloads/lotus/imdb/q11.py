@@ -8,7 +8,7 @@ from lotus.models import LM
 from lotus.types import CascadeArgs
 
 ROUND = 1
-os.environ["OPENAI_API_KEY"] = "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"
+os.environ["OPENAI_API_KEY"] = "<YOUR_API_KEY>"
 
 
 def create_logger(log_dir, log_name):
