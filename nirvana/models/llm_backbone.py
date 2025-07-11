@@ -98,7 +98,7 @@ class LLMClient:
             code = self._extract_code(llm_output, lang=kwargs["lang"])
             outputs["output"] = code
         else:
-            raise ValueError("Specify parsing type for llm outputs: either parsing tags or code.")
+            outputs["output"] = llm_output
         outputs["cost"] = token_cost
         return outputs
 

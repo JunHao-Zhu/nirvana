@@ -1,6 +1,6 @@
 import logging
 import asyncio
-from typing import List
+from typing import List, TYPE_CHECKING
 from collections import defaultdict, Counter
 import re
 import time
@@ -8,8 +8,12 @@ import numpy as np
 
 from nirvana.models.llm_backbone import LLMClient
 from nirvana.lineage.abstractions import LineageNode, LineageOpNode, LineageDataNode
-from nirvana.lineage.utils import collect_op_metadata
+from nirvana.lineage.utils import collect_op_metadata, execute_plan
 from nirvana.optim.optimize_prompt import PLAN_OPIMIZE_PROMPT
+from nirvana.optim.evaluator import Evaluator
+
+if TYPE_CHECKING:
+    import pandas as pd
 
 logger = logging.getLogger(__name__)
 
@@ -180,7 +184,7 @@ class LogicalOptimizer:
                     selectivity *= 0.5
                 elif op_name == "reduce":
                     token_cost += len(user_instr) # TODO: need to consider the size of reducer input
-            return accuracy_score, token_cost
+            return accuracy_score, token_cost, 0.0
         
         ops_on_columns_init, ops_on_columns_new = defaultdict(Counter), defaultdict(Counter)
         for op_info in init_plan_stats:
@@ -199,7 +203,15 @@ class LogicalOptimizer:
                 selectivity *= 0.5 ** num_diff
             elif op_name == "reduce":
                 token_cost += 0.0 if has_func else len(user_instr)
-        return accuracy_score, token_cost
+        return accuracy_score, token_cost, 0.0
+    
+    def _estimate_plan_cost(self, input_plan: LineageNode, input_code: str, input_data: pd.DataFrame, ground_truth: pd.DataFrame = None):
+        results, token_cost, exec_time = execute_plan(input_plan, input_data)
+        if ground_truth is None:
+            accuracy_score = 1.0
+        else:
+            accuracy_score = Evaluator.evaluate(ground_truth, results, self.agent)
+        return accuracy_score, token_cost, exec_time
 
     def optimize(self, initial_plan: LineageNode, input_dataset_name: str, columns: List[str]):
         round = 0
@@ -207,8 +219,8 @@ class LogicalOptimizer:
         optimize_start_time = time.time()
         # 1. get the data processing ground truth by executing the initial plan on the validation set
         init_code, init_plan_stats = self._build_code_from_plan(initial_plan, input_dataset_name=input_dataset_name)
-        accuracy_score, token_cost = self._naive_estimate_plan_cost(init_plan_stats)
-        init_plan_cost = PlanCost(initial_plan, init_code, accuracy_score, token_cost, 0.0)
+        accuracy_score, token_cost, exec_time = self._naive_estimate_plan_cost(init_plan_stats)
+        init_plan_cost = PlanCost(initial_plan, init_code, accuracy_score, token_cost, exec_time)
         self.candidate_logical_plan.append(init_plan_cost)
 
         # 2. optimize the plan
@@ -233,9 +245,9 @@ class LogicalOptimizer:
                 continue
 
             # 2.3. compare the results with the ground truth
-            accuracy_score, token_cost = self._naive_estimate_plan_cost(init_plan_stats, plan_stats)
+            accuracy_score, token_cost, exec_time = self._naive_estimate_plan_cost(init_plan_stats, plan_stats)
             # accuracy_score = Evaluator.evaluate(ground_truth_on_valid_set, results_on_valid_set, self.agent)
-            plan_cost = PlanCost(optimized_plan, optimized_code, accuracy_score, token_cost, 0.0)
+            plan_cost = PlanCost(optimized_plan, optimized_code, accuracy_score, token_cost, exec_time)
             self.candidate_logical_plan.append(plan_cost)
             round += 1
 

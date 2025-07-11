@@ -1,3 +1,4 @@
+import asyncio
 import pandas as pd
 
 from nirvana.models.llm_backbone import LLMClient
@@ -26,6 +27,6 @@ class Evaluator:
                 result=table_serialize(process_result)
             )
         }]
-        rating = evaluator(messages=evaluate_prompt, parse_tags=True, tags=["score"])["score"]
+        rating = asyncio.run(evaluator(messages=evaluate_prompt, parse_tags=True, tags=["score"])["score"])
         rating = float(rating) / 10.0
         return rating
