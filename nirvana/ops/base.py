@@ -7,16 +7,14 @@ from nirvana.models.llm_backbone import LLMClient
 
 @dataclass
 class BaseOpOutputs:
-    cost: int = 0
+    cost: float = 0.0
 
 
 class BaseOperation(ABC):
     llm: LLMClient = None
 
     def __init__(self, op_name: str, *args, **kwargs):
-        max_concurrency = kwargs.get("max_concurrency", 16)
         self.op_name = op_name
-        self.semaphore = asyncio.Semaphore(max_concurrency)  # Limit to 16 concurrent tasks
 
     @classmethod
     def set_llm(cls, llm: LLMClient):

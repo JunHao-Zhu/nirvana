@@ -66,24 +66,27 @@ class DataFrame(LineageMixin):
         df = pd.read_table(path, sep=sep, **kwargs)
         return cls(df)
 
-    def semantic_map(self, user_instruction, input_column, output_column):
+    def semantic_map(self, user_instruction, input_column, output_column, rate_limit: int = 16):
         self.add_operator(op_name="map",
                           user_instruction=user_instruction,
                           input_column=input_column,
                           output_column=output_column,
-                          fields=self.columns)
+                          fields=self.columns,
+                          rate_limit=rate_limit)
         
-    def semantic_filter(self, user_instruction, input_column):
+    def semantic_filter(self, user_instruction, input_column, rate_limit: int = 16):
         self.add_operator(op_name="filter",
                           user_instruction=user_instruction,
                           input_column=input_column,
-                          fields=self.columns)
+                          fields=self.columns,
+                          rate_limit=rate_limit)
         
-    def semantic_reduce(self, user_instruction, input_column):
+    def semantic_reduce(self, user_instruction, input_column, rate_limit: int = 16):
         self.add_operator(op_name="reduce",
                           user_instruction=user_instruction,
                           input_column=input_column,
-                          fields=self.columns)
+                          fields=self.columns,
+                          rate_limit=rate_limit)
         
     def optimize_and_execute(self, optim_config = None):
         self.create_plan_optimizer(optim_config)

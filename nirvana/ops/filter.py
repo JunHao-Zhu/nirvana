@@ -52,6 +52,8 @@ class FilterOperation(BaseOperation):
     ):
         super().__init__("filter", *args, **kwargs)
         self.prompter = FilterPrompter()
+        rate_limit = kwargs.get("rate_limit", 16)
+        self.semaphore = asyncio.Semaphore(rate_limit)
 
     async def _execute_by_plain_llm(self, data: Any, user_instruction: str, dtype: str, **kwargs):
         async with self.semaphore:

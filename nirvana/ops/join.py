@@ -49,12 +49,14 @@ class JoinOperation(BaseOperation):
     ):
         super().__init__("join", *args, **kwargs)
         self.prompter = JoinPrompter()
+        rate_limit = kwargs.get("rate_limit", 16)
+        self.semaphore = asyncio.Semaphore(rate_limit)
 
     async def _plain_llm_execute(self, left_value: Any, right_value: Any, user_instruction: str, dtype: str, **kwargs):
         async with self.semaphore:
             full_prompt = self.prompter.generate_prompt(left_value, right_value, user_instruction, dtype)
             output = await self.llm(full_prompt, parse_tags=True, tags=["output"])
-            output, total_cost += output["output"], output["cost"]
+            output, total_cost = output["output"], output["cost"]
             return output, total_cost
     
     def _postprocess_join_outputs(self, data_id_pairs: List[tuple], results: Iterable[Tuple[Any, float]]):

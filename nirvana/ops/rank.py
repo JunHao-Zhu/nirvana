@@ -38,6 +38,8 @@ class RankOperation(BaseOperation):
     ):
         super().__init__("rank", *args, **kwargs)
         self.prompter = RankPrompter()
+        rate_limit = kwargs.get("rate_limit", 16)
+        self.semaphore = asyncio.Semaphore(rate_limit)
 
     async def _compare_by_plain_llm(self, data1: Any, data2: Any, user_instruction: str, dtype: str, **kwargs):
         async with self.semaphore:

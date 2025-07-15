@@ -11,9 +11,9 @@ from nirvana.optim.optimizer import PlanOptimizer, OptimizeConfig
 
 class LineageMixin:
 
-    def add_operator(self, op_name, user_instruction, input_column, output_column=None, fields=None):
+    def add_operator(self, op_name, user_instruction, input_column, output_column=None, fields=None, **kwargs):
         op_node = LineageOpNode(
-            op_name, user_instruction, None, input_column, output_column
+            op_name, user_instruction, None, input_column, output_column, **kwargs
         )
         if self.last_node is None:
             data_node = LineageDataNode(columns=fields, new_field=output_column)

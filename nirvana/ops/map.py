@@ -55,6 +55,8 @@ class MapOperation(BaseOperation):
     ):
         super().__init__("map", *args, **kwargs)
         self.prompter = MapPrompter()
+        rate_limit = kwargs.get("rate_limit", 16)
+        self.semaphore = asyncio.Semaphore(rate_limit)
     
     async def _execute_by_plain_llm(self, data: Any, user_instruction: str, dtype: str, **kwargs):
         async with self.semaphore:

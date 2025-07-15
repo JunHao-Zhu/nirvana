@@ -1,19 +1,17 @@
 import logging
 import asyncio
-from typing import List, TYPE_CHECKING
+from typing import List
 from collections import defaultdict, Counter
 import re
 import time
 import numpy as np
+import pandas as pd
 
 from nirvana.models.llm_backbone import LLMClient
 from nirvana.lineage.abstractions import LineageNode, LineageOpNode, LineageDataNode
 from nirvana.lineage.utils import collect_op_metadata, execute_plan
 from nirvana.optim.optimize_prompt import PLAN_OPIMIZE_PROMPT
 from nirvana.optim.evaluator import Evaluator
-
-if TYPE_CHECKING:
-    import pandas as pd
 
 logger = logging.getLogger(__name__)
 

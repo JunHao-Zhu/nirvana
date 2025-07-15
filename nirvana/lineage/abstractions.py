@@ -83,11 +83,14 @@ class LineageOpNode(LineageNode):
             user_instruction: str = None,
             func: Callable = None,
             input_column: str = None,
-            output_column: str = None
+            output_column: str = None,
+            **kwargs
     ):
         super().__init__()
         self.op_name = op_name
-        self.op = op_mapping[op_name]()
+        self.op = op_mapping[op_name](
+            **kwargs
+        )
         self.user_instruction = user_instruction
         self.func = func
 
