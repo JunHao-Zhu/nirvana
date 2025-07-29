@@ -1,0 +1,8 @@
+[package]
+name = "datarails"
+version = "0.1.0"
+edition = "2025"
+description = "Core of the Nirvana DataFrame library"
+
+[dependencies]
+arrow = { version = "55.2.0", workspace = true}
