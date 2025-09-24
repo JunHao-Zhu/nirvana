@@ -40,14 +40,14 @@ class MapPrompter:
 
         # 2. Prepare user message
         if dtype == "str":
-            user_content = [{"type": "text", "text": data}]
+            user_content = [{"type": "input_text", "text": data}]
         elif dtype == "image":
             user_content = [
-                {"type": "image_url", "image_url": {"url": data}}
+                {"type": "input_image", "image_url": data}
             ]
         else:
             raise ValueError(f"Data type {type(data)} is not supported.")
-        user_content.append({"type": "text", "text": user_instruction})
+        user_content.append({"type": "input_text", "text": user_instruction})
         user_message = [{"role": "user", "content": user_content}]
 
         messages = sys_message + user_message
@@ -86,15 +86,15 @@ class MapPrompter:
             demo_content = []
             if dtype == "str":
                 demo_content = [
-                    {"type": "text", "text": demo["data"]},
-                    {"type": "text", "text": user_instruction},
-                    {"type": "text", "text": demo["answer"]}
+                    {"type": "input_text", "text": demo["data"]},
+                    {"type": "input_text", "text": user_instruction},
+                    {"type": "input_text", "text": demo["answer"]}
                 ]
             elif dtype == "image":
                 demo_content = [
-                    {"type": "image_url", "image_url": {"url": demo["data"]}},
-                    {"type": "text", "text": user_instruction},
-                    {"type": "text", "text": demo["answer"]}
+                    {"type": "input_image", "image_url": demo["data"]},
+                    {"type": "input_text", "text": user_instruction},
+                    {"type": "input_text", "text": demo["answer"]}
                 ]
             else:
                 raise ValueError(f"Data type {dtype} is not supported.")
@@ -105,13 +105,13 @@ class MapPrompter:
         # 3. Prepare user message
         if dtype == "str":
             user_content = [
-                {"type": "text", "text": data},
-                {"type": "text", "text": user_instruction}
+                {"type": "input_text", "text": data},
+                {"type": "input_text", "text": user_instruction}
             ]
         elif dtype == "image":
             user_content = [
-                {"type": "image_url", "image_url": {"url": data}},
-                {"type": "text", "text": user_instruction}
+                {"type": "input_image", "image_url": data},
+                {"type": "input_text", "text": user_instruction}
             ]
         else:
             raise ValueError(f"Data type {dtype} is not supported.")

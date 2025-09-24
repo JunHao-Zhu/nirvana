@@ -25,18 +25,18 @@ class JoinPrompter:
         # 2. Prepare data
         user_content = []
         if dtype == "str":
-            user_content.append({"type": "text", "text": f"Left data:\n{left_data}"})
+            user_content.append({"type": "input_text", "text": f"Left data:\n{left_data}"})
         elif dtype == "image":
-            user_content.append({"type": "text", "text": "Left data:"})
-            user_content.append({"type": "image", "image_url": {"url": left_data}})
+            user_content.append({"type": "input_text", "text": "Left data:"})
+            user_content.append({"type": "input_image", "image_url": left_data})
         else:
             raise ValueError(f"Data type of left data {type(left_data)} is not supported.")
 
         if dtype == "str":
-            user_content.append({"type": "text", "text": f"Right data:\n{right_data}"})
+            user_content.append({"type": "input_text", "text": f"Right data:\n{right_data}"})
         elif dtype == "image":
-            user_content.append({"type": "text", "text": "Right data:"})
-            user_content.append({"type": "image", "image_url": {"url": right_data}})
+            user_content.append({"type": "input_text", "text": "Right data:"})
+            user_content.append({"type": "input_image", "image_url": right_data})
         else:
             raise ValueError(f"Data type of right data {type(right_data)} is not supported.")
         
@@ -46,7 +46,7 @@ class JoinPrompter:
         elif isinstance(user_instruction, list):
             conditions = [f"condition {idx}: {cond}" for idx, cond in enumerate(user_instruction)]
             conditions = "\n".join(conditions)
-        user_content.append({"type": "text", "text": conditions})
+        user_content.append({"type": "input_text", "text": conditions})
         
         user_message = [{"role": "user", "content": user_content}]
 

@@ -11,14 +11,17 @@ logger = logging.getLogger(__name__)
 
 MODEL_PRICING = { # pricing policies (in US dollar per 1k tokens)
     # models from OpenAI
-    "gpt-4.1-2025-04-14": {"Input": 0.002, "Output": 0.008},
-    "gpt-4.1-mini-2025-04-14": {"Input": 0.0004, "Output": 0.0016},
-    "gpt-4.1-nano-2025-04-14": {"Input": 0.0001, "Output": 0.0004},
-    "gpt-4o-2024-08-06": {"Input": 0.0025, "Output": 0.01},
-    "gpt-4o-mini-2024-07-18": {"Input": 0.00015, "Output": 0.0006},
+    "gpt-5-2025-08-07": {"Input": 0.00125, "Cache": 0.000125, "Output": 0.01},
+    "gpt-5-mini-2025-08-07": {"Input": 0.00025, "Cache": 0.000025, "Output": 0.002},
+    "gpt-5-nano-2025-08-07": {"Input": 0.00005, "Cache": 0.000005, "Output": 0.0004},
+    "gpt-4.1-2025-04-14": {"Input": 0.002, "Cache": 0.0005, "Output": 0.008},
+    "gpt-4.1-mini-2025-04-14": {"Input": 0.0004, "Cache": 0.0001, "Output": 0.0016},
+    "gpt-4.1-nano-2025-04-14": {"Input": 0.0001, "Cache": 0.000025, "Output": 0.0004},
+    "gpt-4o-2024-08-06": {"Input": 0.0025, "Cache": 0.00125, "Output": 0.01},
+    "gpt-4o-mini-2024-07-18": {"Input": 0.00015, "Cache": 0.000075, "Output": 0.0006},
     "text-embedding-3-large": {"Input": 0.00013,},
     # models from DeepSeek
-    "deepseek-chat": {"Input": 0.00007, "Output": 0.0011},
+    "deepseek-chat": {"Input": 0.00027, "Cache": 0.00007, "Output": 0.0011},
     # models from Qwen
     "qwen-max-latest": {"Input": 0.00033, "Output": 0.0013},
 }
@@ -62,7 +65,7 @@ class LLMClient:
         cost = (response.usage.total_tokens / 1000) * MODEL_PRICING[embed_model]["Input"]
         return np.array([data.embedding for data in response.data]).squeeze(), cost
 
-    async def __call__(
+    async def __call(
             self,
             messages: List[Dict[str, str]],
             parse_tags: bool = False,
@@ -75,19 +78,17 @@ class LLMClient:
         while not success and timeout < self.config.max_timeouts:
             timeout += 1
             try:
-                response = await self.client.chat.completions.create(
+                response = await self.client.responses.create(
                     model=model_name,
-                    messages=messages,
-                    max_tokens=self.config.max_tokens,
+                    input=messages,
+                    max_output_tokens=self.config.max_tokens,
                     temperature=self.config.temperature,
                 )
-                llm_output = response.choices[0].message.content
-                input_cost = (response.usage.prompt_tokens / 1000) * MODEL_PRICING[model_name]["Input"]
-                output_cost = (response.usage.completion_tokens / 1000) * MODEL_PRICING[model_name]["Output"]
-                token_cost = input_cost + output_cost
+                llm_output = response.output_text
+                token_cost = self._compute_usage(response)
                 success = True
             except Exception as e:
-                logger.error(f"An error occurs when creating a completion: {e}")
+                logger.error(f"An error occurs when creating a response: {e}")
 
         outputs = dict()
         if parse_tags:
@@ -101,6 +102,37 @@ class LLMClient:
             outputs["output"] = llm_output
         outputs["cost"] = token_cost
         return outputs
+    
+    def _compute_usage(self, response):
+        """
+        Compute the token cost of an LLM completion.
+        
+        Args:
+            response: The response object from the LLM API.
+        
+        Returns:
+            float: The total token cost.
+        """
+        model_name = response.model
+        input_tokens = response.usage.input_tokens
+        output_tokens = response.usage.output_tokens
+        cached_tokens = response.usage.input_tokens_details.cached_tokens
+        
+        # Get the pricing for the model
+        pricing = MODEL_PRICING[model_name]
+        
+        # Compute the cost for each type of token
+        # If the model is qwen-series, no price differences are in input and cached tokens
+        if model_name.startswith("qwen"):
+            input_cost = (input_tokens / 1000) * pricing["Input"]
+            output_cost = (output_tokens / 1000) * pricing["Output"]
+            return input_cost + output_cost
+        else:
+            # Otherwise, consider the difference between input and cached tokens
+            input_cost = (input_tokens - cached_tokens) / 1000 * pricing["Input"]
+            output_cost = (output_tokens / 1000) * pricing["Output"]
+            cache_cost = (cached_tokens / 1000) * pricing["Cache"]
+            return input_cost + output_cost + cache_cost
 
     def _extract_xml(self, text: str, tag: str):
         match = re.search(f"<{tag}>(.*?)</{tag}>", text, re.DOTALL)
