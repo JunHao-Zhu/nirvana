@@ -62,6 +62,24 @@ RankOpOutputs(
 ```
 
 Operator `join`: Join values of two columns against a specific user's instruction (under intensive testing). The current implementation has inherent quadratic complexity which we aim to avoid.
+```python
+# left_data: clinical_note
+# | name | age | gender | symptom |
+# | Alice | 12 | F | headache |
+# | Bob | 20 | M | have a cough |
+
+# right_data: drug
+# | name | medical_use |
+# | Salbutamol | treat bronchospasm, as well as chronic obstructive pulmonary disease |
+# | ibuprofen | treat mild to moderate pain, painful menstruation, osteoarthritis, dental pain, headaches, and pain from kidney stones|
+>>> nv.ops.join(left_data=clinical_note, right_data=drug, user_instruction="Does the drug cure the possible disease according to the symptoms?", left_on="symptom", right_on="medical_use", how="inner")
+RankOpOutputs(
+    joined_pairs = [("headache", "ibuprofen"), ("have a cough", "Salbutamol")],
+    left_join_keys = [1, 2],
+    right_join_keys = [2, 1]
+)
+```
+For now, it supports inner join, left join, and right join by setting parameter `how` to `inner`, `left`, and `right`.
 
 Operator `discover`: Discover relevant data from a data lake based on a query. This operation is applied to a data lake with an interface of DataLake class above it (see datalake/datalake.py)
 
