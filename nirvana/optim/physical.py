@@ -6,7 +6,7 @@ import numpy as np
 import pandas as pd
 
 from nirvana.models.llm_backbone import LLMClient
-from nirvana.lineage.abstractions import LineageNode, LineageDataNode, LineageOpNode, OpOutputsType
+from nirvana.lineage.abstractions import LineageNode, OpOutputsType
 
 logger = logging.getLogger(__name__)
 
@@ -34,16 +34,28 @@ class PhysicalOptimizer:
     def __init__(self, agent: LLMClient = None):
         self.agent = agent
 
-    async def optimize_exec_model_approx(self, node: LineageOpNode, input_data: pd.DataFrame, num_samples: int, improve_margin: float = 0.2):
-        # if node.func is not None:
-        #     return node.run(input_data)
-        if len(input_data) < 2 * num_samples:
+    async def optimize_exec_model_approx(
+            self, 
+            node: LineageNode, 
+            input_data: pd.DataFrame | list[pd.DataFrame], 
+            num_samples: int, 
+            improve_margin: float = 0.2
+    ):
+        if node.op_name == "join" and len(input_data[0]) < 2 * num_samples and len(input_data[1]) < 2 * num_samples:
+            node.set_exec_model(ORDERED_MODELS[-1])
+            node_output = await node.run(input_data)
+            return node_output
+        
+        if len(input_data[0]) < 2 * num_samples:
             node.set_exec_model(ORDERED_MODELS[-1])
             node_output = await node.run(input_data)
             return node_output
 
         optimize_start_time = time.time()
-        data_samples = input_data.iloc[:num_samples]
+        if node.op_name == "join":
+            data_samples = [input_data[0].iloc[:num_samples], input_data[1].iloc[:num_samples]]
+        else:
+            data_samples = input_data.iloc[:num_samples]
         exec_model = ORDERED_MODELS[0]
         node.set_exec_model(exec_model)
         node_output = None
@@ -195,7 +207,7 @@ class PhysicalOptimizer:
         node_output = concate_output(node_output, rest_output)
         return node_output
 
-    async def optimize_exec_model(self, node: LineageOpNode, input_data: pd.DataFrame, num_samples: int, improve_margin: float = 0.2):
+    async def optimize_exec_model(self, node: LineageNode, input_data: pd.DataFrame, num_samples: int, improve_margin: float = 0.2):
         if len(input_data) < 2 * num_samples:
             node.set_exec_model(ORDERED_MODELS[-1])
             node_output = await node.run(input_data)

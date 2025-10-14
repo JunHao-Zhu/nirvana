@@ -5,43 +5,41 @@ import pandas as pd
 from nirvana.lineage.abstractions import LineageNode, LineageDataNode, LineageOpNode
 
 schema_mapping = {
-    "map": "[{input_column}]->[{output_column}]",
-    "filter": "[{input_column}]->[Bool]",
-    "reduce": "[{input_column}]->[Aggregated Result]",
+    "map": "MAP({user_instruction}):[{input_column}]->[{output_column}]",
+    "filter": "FILTER({user_instruction}):[{input_column}]->[Bool]",
+    "reduce": "AGGR({user_instruction}):[{input_column}]->[Aggr]",
+    "join": "{how}-JOIN({user_instruction}):[left[{left_on}] * right[{right_on}]",
 }
 
 
 def collect_op_metadata(op_node: LineageOpNode, print_info: bool = False):
     op_name = op_node.op_name
-    user_instr = op_node.user_instruction
-    input_col = op_node.input_column
-    output_col = op_node.output_column
+    op_kwargs = op_node.op_kwargs
     has_func = True if op_node.func else False
     if print_info:
         op_signature = (
-            f"{schema_mapping[op_name].format(input_column=input_col, output_column=output_col)} ({user_instr})"
+            f"{schema_mapping[op_name].format(**op_kwargs)}"
         )
         return op_signature
     else:
+        # Note: there might be a bug
         metadata = (
-            op_name, user_instr, input_col, output_col, has_func
+            op_name, *op_kwargs.values(), has_func
         )
         return metadata
 
 
 def execute_plan(last_node: LineageNode, input_data: pd.DataFrame):
     execute_output = {
-        "dataframe_from_last_node": input_data.copy(),
+        "dataframe_from_last_node": None,
         "output_from_last_node": None,
         "total_token_cost": 0,
     }
     def _run_node(node: LineageNode):
-        # if the node is the first operator, run it on input data
+        # The first node has to be a data node where data are scanned from in-/out-memory data stores
         if len(node.parent) == 0:
-            assert isinstance(node, LineageOpNode), "The first node should be an operator."
-            output_from_last_node = asyncio.run(node.run(execute_output["dataframe_from_last_node"]))
-            execute_output["output_from_last_node"] = output_from_last_node
-            execute_output["total_token_cost"] += output_from_last_node.cost
+            assert isinstance(node, LineageDataNode), "The first node should include data."
+            execute_output["dataframe_from_last_node"] = node.data
             return
         # run the parent nodes
         for parent_node in node.parent:

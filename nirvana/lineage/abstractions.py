@@ -1,118 +1,139 @@
 import asyncio
-from typing import List, Union, Callable
+from typing import List, Union, Callable, Any
+
 import pandas as pd
+from pydantic import BaseModel
 
 from nirvana.ops.map import MapOperation, MapOpOutputs
 from nirvana.ops.filter import FilterOperation, FilterOpOutputs
 from nirvana.ops.reduce import ReduceOperation, ReduceOpOutputs
+from nirvana.ops.join import JoinOperation, JoinOpOutputs
 
-OpOutputsType = Union[MapOpOutputs, FilterOpOutputs, ReduceOpOutputs]
+OpOutputsType = Union[MapOpOutputs, FilterOpOutputs, ReduceOpOutputs, JoinOpOutputs]
 
 op_mapping = {
     "map": MapOperation,
     "filter": FilterOperation,
-    "reduce": ReduceOperation
+    "reduce": ReduceOperation,
+    "join": JoinOperation
 }
 
 
-class LineageNode:
+class NodeOutput(BaseModel):
+    output: pd.DataFrame | List[Any]
+    cost: float
+    
+
+class NodeBase:
     def __init__(self):
-        self.is_visited = False
-        self._parent: List[LineageNode] = []
-        self._child: List[LineageNode] = []
+        self._left_parent: NodeBase | None = None
+        self._right_parent: NodeBase | None = None
 
     @property
-    def parent(self):
-        return self._parent
+    def left_parent(self):
+        return self._left_parent
     
     @property
-    def child(self):
-        return self._child
+    def right_parent(self):
+        return self._right_parent
     
-    def set_parent(self, nodes: List["LineageNode"]):
-        self._parent = nodes.copy()
+    def set_left_parent(self, node: "NodeBase" | None):
+        self._left_parent = node
 
-    def set_child(self, nodes: List["LineageNode"]):
-        self._child = nodes.copy()
+    def set_right_parent(self, node: "NodeBase" | None):
+        self._right_parent = node
 
-    def remove_child(self, node: "LineageNode"):
-        self._child.remove(node)
 
-    def remove_parent(self, node: "LineageNode"):
-        self._parent.remove(node)
-    
-    def add_child(self, node: "LineageNode"):
-        self._child.append(node)
-
-    def add_parent(self, node: "LineageNode"):
-        self._parent.append(node)
-    
-
-class LineageDataNode(LineageNode):
+class LineageNode(NodeBase):
     def __init__(
             self, 
-            columns: List[str], 
-            new_field: Union[str, None] = None, 
-            materialized: bool = False
-    ):
-        super().__init__()
-        self.columns = columns
-        self.new_field = new_field
-        self.materialized = materialized
-
-    def run(self, input_data: pd.DataFrame, last_op_output: OpOutputsType) -> pd.DataFrame:
-        if hasattr(last_op_output, "field_name"):
-            self.new_field = last_op_output.field_name
-            if last_op_output.output is None:
-                return input_data
-            input_data[self.new_field] = last_op_output.output
-            return input_data
-        if isinstance(last_op_output, FilterOpOutputs):
-            if last_op_output.output is None:
-                return input_data
-            input_data = input_data[last_op_output.output]
-            return input_data
-        if isinstance(last_op_output, ReduceOpOutputs):
-            return pd.DataFrame({"reduce_result": [last_op_output.output]})
-
-
-class LineageOpNode(LineageNode):
-    def __init__(
-            self, 
-            op_name: str, 
-            user_instruction: str = None,
+            op_name: str | None = None, 
+            op_metadata: dict | None = None,
+            data_metadata: dict | None = None,
+            datasource: pd.DataFrame | None = None,
             func: Callable = None,
-            input_column: str = None,
-            output_column: str = None,
             **kwargs
     ):
         super().__init__()
         self.op_name = op_name
+        self.op_metadata = op_metadata
+        self.data_metadata = data_metadata
+
         self.op = op_mapping[op_name](
             **kwargs
         )
-        self.user_instruction = user_instruction
         self.func = func
-
-        if input_column is None:
-            raise ValueError("The argument `input_column` must be given.")
-        self.input_column = input_column
-        self.output_column = output_column
         self.exec_model = None
-
+        self.datasource = datasource
+        
     def set_exec_model(self, model_name: str):
         self.exec_model = model_name
 
-    async def run(self, input_data: pd.DataFrame) -> OpOutputsType:
-        op_kwargs = {
-            "input_column": self.input_column,
-            "user_instruction": self.user_instruction,
-            "func": self.func,
-            "output_column": self.output_column,
-        }
+    async def execute_operation(self, input: pd.DataFrame | List[pd.DataFrame] | None) -> NodeOutput:
+        if self.func is not None:
+            self.op_kwargs["func"] = self.func
         if self.exec_model is not None:
-            op_kwargs["model"] = self.exec_model
-        return await self.op.execute(
-            input_data=input_data,
-            **op_kwargs
-        )
+            self.op_kwargs["model"] = self.exec_model
+        
+        if self.op_name == "scan":
+            return NodeOutput(output=self.datasource, cost=0.0)
+        elif self.op_name == "join":
+            return await self.op.execute(left_data=input[0], right_data=input[1], **self.op_kwargs)
+        else:
+            return await self.op.execute(input_data=input, **self.op_kwargs)
+        
+    async def collate_dataframe(self, input: pd.DataFrame | List[pd.DataFrame] | None, op_outputs: NodeOutput | None) -> pd.DataFrame:
+        if self.op_name == "scan":
+            return op_outputs
+        elif self.op_name == "join":
+            input[0]["keys"] = op_outputs.left_join_keys
+            input[1]["keys"] = op_outputs.right_join_keys
+            output = input[0].join(input[1], on="keys", how=self.op_kwargs["how"]).drop("keys", axis=1)
+            return NodeOutput(output=output, cost=op_outputs.cost)
+        elif self.op_name == "filter":
+            if op_outputs.output is None:
+                return NodeOutput(output=input, cost=op_outputs.cost)
+            return NodeOutput(output=input[op_outputs.output], cost=op_outputs.cost)
+        elif self.op_name == "map":
+            if op_outputs.output is None:
+                return NodeOutput(output=input, cost=op_outputs.cost)
+            input[op_outputs.new_field] = op_outputs.output
+            return NodeOutput(output=input, cost=op_outputs.cost)
+        elif self.op_name == "reduce":
+            return NodeOutput(output=pd.DataFrame({"reduce_result": [op_outputs.output]}), cost=op_outputs.cost)
+
+    async def run(self, input: pd.DataFrame | List[pd.DataFrame] | None) -> NodeOutput:
+        if self.func is not None:
+            self.op_kwargs["func"] = self.func
+        if self.exec_model is not None:
+            self.op_kwargs["model"] = self.exec_model
+
+        if self.op_name == "scan":
+            return NodeOutput(output=self.datasource, cost=0.0)
+        
+        elif self.op_name == "join":
+            op_outputs = await self.op.execute(left_data=input[0], right_data=input[1], **self.op_kwargs)
+            input[0]["keys"] = op_outputs.left_join_keys
+            input[1]["keys"] = op_outputs.right_join_keys
+            output = input[0].join(input[1], on="keys", how=self.op_kwargs["how"]).drop("keys", axis=1)
+            return NodeOutput(output=output, cost=op_outputs.cost)
+
+        elif self.op_name == "filter":
+            op_outputs = await self.op.execute(input_data=input, **self.op_kwargs)
+            if op_outputs.output is None:
+                return NodeOutput(output=input, cost=op_outputs.cost)
+            return NodeOutput(output=input[op_outputs.output], cost=op_outputs.cost)
+        
+        elif self.op_name == "map":
+            op_outputs = await self.op.execute(input_data=input, **self.op_kwargs)
+            if op_outputs.output is None:
+                return NodeOutput(output=input, cost=op_outputs.cost)
+            input[op_outputs.new_field] = op_outputs.output
+            return NodeOutput(output=input, cost=op_outputs.cost)
+        
+        elif self.op_name == "reduce":
+            op_outputs = await self.op.execute(input_data=input, **self.op_kwargs)
+            return NodeOutput(output=pd.DataFrame({"reduce_result": [op_outputs.output]}), cost=op_outputs.cost)
+        
+        else:
+            raise ValueError(f"Unspported operator: {self.op_name}")

@@ -1,17 +1,18 @@
 import logging
 import asyncio
 from typing import List
-from collections import defaultdict, Counter
+from collections import defaultdict, Counter, deque
 import re
 import time
 import numpy as np
 import pandas as pd
 
 from nirvana.models.llm_backbone import LLMClient
-from nirvana.lineage.abstractions import LineageNode, LineageOpNode, LineageDataNode
-from nirvana.lineage.utils import collect_op_metadata, execute_plan
+from nirvana.lineage.abstractions import LineageNode
+from nirvana.lineage.mixin import collect_op_metadata, execute_along_lineage
 from nirvana.optim.optimize_prompt import PLAN_OPIMIZE_PROMPT
 from nirvana.optim.evaluator import Evaluator
+from nirvana.optim.plan_rewrite import FilterPushdown
 
 logger = logging.getLogger(__name__)
 
@@ -53,52 +54,50 @@ class PlanCost:
 
 
 class LogicalOptimizer:
+    # TODO: here we only consider one join in the logical plan. Multiple joins will be considered in the future.
     def __init__(self, max_round: int = 5, agent: LLMClient = None):
         self.agent = agent
         self.max_round = max_round
-        self.candidate_logical_plan = []
+        self.plan_candidates = []
+        self.num_dataset = 0
 
     def clear(self):
-        self.candidate_logical_plan = []
+        self.plan_candidates = []
 
     def _sample_from_candidates(self, lambda_=0.2):
-        token_costs = np.array([plan.cost for plan in self.candidate_logical_plan])
+        token_costs = np.array([plan.cost for plan in self.plan_candidates])
         token_costs = (np.max(token_costs) - token_costs) / (np.max(token_costs) - np.min(token_costs) + 1e-6)
         costs_prob = np.exp(token_costs) / np.exp(token_costs).sum()
         uniform_prob = np.ones_like(token_costs, dtype=float) / len(token_costs)
         total_prob = lambda_ * uniform_prob + (1 - lambda_) * costs_prob
 
         selected_index = np.random.choice(len(token_costs), p=total_prob)
-        return self.candidate_logical_plan[selected_index]
+        return self.plan_candidates[selected_index]
 
-    def _build_code_from_plan(self, last_node_in_plan: LineageNode, input_dataset_name: str):
+    def _build_code_from_plan(self, last_node_in_plan: LineageNode):
         logical_plan = []
         plan_stats = []
-        
         def _build_op(node: LineageNode):
-            if len(node.parent) == 0:
-                node: LineageOpNode = node
-                plan_stats.append(collect_op_metadata(node, print_info=False))
-                if node.output_column:
-                    code = f"{input_dataset_name}.semantic_{node.op_name}(user_instruction=\"{node.user_instruction}\", input_column=\"{node.input_column}\", output_column=\"{node.output_column}\")"
-                else:
-                    code = f"{input_dataset_name}.semantic_{node.op_name}(user_instruction=\"{node.user_instruction}\", input_column=\"{node.input_column}\")"
-                return code
+            if node.op_name == "scan":
+                self.num_dataset += 1
+                return None
 
-            code_for_parents = ""
-            for parent_node in node.parent:
-                code_for_parents += _build_op(parent_node)
-            if code_for_parents:
-                logical_plan.append(code_for_parents)
-
-            if isinstance(node, LineageDataNode):
-                return ""
+            code_from_left_parent = _build_op(node.left_parent)
+            if code_from_left_parent:
+                logical_plan.append(code_from_left_parent)
+            if node.right_parent:
+                code_from_right_parent = _build_op(node.right_parent)
+                if code_from_right_parent:
+                    logical_plan.append(code_from_right_parent)
             
             plan_stats.append(collect_op_metadata(node, print_info=False))
-            if node.output_column:
-                code = f"{input_dataset_name}.semantic_{node.op_name}(user_instruction=\"{node.user_instruction}\", input_column=\"{node.input_column}\", output_column=\"{node.output_column}\")"
-            else:
-                code = f"{input_dataset_name}.semantic_{node.op_name}(user_instruction=\"{node.user_instruction}\", input_column=\"{node.input_column}\")"
+            op_kwargs = node.op_metadata
+            if node.op_name == "map":
+                code = f"df{self.num_dataset}.semantic_map(user_instruction=\"{op_kwargs["user_instruction"]}\", input_column=\"{op_kwargs["input_column"]}\", output_column=\"{op_kwargs["output_column"]}\")"
+            elif node.op_name == "filter" or node.op_name == "reduce":
+                code = f"df{self.num_dataset}.semantic_{node.op_name}(user_instruction=\"{op_kwargs["user_instruction"]}\", input_column=\"{op_kwargs["input_column"]}\")"
+            elif node.op_name == "join":
+                code = f"df{self.num_dataset - 1}.semantic_join(other=df{self.num_dataset}, user_instruction=\"{op_kwargs['user_instruction']}\", left_on=\"{op_kwargs['left_on']}\", right_on=\"{op_kwargs['right_on']}\", how=\"{op_kwargs['how']}\")"
             return code
         
         _build_op(last_node_in_plan)
@@ -106,16 +105,26 @@ class LogicalOptimizer:
         return code, plan_stats
     
     def _extract_op_name_and_args(self, code: str):
-        match = re.search(r'\w+\.semantic_(\w+)\((.*)\)', code, flags=re.DOTALL)
+        match = re.search(r'(\w+)\.semantic_(\w+)\((.*)\)', code, flags=re.DOTALL)
         if match:
-            op_name = match.group(1)
-            args = match.group(2)
-            user_instruction = re.search(r'user_instruction="([^"]*)"', args)
-            input_column = re.search(r'input_column="([^"]*)"', args)
-            func = re.search(r'func=([^,]+)', args)
-            output_column = re.search(r'output_column="([^"]*)"', args)
+            data_name = match.group(1)
+            op_name = match.group(2)
+            args = match.group(3)
+            if op_name == "map" or op_name == "filter" or op_name == "reduce":
+                user_instruction = re.search(r'user_instruction="([^"]*)"', args)
+                input_column = re.search(r'input_column="([^"]*)"', args)
+                func = re.search(r'func=([^,]+)', args)
+                output_column = re.search(r'output_column="([^"]*)"', args)
+            else:
+                user_instruction = re.search(r'user_instruction="([^"]*)"', args)
+                other = re.search(r'other=([^,]+)', args)
+                left_on = re.search(r'left_on="([^"]*)"', args)
+                right_on = re.search(r'right_on="([^"]*)"', args)
+                how = re.search(r'how="([^"]*)"', args)
+                func = re.search(r'func=([^,]+)', args)
             try:
                 return {
+                    "data_name": data_name,
                     "op_name": op_name,
                     "user_instruction": user_instruction.group(1) if user_instruction else None,
                     "input_column": input_column.group(1) if input_column else None,
@@ -126,6 +135,7 @@ class LogicalOptimizer:
                 logger.debug(f"the `func` cannot be used: {e}")
             
             return {
+                "data_name": data_name,
                 "op_name": op_name,
                 "user_instruction": user_instruction.group(1) if user_instruction else None,
                 "input_column": input_column.group(1) if input_column else None,
@@ -134,41 +144,100 @@ class LogicalOptimizer:
             }
         return None
     
-    def _build_plan_from_code(self, code: str, columns: List[str]):
-        last_node_in_plan = None
+    def _build_plan_from_code(self, code: str, valid_sets: deque, **kwargs):
+        sub_lineages = deque()
         plan_stats = []
         operations = code.split("\n")
+        data_name = set()
         for operation in operations:
             # define the regex pattern and match the operation string
             op_kwargs = self._extract_op_name_and_args(operation)
             if op_kwargs is None:
                 continue
-            op_node = LineageOpNode(**op_kwargs)
+            op_node = LineageNode(op_name=op_kwargs["op_name"], op_metadata=op_kwargs)
             plan_stats.append(collect_op_metadata(op_node, print_info=False))
             
-            if last_node_in_plan is None:
-                data_node = LineageDataNode(columns=columns, new_field=op_kwargs["output_column"])
-                op_node.add_child(data_node)
-                data_node.add_parent(op_node)
-                last_node_in_plan = data_node
-            else:
-                columns_from_last_node = (
-                    last_node_in_plan.columns 
-                    if last_node_in_plan.new_field is None else 
-                    last_node_in_plan.columns + [last_node_in_plan.new_field]
-                )
-                if op_kwargs["input_column"] not in columns_from_last_node:
-                    return None, None
-                data_node = LineageDataNode(columns=columns_from_last_node, new_field=op_kwargs["output_column"])
-                op_node.add_child(data_node)
-                data_node.add_parent(op_node)
-
-                op_node.add_parent(last_node_in_plan)
-                last_node_in_plan.add_child(op_node)
-                last_node_in_plan = data_node
-        # if last_node_in_plan is None:
-        #     raise RuntimeError("The operation string does not match the expected format.")
-        return last_node_in_plan, plan_stats
+            if op_kwargs["op_name"] == "join":
+                if op_kwargs["data_name"] not in data_name and op_kwargs["other"] not in data_name:
+                    data_name.update([op_kwargs["data_name"], op_kwargs["other"]])
+                    left_data = valid_sets.popleft()
+                    right_data = valid_sets.popleft()
+                    left_node = LineageNode(op_name="scan", data_metadata={"columns": left_data.columns}, datasource=left_data)
+                    right_node = LineageNode(op_name="scan", data_metadata={"columns": right_data.columns}, datasource=right_data)
+                    data_metadata = {
+                        "input_left_fields": left_data.columns,
+                        "input_right_fields": right_data.columns,
+                        "output_fields": list(set(left_data.columns).union(set(right_data.columns))),
+                    }
+                    node = LineageNode(op_name="join", op_metadata=op_kwargs, data_metadata=data_metadata)
+                    node.set_left_parent(left_node)
+                    node.set_right_parent(right_node)
+                elif op_kwargs["other"] not in data_name:
+                    data_name.add(op_kwargs["other"])
+                    left_node = sub_lineages.popleft()
+                    right_node = valid_sets.popleft()
+                    data_metadata = {
+                        "input_left_fields": left_node.data_metadata["columns"],
+                        "input_right_fields": right_data.columns,
+                        "output_fields": list(set(left_node.data_metadata["columns"]).union(set(right_data.columns))),
+                    }
+                    node = LineageNode(op_name="join", op_metadata=op_kwargs, data_metadata=data_metadata)
+                    node.set_left_parent(left_node)
+                    node.set_right_parent(right_node)
+                else:
+                    left_node = sub_lineages.popleft()
+                    right_node = sub_lineages.popleft()
+                    data_metadata = {
+                        "input_left_fields": left_node.data_metadata["columns"],
+                        "input_right_fields": right_node.data_metadata["columns"],
+                        "output_fields": list(set(left_node.data_metadata["columns"]).union(set(right_node.data_metadata["columns"]))),
+                    }
+                    node = LineageNode(op_name="join", op_metadata=op_kwargs, data_metadata=data_metadata)
+                    node.set_left_parent(left_node)
+                    node.set_right_parent(right_node)
+                sub_lineages.append(node)
+            elif op_kwargs["op_name"] == "map" or op_kwargs["op_name"] == "filter":
+                if op_kwargs["data_name"] not in data_name:
+                    data_name.add(op_kwargs["data_name"])
+                    dataset = valid_sets.popleft()
+                    data = LineageNode(op_name="scan", data_metadata={"columns": dataset.columns}, datasource=dataset)
+                    data_metadata = {
+                        "input_fields": dataset.columns,
+                        "output_fields": dataset.columns + [op_kwargs["output_column"]] if op_kwargs["output_column"] else dataset.columns,
+                    }
+                    op_node = LineageNode(op_name=op_kwargs["op_name"], op_metadata=op_kwargs, data_metadata=data_metadata)
+                    op_node.set_left_parent(data)
+                else:
+                    last_node = sub_lineages.popleft()
+                    data_metadata = {
+                        "input_fields": last_node.data_metadata["columns"],
+                        "output_fields": last_node.data_metadata["columns"] + [op_kwargs["output_column"]] if op_kwargs["output_column"] else last_node.data_metadata["columns"],
+                    }
+                    op_node = LineageNode(op_name=op_kwargs["op_name"], op_metadata=op_kwargs, data_metadata=data_metadata)
+                    op_node.set_left_parent(last_node)
+                sub_lineages.append(op_node)
+            elif op_kwargs["op_name"] == "reduce":
+                if op_kwargs["data_name"] not in data_name:
+                    data_name.add(op_kwargs["data_name"])
+                    dataset = valid_sets.popleft()
+                    data = LineageNode(op_name="scan", data_metadata={"columns": dataset.columns}, datasource=dataset)
+                    data_metadata = {
+                        "input_fields": dataset.columns,
+                        "output_fields": None
+                    }
+                    op_node = LineageNode(op_name=op_kwargs["op_name"], op_metadata=op_kwargs, data_metadata=data_metadata)
+                    op_node.set_left_parent(data)
+                else:
+                    last_node = sub_lineages.popleft()
+                    data_metadata = {
+                        "input_fields": last_node.data_metadata["columns"],
+                        "output_fields": None
+                    }
+                    op_node = LineageNode(op_name=op_kwargs["op_name"], op_metadata=op_kwargs, data_metadata=data_metadata)
+                    op_node.set_left_parent(last_node)
+                sub_lineages.append(op_node)
+        assert len(sub_lineages) == 1
+        return sub_lineages.pop(), plan_stats
     
     def _naive_estimate_plan_cost(self, init_plan_stats: list, new_plan_stats: list = None):
         accuracy_score, token_cost, selectivity = 1.0, 0.0, 1.0
@@ -203,23 +272,35 @@ class LogicalOptimizer:
                 token_cost += 0.0 if has_func else len(user_instr)
         return accuracy_score, token_cost, 0.0
     
-    def _estimate_plan_cost(self, input_plan: LineageNode, input_code: str, input_data: pd.DataFrame, ground_truth: pd.DataFrame = None):
-        results, token_cost, exec_time = execute_plan(input_plan, input_data)
+    def _estimate_plan_cost(self, plan: LineageNode, ground_truth: pd.DataFrame = None):
+        results, token_cost, exec_time = execute_along_lineage(plan)
         if ground_truth is None:
             accuracy_score = 1.0
         else:
             accuracy_score = Evaluator.evaluate(ground_truth, results, self.agent)
-        return accuracy_score, token_cost, exec_time
+        return results, accuracy_score, token_cost, exec_time
+    
+    def rewrite_logical_plan(self, lineage: LineageNode):
+        root_op = lineage.parent[0]
+        root_op = FilterPushdown.rewrite_op(root_op)
+        root_op.set_child([lineage])
+        lineage.set_parent([root_op])
 
-    def optimize(self, initial_plan: LineageNode, input_dataset_name: str, columns: List[str]):
+    def optimize(self, initial_plan: LineageNode, valid_set: List[pd.DataFrame]):
         round = 0
         optimize_cost = 0.0
         optimize_start_time = time.time()
+        # 0. prepare the valid set
+        columns = []
+        for dataset in valid_set:
+            columns.extend(dataset.columns.to_list())
+        valid_set = deque(valid_set)
         # 1. get the data processing ground truth by executing the initial plan on the validation set
-        init_code, init_plan_stats = self._build_code_from_plan(initial_plan, input_dataset_name=input_dataset_name)
-        accuracy_score, token_cost, exec_time = self._naive_estimate_plan_cost(init_plan_stats)
+        init_code, init_plan_stats = self._build_code_from_plan(initial_plan)
+        # Bug: need to load valid sets in initial plan
+        groundtruth, accuracy_score, token_cost, exec_time = self._estimate_plan_cost(initial_plan)
         init_plan_cost = PlanCost(initial_plan, init_code, accuracy_score, token_cost, exec_time)
-        self.candidate_logical_plan.append(init_plan_cost)
+        self.plan_candidates.append(init_plan_cost)
 
         # 2. optimize the plan
         while round < self.max_round:
@@ -243,14 +324,13 @@ class LogicalOptimizer:
                 continue
 
             # 2.3. compare the results with the ground truth
-            accuracy_score, token_cost, exec_time = self._naive_estimate_plan_cost(init_plan_stats, plan_stats)
-            # accuracy_score = Evaluator.evaluate(ground_truth_on_valid_set, results_on_valid_set, self.agent)
+            _, accuracy_score, token_cost, exec_time = self._estimate_plan_cost(optimized_plan, groundtruth)
             plan_cost = PlanCost(optimized_plan, optimized_code, accuracy_score, token_cost, exec_time)
-            self.candidate_logical_plan.append(plan_cost)
+            self.plan_candidates.append(plan_cost)
             round += 1
 
         # 3. select the best plan from the candidate list
-        best_plan = sorted(self.candidate_logical_plan)[0]
+        best_plan = sorted(self.plan_candidates)[0]
         optimize_end_time = time.time()
         optimize_time = optimize_end_time - optimize_start_time
         logger.info(f"Plan optimization is finished, taking {optimize_time:.4f} seconds and ${optimize_cost:.4f}. Here are some statistics:")

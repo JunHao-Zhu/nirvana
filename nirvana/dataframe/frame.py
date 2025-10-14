@@ -36,7 +36,7 @@ class DataFrame(LineageMixin):
     ):
         self._data = data
         self.columns = list(data.columns)
-        self.last_node = None
+        self.initialize()
 
     def __len__(self):
         _len = self.nrows
@@ -67,36 +67,78 @@ class DataFrame(LineageMixin):
         return cls(df)
 
     def semantic_map(self, user_instruction, input_column, output_column, rate_limit: int = 16):
+        op_kwargs = {
+            "user_instruction": user_instruction,
+            "input_column": input_column,
+            "output_column": output_column
+        }
+        data_kwargs = {
+            "input_fields": self.leaf_node.data_metadata["output_fields"],
+            "output_fields": self.leaf_node.data_metadata["output_fields"] + [output_column]
+        }
         self.add_operator(op_name="map",
-                          user_instruction=user_instruction,
-                          input_column=input_column,
-                          output_column=output_column,
-                          fields=self.columns,
+                          op_kwargs=op_kwargs,
+                          data_kwargs=data_kwargs,
                           rate_limit=rate_limit)
         
     def semantic_filter(self, user_instruction, input_column, rate_limit: int = 16):
+        op_kwargs = {
+            "user_instruction": user_instruction,
+            "input_column": input_column,
+        }
+        data_kwargs = {
+            "input_fields": self.leaf_node.data_metadata["output_fields"],
+            "output_fields": self.leaf_node.data_metadata["output_fields"]
+        }
         self.add_operator(op_name="filter",
-                          user_instruction=user_instruction,
-                          input_column=input_column,
-                          fields=self.columns,
+                          op_kwargs=op_kwargs,
+                          data_kwargs=data_kwargs,
                           rate_limit=rate_limit)
         
     def semantic_reduce(self, user_instruction, input_column, rate_limit: int = 16):
+        op_kwargs = {
+            "user_instruction": user_instruction,
+            "input_column": input_column,
+        }
+        data_kwargs = {
+            "input_fields": self.leaf_node.data_metadata["output_fields"],
+            "output_fields": None
+        }
         self.add_operator(op_name="reduce",
-                          user_instruction=user_instruction,
-                          input_column=input_column,
-                          fields=self.columns,
+                          op_kwargs=op_kwargs,
+                          data_kwargs=data_kwargs,
+                          rate_limit=rate_limit)
+        
+    def semantic_join(self, other: "DataFrame", user_instruction, left_on, right_on, how, rate_limit: int = 16):
+        union_fields = (
+            list(set(self.leaf_node.data_metadata["output_fields"]).union(set(other.leaf_node.data_metadata["output_fields"])))
+        )
+        op_kwargs = {
+            "user_instruction": user_instruction,
+            "left_on": left_on,
+            "right_on": right_on,
+            "how": how,
+        }
+        data_kwargs = {
+            "input_left_fields": self.leaf_node.data_metadata["output_fields"],
+            "input_right_fields": other.leaf_node.data_metadata["output_fields"],
+            "output_fields": union_fields
+        }
+        self.add_operator(op_name="join",
+                          op_kwargs=op_kwargs,
+                          data_kwargs=data_kwargs,
+                          other=other,
                           rate_limit=rate_limit)
         
     def optimize_and_execute(self, optim_config = None):
         self.create_plan_optimizer(optim_config)
         if self.optimizer.config.do_logical_optimization:
-            self.last_node = self.optimizer.optimize_logical_plan(self.last_node, "df", self.columns)
+            self.leaf_node = self.optimizer.optimize_logical_plan(self.leaf_node, "df", self.columns)
         if self.optimizer.config.do_physical_optimization:
             output, cost, runtime = self.optimizer.optimize_physical_plan(
-                self.last_node,
+                self.leaf_node,
                 self._data,
             )
         else:
-            output, cost, runtime = self.execute(self._data)
+            output, cost, runtime = self.execute()
         return output, cost, runtime

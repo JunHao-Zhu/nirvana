@@ -2,97 +2,139 @@
 Record the OP lineage (operator and its user instruction) for optimizing operator orchestration.
 """
 import copy
+import time
+import asyncio
 import pandas as pd
+from collections import deque
 
-from nirvana.lineage.abstractions import LineageNode, LineageDataNode, LineageOpNode
-from nirvana.lineage.utils import execute_plan, collect_op_metadata
+from nirvana.lineage.abstractions import LineageNode
 from nirvana.optim.optimizer import PlanOptimizer, OptimizeConfig
+
+schema_mapping = {
+    "map": "MAP({user_instruction}):[{input_column}]->[{output_column}]",
+    "filter": "FILTER({user_instruction}):[{input_column}]->[Bool]",
+    "reduce": "AGGR({user_instruction}):[{input_column}]->[Aggr]",
+    "join": "{how}-JOIN({user_instruction}):[left[{left_on}] * right[{right_on}]",
+}
+
+
+def collect_op_metadata(op_node: LineageNode, print_info: bool = False):
+    op_name = op_node.op_name
+    op_kwargs = op_node.op_kwargs
+    has_func = True if op_node.func else False
+    if print_info:
+        op_signature = (
+            f"{schema_mapping[op_name].format(**op_kwargs)}"
+        )
+        return op_signature
+    else:
+        # Note: there might be a bug
+        metadata = (
+            op_name, *op_kwargs.values(), has_func
+        )
+        return metadata
+
+
+def execute_along_lineage(leaf_node: LineageNode):
+    total_token_cost = 0
+    def _execute_node(node: LineageNode) -> pd.DataFrame:
+        if node.left_parent:
+            left_node_output = _execute_node(node.left_parent)
+        if node.right_parent:
+            right_node_output = _execute_node(node.right_parent)
+        
+        if node.op_name == "scan":
+            node_output = asyncio.run(node.run())
+            total_token_cost += node_output.cost
+            return node_output.output
+        
+        elif node.op_name == "join":
+            node_output = asyncio.run(node.run([left_node_output, right_node_output]))
+            total_token_cost += node_output.cost
+            return node_output.output
+        
+        else:
+            node_output = asyncio.run(node.run(left_node_output))
+            total_token_cost += node_output.cost
+            return node_output
+    
+    execution_start_time = time.time()
+    output_from_lineage = _execute_node(leaf_node)
+    execution_end_time = time.time()
+    execution_time = execution_end_time - execution_start_time
+    return output_from_lineage, total_token_cost, execution_time
 
 
 class LineageMixin:
+    def initialize(self):
+        data_kwargs = {"output_fields": self.columns}
+        node = LineageNode(op_name="scan", data_metadata=data_kwargs, datasource=self._data)
+        self.leaf_node = node
 
-    def add_operator(self, op_name, user_instruction, input_column, output_column=None, fields=None, **kwargs):
-        op_node = LineageOpNode(
-            op_name, user_instruction, None, input_column, output_column, **kwargs
-        )
-        if self.last_node is None:
-            data_node = LineageDataNode(columns=fields, new_field=output_column)
-            op_node.add_child(data_node)
-            data_node.add_parent(op_node)
-            self.last_node = data_node
+    def add_operator(self, op_name: str, op_kwargs: dict, data_kwargs: dict, **kwargs):
+        node = LineageNode(op_name, op_metadata=op_kwargs, data_metadata=data_kwargs)
+        if op_name == "join":
+            node.set_left_parent(self.leaf_node)
+            node.set_right_parent(kwargs["other"].leaf_node)
+            self.leaf_node = node
         else:
-            columns_from_last_node = (
-                self.last_node.columns 
-                if self.last_node.new_field is None else 
-                self.last_node.columns + [self.last_node.new_field]
-            )
-            data_node = LineageDataNode(columns=columns_from_last_node, new_field=output_column)
-            op_node.add_child(data_node)
-            data_node.add_parent(op_node)
-
-            op_node.add_parent(self.last_node)
-            self.last_node.add_child(op_node)
-            self.last_node = data_node
+            node.set_left_parent(self.leaf_node)
+            self.leaf_node = node
 
     def create_plan_optimizer(self, config: OptimizeConfig = None):
         self.optimizer = PlanOptimizer(config)
 
-    def execute(self, input_data: pd.DataFrame = None):
-        if input_data is None:
-            return execute_plan(self.last_node, self._data)
-        return execute_plan(self.last_node, input_data)
-
-    def print_logical_plan(self):
-        if self.last_node is None:
-            print("No operations have been added to the DataFrame.")
-            return
-        logical_plan = []
-        def _print_op(node: LineageNode):
-            if node.is_visited:
-                return ""
-            
-            if len(node.parent) == 0:
-                op_info = collect_op_metadata(node, print_info=True)
-                return op_info
-            
-            op_info = ""
-            for parent_node in node.parent:
-                op_info += _print_op(parent_node)
-            if op_info:
-                logical_plan.append(op_info)
-            
-            if isinstance(node, LineageDataNode):
-                return ""
-            
-            node.is_visited = True
-            op_info = collect_op_metadata(node, print_info=True)
-            return op_info
+    def execute(self):
+        return execute_along_lineage(self.leaf_node)
         
-        op_info = _print_op(self.last_node)
-        if op_info:
-            logical_plan.append(op_info)
+    def print_lineage_graph(self):
+        lineage_graph_strings = []
+        op_strings_in_same_hop = []
+        node_queue = deque([self.leaf_node])
 
-        logical_plan = "=>\n".join(logical_plan)
-        print(f"Logical Plan:\n{logical_plan}")
+        while node_queue:
+            node = node_queue.popleft()
+            if node is None:
+                lineage_graph_strings.append(op_strings_in_same_hop)
+                op_strings_in_same_hop = []
+                continue
 
-        self._clear_visited_flag(self.last_node)
+            op_info = collect_op_metadata(node, print_info=True)
+            op_strings_in_same_hop.append(op_info)
 
-    def _clear_visited_flag(self, node: LineageNode):
-        node.is_visited = False
-        for parent_node in node.parent:
-            self._clear_visited_flag(parent_node)
-        return
+            node_queue.append(node.left_parent)
+            if node.right_parent:
+                node_queue.append(node.right_parent)
+            node_queue.append(None)
 
-    def empty_lineage(self):
+        stringified_lineage_graph = ""
+        while lineage_graph_strings:
+            ops_info = lineage_graph_strings.pop()
+            ops_info_string = ""
+            for op_info in ops_info:
+                if len(op_info) > 20:
+                    op_info = f"{op_info[:17] + '...':<20}\t"
+                else:
+                    op_info = f"{op_info:<20}\t"
+                ops_info_string += op_info
+            divider = "{|:<20}\t" * len(ops_info)
+            stringified_lineage_graph += ops_info_string.strip() + "\n"
+            stringified_lineage_graph += divider + "\n"
+
+        print(f"Lineage Graph:\n{stringified_lineage_graph}")
+
+    def clear_lineage_graph(self):
         self.optimizer.clear()
-        temp_node = copy.copy(self.last_node)
-        self.last_node = None
+        temp_node = copy.copy(self.leaf_node)
+        self.leaf_node = None
+        # See join left and right tables in data lineage, 
+        # empty_lineage will delete all nodes along two upstream sub-lineages
+        # So put a note here if there is a bug when deleting nodes
         def _delete_node(node: LineageNode):
-            if len(node.parent) == 0:
-                del node
-                return
-            for p in node.parent:
-                _delete_node(p)
+            if node.left_parent:
+                _delete_node(node.left_parent)
+            if node.right_parent:
+                _delete_node(node.right_parent)
             del node
             return
         _delete_node(temp_node)
