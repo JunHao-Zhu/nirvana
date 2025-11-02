@@ -12,7 +12,7 @@ from nirvana.lineage.abstractions import LineageNode
 from nirvana.lineage.mixin import collect_op_metadata, execute_along_lineage
 from nirvana.optim.optimize_prompt import PLAN_OPIMIZE_PROMPT
 from nirvana.optim.evaluator import Evaluator
-from nirvana.optim.plan_rewrite import FilterPushdown
+from nirvana.optim.static_rules import FilterPushdown, NonLLMPushdown
 
 logger = logging.getLogger(__name__)
 

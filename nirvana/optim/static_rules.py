@@ -60,3 +60,44 @@ class FilterPushdown:
         
         else:
             return node
+
+
+class NonLLMPushdown:
+    @classmethod
+    def rewrite_plan(cls, node: LineageNode) -> LineageNode:
+        if node.op_name in ["map", "filter", "reduce"]:
+            last_node = node.left_parent
+            last_node = cls.rewrite_plan(last_node)
+            func = node.op_metadata.get("func", None)
+            input_column = node.op_metadata["input_column"]
+
+            if func and input_column not in last_node.data_metadata.get("output_fields", []):
+                # push non-LLM ops down if they have a UDF and their action scope is not included in the output_fields of their ancestors
+                new_node = LineageNode(op_name=node.op_name, op_metadata=node.op_metadata, data_metadata=node.data_metadata)
+                # swap info (eg fields) of current op and its predecessor
+                new_node.data_metadata["input_fields"] = last_node.data_metadata["input_fields"]
+                new_node.data_metadata["output_fields"] = (
+                    list(set(last_node.data_metadata["input_fields"] + [node.op_metadata["output_column"]]))
+                    if "output_column" in node.op_metadata else 
+                    last_node.data_metadata["input_fields"]
+                )
+                last_node.data_metadata["input_fields"] = new_node.data_metadata["output_fields"]
+                last_node.data_metadata["output_fields"] = (
+                    list(set(last_node.data_metadata["input_fields"] + [last_node.op_metadata["output_column"]]))
+                    if "output_column" in last_node.op_metadata else 
+                    last_node.data_metadata["input_fields"]
+                )
+                new_node.set_left_parent(last_node.left_parent)
+                last_node.set_left_parent(cls.rewrite_plan(new_node))
+                del node
+                return last_node
+            else:
+                return node
+        
+        elif node.op_name == "join":
+            node.set_left_parent(cls.rewrite_plan(node.left_parent))
+            node.set_right_parent(cls.rewrite_plan(node.right_parent))
+            return node
+        
+        else:
+            return node

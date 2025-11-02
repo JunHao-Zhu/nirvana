@@ -65,8 +65,7 @@ class LLMClient:
         cost = (response.usage.total_tokens / 1000) * MODEL_PRICING[embed_model]["Input"]
         return np.array([data.embedding for data in response.data]).squeeze(), cost
 
-    async def __call(
-            self,
+    async def __call__(self,
             messages: List[Dict[str, str]],
             parse_tags: bool = False,
             parse_code: bool = False,
