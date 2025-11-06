@@ -1,5 +1,6 @@
 import asyncio
 from dataclasses import dataclass
+from typing import Any
 from abc import ABC, abstractmethod
 
 from nirvana.models.llm_backbone import LLMClient
@@ -7,6 +8,7 @@ from nirvana.models.llm_backbone import LLMClient
 
 @dataclass
 class BaseOpOutputs:
+    output: Any | None = None
     cost: float = 0.0
 
 
