@@ -1,7 +1,15 @@
 *.DS_Store
+
 .idea/
 .vscode/
 *__pycache__*
+*.egg-info/
+
+dist/
+
+# virtual environments
+.venv/
+
 assets/
 
 # experiments
@@ -12,3 +20,4 @@ experiments/steam/
 experiments/*.pdf
 experiments/*.svg
 experiments/*.ipynb
+
