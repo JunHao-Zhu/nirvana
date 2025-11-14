@@ -13,6 +13,7 @@ from nirvana.optim.optimizer import PlanOptimizer, OptimizeConfig
 schema_mapping = {
     "map": "MAP({user_instruction}):[{input_column}]->[{output_column}]",
     "filter": "FILTER({user_instruction}):[{input_column}]->[Bool]",
+    "rank": "RANK({user_instruction}):[{input_column}]->[Rank]",
     "reduce": "AGGR({user_instruction}):[{input_column}]->[Aggr]",
     "join": "{how}-JOIN({user_instruction}):[left[{left_on}] * right[{right_on}]",
 }
@@ -20,19 +21,20 @@ schema_mapping = {
 
 def collect_op_metadata(op_node: LineageNode, print_info: bool = False):
     op_name = op_node.op_name
-    op_kwargs = op_node.op_kwargs
-    has_func = True if op_node.func else False
-    if print_info:
+    op_kwargs = op_node.operator.op_kwargs
+    if op_name == "map":
         op_signature = (
-            f"{schema_mapping[op_name].format(**op_kwargs)}"
+            f"{schema_mapping[op_name].format(op_kwargs['user_instruction'], op_kwargs['input_columns'][0], op_kwargs['output_columns'][0])}"
         )
-        return op_signature
-    else:
-        # Note: there might be a bug
-        metadata = (
-            op_name, *op_kwargs.values(), has_func
+    elif op_name in ["filter", "rank", "reduce"]:
+        op_signature = (
+            f"{schema_mapping[op_name].format(op_kwargs['user_instruction'], op_kwargs['input_columns'][0])}"
         )
-        return metadata
+    elif op_name == "join":
+        op_signature = (
+            f"{schema_mapping[op_name].format(op_kwargs['how'], op_kwargs['user_instruction'], op_kwargs['left_on'][0], op_kwargs['right_on'][0])}"
+        )
+    return op_signature
 
 
 def execute_along_lineage(leaf_node: LineageNode):
@@ -67,12 +69,13 @@ def execute_along_lineage(leaf_node: LineageNode):
 
 class LineageMixin:
     def initialize(self):
-        data_kwargs = {"output_fields": self.columns}
-        node = LineageNode(op_name="scan", data_metadata=data_kwargs, datasource=self._data)
+        op_kwargs = {"datasource": "dataframe"}
+        data_kwargs = {"left_input_fields": [], "right_input_fields": [], "output_fields": self.columns}
+        node = LineageNode(op_name="scan", op_kwargs=op_kwargs, node_fields=data_kwargs, datasource=self._data)
         self.leaf_node = node
 
     def add_operator(self, op_name: str, op_kwargs: dict, data_kwargs: dict, **kwargs):
-        node = LineageNode(op_name, op_metadata=op_kwargs, data_metadata=data_kwargs)
+        node = LineageNode(op_name, op_kwargs=op_kwargs, node_fields=data_kwargs)
         if op_name == "join":
             node.set_left_parent(self.leaf_node)
             node.set_right_parent(kwargs["other"].leaf_node)

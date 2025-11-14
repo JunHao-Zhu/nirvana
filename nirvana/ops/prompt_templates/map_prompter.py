@@ -6,7 +6,9 @@ class MapPrompter:
         self.system_instruction = (
             "You are a helpful assistant helping the user make sense of their data. "
             "You are performing a map operation (one input: one output) to "
-            "project the given data based on the user's instruction.\n"
+            "project the given data based on the user's instruction."
+        )
+        self.output_format = (
             "Output the result of the map operation concisely in the following format.\n"
             "<output> LLM output </output>\n"
         )
@@ -36,7 +38,10 @@ class MapPrompter:
             ValueError: If the type of `data` is not supported.
         """
         # 1. Prepare system message
-        sys_message = [{"role": "system", "content": self.system_instruction}]
+        sys_message = [
+            {"role": "system", "content": self.system_instruction},
+            {"role": "system", "content": self.output_format}
+        ]
 
         # 2. Prepare user message
         if dtype == "str":
@@ -61,7 +66,7 @@ class MapPrompter:
             demos: List[Dict[str, Any]]
     ):
         """
-        Generates a Chain-of-Thought (CoT) prompt for an LLM.
+        Generates a prompt with demonstration examples for an LLM.
         Args:
             user_instruction (str): The instruction provided by the user to guide the AI's response.
             data (Any): The input data provided by the user. Must be a string; otherwise, a ValueError is raised.
@@ -78,7 +83,10 @@ class MapPrompter:
             ValueError: If the type of `data` or `demo["data"]` is not supported.
         """
         # 1. Prepare system message
-        sys_message = [{"role": "system", "content": self.system_instruction}]
+        sys_message = [
+            {"role": "system", "content": self.system_instruction},
+            {"role": "system", "content": self.output_format}
+        ]
 
         # 2. Prepare demonstration message
         demos_message = []
@@ -118,4 +126,58 @@ class MapPrompter:
         user_message = [{"role": "user", "content": user_content}]
         
         messages = sys_message + demos_message + user_message
+        return messages
+    
+    def generate_evaluate_prompt(
+            self,
+            data: Any,
+            answer: Any,
+            user_instruction: str,
+            dtype: str = "str"
+    ):
+        evaluator_task = [{"role": "user", "content": "Analyze the map operation tasked with transforming data based on a given instruction:"}]
+        instruction = user_instruction.strip() + " " + self.output_format
+        if dtype == "str":
+            evaluator_context = [
+                {"role": "user", "content": f"Input:\n{data}\nOutput:\n{answer}\nInstruction:\n{instruction}"}
+            ]
+        elif dtype == "image":
+            _input = [{"type": "input_text", "text": "Input:"}, {"type": "input_image", "image_url": data}]
+            _output = [{"type": "input_text", "text": f"Output:\n{answer}"}]
+            _instruction = [{"type": "input_text", "text": f"Instruction:\n{instruction}"}]
+            evaluator_context = [
+                {"role": "user", "content": _input + _output + _instruction}
+            ]
+        else:
+            raise ValueError(f"Data type {dtype} is not supported.")
+
+        evaluator_criteria = (
+            "Evaluate the map operation based on the following criteria:\n"
+            "1. Does the output strictly adhere to the required output format?\n"
+            "2. Does the output satisfy the instruction?\n"
+            "You should be evaluating only and not attemping to solve the task. Only output PASS if all criteria are met and you have no further suggestions for improvements.\n"
+            "Output your evaluation concisely in the following format.\n"
+            "<evaluation> PASS or FAIL </evaluation>\n"
+            "<feedback> What needs improvement and why. </feedback>\n"
+        )
+        evaluator_criteria = [{"role": "user", "content": evaluator_criteria}]
+        messages = evaluator_task + evaluator_context + evaluator_criteria
+        return messages
+    
+    def generate_refine_prompt(
+            self,
+            data: Any,
+            answer: Any,
+            user_instruction: str,
+            feedback: str,
+            dtype: str = "str"
+    ):
+        initial_generate_prompt = self.generate_prompt(data, user_instruction, dtype)
+        refine_context =(
+            "There is feedback from your previous output.\n"
+            f"Output:\n{answer}\nFeedback:\n{feedback}\n"
+            "Your task is to refine the output based on the feedback."
+        )
+        refine_prompt = [{"role": "user", "content": refine_context}]
+        messages = initial_generate_prompt + refine_prompt
         return messages

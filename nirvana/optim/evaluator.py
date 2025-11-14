@@ -1,7 +1,7 @@
 import asyncio
 import pandas as pd
 
-from nirvana.models.llm_backbone import LLMClient
+from nirvana.executors.llm_backbone import LLMClient
 from nirvana.optim.optimize_prompt import RESULT_EVALUATE_PROMPT
 
 

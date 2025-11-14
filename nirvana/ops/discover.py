@@ -63,8 +63,6 @@ class SummarizeOperation(BaseOperation):
     ):
         super().__init__("summarize", *args, **kwargs)
         self.prompter = SummarizePrompter()
-        rate_limit = kwargs.get("rate_limit", 16)
-        self.semaphore = asyncio.Semaphore(rate_limit)
 
     async def _summarize_column_by_llm(self, target_column: Any, all_columns: Iterable[str], **kwargs):
         async with self.semaphore:
@@ -134,8 +132,6 @@ class SummarizeOperation(BaseOperation):
 class VectorizeOperation(BaseOperation):
     def __init__(self, *args, **kwargs):
         super().__init__("index", *args, **kwargs)
-        rate_limit = kwargs.get("rate_limit", 16)
-        self.semaphore = asyncio.Semaphore(rate_limit)
 
     async def _prepare_documents(self, lake_manager):
         doc_idx, documents = [], []
@@ -205,8 +201,6 @@ class DiscoverOperation(BaseOperation):
     ):
         super().__init__("discover", *args, **kwargs)
         self.prompter = RerankPrompter()
-        rate_limit = kwargs.get("rate_limit", 16)
-        self.semaphore = asyncio.Semaphore(rate_limit)
 
     def _adjust_index_search(self, search_results, misaligned_ids, reverse_vocab_dict, text_index, query):
         docs = [docs for docs in search_results[0][0]]

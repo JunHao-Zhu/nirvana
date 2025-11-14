@@ -1,3 +1,12 @@
+FILTER_PUSHDOWN = """- Filter pushdown: Move a filter operator that does not rely on results of prior operator to occur before the prior operator."""
+
+
+OPERATOR_FUSION = """- Operator fusion: Merge multiple operators that are in the same category and work on the same column into one operator. To keep semantically equivalent, you are required to rewrite the instruction for the new operator."""
+
+
+NON_LLM_REPLACEMENT = """- Non-LLM operator replacement: Replace the NL instruction over non-image/video/audio data with an equivalent compute function only when `user_instruction` can be converted to a straightforward `func` (`func` has to be a simple lambda or built-in function). Note that the `user_instruction` should be preserved in the new operator."""
+
+
 PLAN_OPIMIZE_PROMPT = """Given a dataset and a user-specified logical plan for a data processing task, you are required to optimize the plan by applying a set of equivalent transformations.
 The transformations should be semantically equivalent to the original plan but can improve efficiency and reduce runtime costs/LLM calls.
 The dataset is given in the form of a pandas dataframe, and a logical plan is represented by a sequence of .semantic_*(...) functions (* can be replaced with names of possible operators).
@@ -18,17 +27,23 @@ The supported operators and their required arguments are as follows.
 - user_instruction: the natural language condition
 - func: Python function, returns boolean value by a predicate
 - input_column: the name of column on which the operation is performed
-3. reduce: Aggregate multiple values in a given column into a single result. Required arguments:
+3. join: Join a table with another table by keeping all tuple pairs that satisfy a natural language condition. Required arguments:
+- other: the other dataset to join with
+- user_instruction: the join condition in natural language
+- left_on: the name of the column from the left table to join on
+- right_on: the name of the column from the right table to join on
+- how: the type of join to be performed (e.g., inner, left, right)
+- func: function to evaluate the join condition
+4. reduce: Aggregate multiple values in a given column into a single result. Required arguments:
 - user_instruction: the reducer function in natural language
 - func: function to use for aggregating the data
 - input_column: the name of column on which the operation is performed
 
 The available transformation rules are as follows.
-- Filter pushdown: Move a filter operator that does not rely on results of prior operator to occur before the prior operator.
 - Operator fusion: Fuse multiple operators that are in the same category and work on the same column into one operator. To keep semantically equivalent, you are required to rewrite the instruction for the new operator.
 - Non-LLM operator replacement: Replace the NL instruction over non-image/video/audio data with an equivalent compute function only when `user_instruction` can be converted to a straightforward `func` (`func` has to be a simple lambda or built-in function). Note that the `user_instruction` should be preserved in the new operator.
 
-Now, you are given a dataset with columns: {columns}, and a logical plan:
+Now, you are given two datasets with columns: {columns}, and a logical plan:
 ```python
 {logical_plan}
 ```

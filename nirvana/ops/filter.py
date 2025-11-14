@@ -17,13 +17,15 @@ def filter_wrapper(
     strategy: str = None, 
     **kwargs
 ):
-    filter_op = FilterOperation()
+    filter_op = FilterOperation(
+        user_instruction=user_instruction,
+        input_columns=[input_column],
+        executor=None if func is None else func,
+        implementation=strategy,
+        **kwargs
+    )
     outputs = asyncio.run(filter_op.execute(
         input_data=input_data,
-        user_instruction=user_instruction,
-        func=func,
-        input_column=input_column,
-        strategy=strategy,
         **kwargs
     ))
     return outputs
@@ -44,16 +46,35 @@ class FilterOperation(BaseOperation):
     """
     Filter operator: Uses an LLM to evaluate a natural language predicate on a column
     """
+    implementation_options = ["plain", "self-refine", "vote"]
     
     def __init__(
             self,
-            *args,
+            user_instruction: str = "",
+            input_columns: list[str] = [],
             **kwargs,
     ):
-        super().__init__("filter", *args, **kwargs)
+        super().__init__(
+            op_name="filter",
+            user_instruction=user_instruction,
+            **kwargs
+        )
         self.prompter = FilterPrompter()
-        rate_limit = kwargs.get("rate_limit", 16)
-        self.semaphore = asyncio.Semaphore(rate_limit)
+        self.input_columns = input_columns
+
+    @property
+    def dependencies(self) -> list[str]:
+        return self.input_columns
+    
+    @property
+    def generated_fields(self) -> list[str]:
+        return []
+    
+    @property
+    def op_kwargs(self) -> dict:
+        kwargs = super().op_kwargs()
+        kwargs["input_columns"] = self.input_columns
+        return kwargs
 
     async def _execute_by_plain_llm(self, data: Any, user_instruction: str, dtype: str, **kwargs):
         async with self.semaphore:
@@ -70,6 +91,27 @@ class FilterOperation(BaseOperation):
             full_prompt = self.prompter.generate_fewshot_prompt(data, user_instruction, dtype, demos)
             output = await self.llm(full_prompt, parse_tags=True, tags=["output"], **kwargs)
             return output["output"], output["cost"]
+        
+    async def _execute_by_self_refine(self, data: Any, user_instruction: str, dtype: str, **kwargs):
+        async with self.semaphore:
+            self_refine_cost = 0.0
+            if dtype == "str":
+                data = f"{kwargs['field_name']}: {str(data)}"
+            generate_prompt = self.prompter.generate_prompt(data, user_instruction, dtype)
+            output = await self.llm(generate_prompt, parse_tags=True, tags=["output"], **kwargs)
+            self_refine_cost += output["cost"]
+
+            evaluate_prompt = self.prompter.generate_evaluate_prompt(data, output["raw_output"], user_instruction, dtype)
+            evaluate_output = await self.llm(evaluate_prompt, parse_tags=True, tags=["evaluation", "feedback"], **kwargs)
+            self_refine_cost += evaluate_output["cost"]
+            
+            if "pass" in evaluate_output["evaluation"].lower():
+                return output["output"], self_refine_cost
+            else:
+                refine_prompt = self.prompter.generate_refine_prompt(data, output["raw_output"], user_instruction, evaluate_output["feedback"], dtype)
+                refine_output = await self.llm(refine_prompt, parse_tags=True, tags=["output"], **kwargs)
+                self_refine_cost += refine_output["cost"]
+                return refine_output["output"], self_refine_cost
     
     async def _execute_by_func(self, data: Any, user_instruction: str, func: Callable, llm_call: Callable, **kwargs):
         try:
@@ -97,43 +139,42 @@ class FilterOperation(BaseOperation):
     async def execute(
             self, 
             input_data: pd.DataFrame,
-            user_instruction: str = None,
-            func: Callable = None,
-            input_column: str = None,
-            strategy: str = "plain_llm",
             *args, 
             **kwargs
     ):
-        if user_instruction is None and func is None:
+        if self.user_instruction is None and not self.has_udf():
             raise ValueError("Neither `user_instruction` nor `func` is given.")
         
         if input_data.empty:
             return FilterOpOutputs()
         
-        processed_data = input_data[input_column]
+        processed_data = input_data[self.input_columns[0]]
         if isinstance(processed_data.dtype, ImageDtype):
             dtype = "image"
         else:
-            dtype = "str" 
+            dtype = "str"
 
-        if strategy == "plain_llm":
-            execution_func = functools.partial(self._execute_by_plain_llm, dtype=dtype, field_name=input_column, **kwargs)
-        elif strategy == "fewshot":
-            demos = kwargs.get("demos", None)
-            execution_func = functools.partial(self._execute_by_fewshot_llm, dtype=dtype, demos=demos, field_name=input_column, **kwargs)
+        if self.implementation == "plain":
+            execution_func = functools.partial(self._execute_by_plain_llm, dtype=dtype, field_name=self.input_columns[0], model=self.model, **kwargs)
+        elif self.implementation == "fewshot":
+            assert self.context is not None, "Few-shot examples must be provided in the context for in-context learning."
+            demos = self.context
+            execution_func = functools.partial(self._execute_by_fewshot_llm, dtype=dtype, demos=demos, field_name=self.input_columns[0], model=self.model, **kwargs)
+        elif self.implementation == "self_refine":
+            execution_func = functools.partial(self._execute_by_self_refine, dtype=dtype, field_name=self.input_columns[0], model=self.model, **kwargs)
         else:
-            raise NotImplementedError(f"Strategy {strategy} is not implemented.")
-        
+            raise NotImplementedError(f"Strategy {self.implementation} is not implemented.")
+
         # Create tasks for all data points
         tasks = []
         for data in processed_data:
             if pd.isna(data):
                 tasks.append(asyncio.create_task(asyncio.sleep(0, result=(False, 0.0))))
-            elif func is not None:
-                tasks.append(asyncio.create_task(self._execute_by_func(data, user_instruction, func, execution_func)))
+            elif self.has_udf():
+                tasks.append(asyncio.create_task(self._execute_by_func(data, self.user_instruction, self.tool, execution_func)))
             else:
-                tasks.append(asyncio.create_task(execution_func(data, user_instruction)))
-        
+                tasks.append(asyncio.create_task(execution_func(data, self.user_instruction)))
+
         # Wait for all tasks to complete
         results = await asyncio.gather(*tasks)
         

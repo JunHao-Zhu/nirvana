@@ -2,7 +2,7 @@ import logging
 import re
 from pathlib import Path
 from typing import Union, Optional, List, Dict, Any
-from dataclasses import dataclass, field
+from pydantic import BaseModel, Field
 import numpy as np
 from openai import AsyncOpenAI
 
@@ -39,11 +39,10 @@ def _create_client(api_key, **kwargs):
     return client
 
 
-@dataclass
-class LLMArguments:
-    max_tokens: int = field(default=512, metadata={"help": "The maximum number of tokens to generate."})
-    temperature: float = field(default=0.1, metadata={"help": "The sampling temperature."})
-    max_timeouts: int = field(default=3, metadata={"help": "The maximum number of timeouts."})
+class LLMArguments(BaseModel):
+    max_tokens: int = Field(default=512, ge=1, le=16384, description="The maximum number of tokens to generate.")
+    temperature: float = Field(default=0.1, ge=0.0, le=1.0, description="The sampling temperature.")
+    max_timeouts: int = Field(default=3, ge=1, le=10, description="The maximum number of timeouts.")
 
 
 class LLMClient:
@@ -90,6 +89,7 @@ class LLMClient:
                 logger.error(f"An error occurs when creating a response: {e}")
 
         outputs = dict()
+        outputs["raw_output"] = llm_output
         if parse_tags:
             tags: List[str] = kwargs["tags"]
             for tag in tags:

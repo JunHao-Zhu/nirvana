@@ -3,7 +3,7 @@ from copy import deepcopy
 from pathlib import Path
 from typing import Union
 
-from nirvana.models.llm_backbone import LLMClient
+from nirvana.executors.llm_backbone import LLMClient
 from nirvana.ops.base import BaseOperation
 from nirvana.optim.optimizer import PlanOptimizer
 

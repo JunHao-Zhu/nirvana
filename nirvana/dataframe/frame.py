@@ -69,11 +69,12 @@ class DataFrame(LineageMixin):
     def semantic_map(self, user_instruction, input_column, output_column, rate_limit: int = 16):
         op_kwargs = {
             "user_instruction": user_instruction,
-            "input_column": input_column,
-            "output_column": output_column
+            "input_columns": [input_column],
+            "output_columns": [output_column]
         }
         data_kwargs = {
-            "input_fields": self.leaf_node.data_metadata["output_fields"],
+            "left_input_fields": self.leaf_node.data_metadata["output_fields"],
+            "right_input_fields": [],
             "output_fields": self.leaf_node.data_metadata["output_fields"] + [output_column]
         }
         self.add_operator(op_name="map",
@@ -84,10 +85,11 @@ class DataFrame(LineageMixin):
     def semantic_filter(self, user_instruction, input_column, rate_limit: int = 16):
         op_kwargs = {
             "user_instruction": user_instruction,
-            "input_column": input_column,
+            "input_columns": [input_column],
         }
         data_kwargs = {
-            "input_fields": self.leaf_node.data_metadata["output_fields"],
+            "left_input_fields": self.leaf_node.data_metadata["output_fields"],
+            "right_input_fields": [],
             "output_fields": self.leaf_node.data_metadata["output_fields"]
         }
         self.add_operator(op_name="filter",
@@ -98,10 +100,11 @@ class DataFrame(LineageMixin):
     def semantic_reduce(self, user_instruction, input_column, rate_limit: int = 16):
         op_kwargs = {
             "user_instruction": user_instruction,
-            "input_column": input_column,
+            "input_columns": [input_column],
         }
         data_kwargs = {
-            "input_fields": self.leaf_node.data_metadata["output_fields"],
+            "left_input_fields": self.leaf_node.data_metadata["output_fields"],
+            "right_input_fields": [],
             "output_fields": None
         }
         self.add_operator(op_name="reduce",
@@ -115,8 +118,8 @@ class DataFrame(LineageMixin):
         )
         op_kwargs = {
             "user_instruction": user_instruction,
-            "left_on": left_on,
-            "right_on": right_on,
+            "left_on": [left_on],
+            "right_on": [right_on],
             "how": how,
         }
         data_kwargs = {
