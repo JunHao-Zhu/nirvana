@@ -37,7 +37,9 @@ class PlanOptimizer:
     def __init__(self, config: OptimizeConfig = None):
         self.config = config if config is not None else OptimizeConfig()
         if self.config.do_logical_optimization:
-            self.logical_optimizer = LogicalOptimizer(self.client, config.non_llm_replace)
+            self.logical_optimizer = LogicalOptimizer(
+                self.client, config.filter_pullup, config.filter_pushdown, config.map_pullup, config.non_llm_pushdown, config.non_llm_replace
+            )
         else:
             self.logical_optimizer = None
         if self.config.do_physical_optimization:
@@ -52,16 +54,16 @@ class PlanOptimizer:
         if self.logical_optimizer:
             self.logical_optimizer.clear()
 
-    def optimize_logical_plan(self, plan: LineageNode, input_dataset_name: str, columns: List[str]):
+    def optimize_logical_plan(self, plan: LineageNode):
         # plan = self.logical_optimizer.optimize(plan, input_dataset_name, columns)
         plan = self.logical_optimizer.optimize(plan)
         return plan
     
-    def optimize_physical_plan(self, plan: LineageNode, input_data: pd.DataFrame):
+    def optimize_physical_plan(self, plan: LineageNode, num_records: int):
         if self.config.sample_ratio:
-            num_sample = int(self.config.sample_ratio * len(input_data)) + 1
+            num_sample = int(self.config.sample_ratio * num_records) + 1
         elif self.config.sample_size:
             num_sample = self.config.sample_size
         else:
             raise ValueError("Please specify either `sample_ratio` or `sample_size` for physical plan optimization.")
-        return self.physical_optimizer.optimize(plan, input_data, num_sample, self.config.improve_margin, self.config.approx_mode)
+        return self.physical_optimizer.optimize(plan, num_sample, self.config.improve_margin, self.config.approx_mode)

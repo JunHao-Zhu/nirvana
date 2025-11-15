@@ -11,6 +11,7 @@ from nirvana.lineage.abstractions import LineageNode
 from nirvana.optim.optimizer import PlanOptimizer, OptimizeConfig
 
 schema_mapping = {
+    "scan": "SCAN({source}):[]->[{output_columns}]",
     "map": "MAP({user_instruction}):[{input_column}]->[{output_column}]",
     "filter": "FILTER({user_instruction}):[{input_column}]->[Bool]",
     "rank": "RANK({user_instruction}):[{input_column}]->[Rank]",
@@ -19,22 +20,29 @@ schema_mapping = {
 }
 
 
-def collect_op_metadata(op_node: LineageNode, print_info: bool = False):
+def collect_op_metadata(op_node: LineageNode, max_instruction_print_length: int = 50):
     op_name = op_node.op_name
     op_kwargs = op_node.operator.op_kwargs
+    user_instruction = op_kwargs["user_instruction"][:max_instruction_print_length]
     if op_name == "map":
-        op_signature = (
-            f"{schema_mapping[op_name].format(op_kwargs['user_instruction'], op_kwargs['input_columns'][0], op_kwargs['output_columns'][0])}"
+        return (
+            schema_mapping[op_name].format(user_instruction=user_instruction, input_column=op_kwargs['input_columns'][0], output_column=op_kwargs['output_columns'][0])
         )
     elif op_name in ["filter", "rank", "reduce"]:
-        op_signature = (
-            f"{schema_mapping[op_name].format(op_kwargs['user_instruction'], op_kwargs['input_columns'][0])}"
+        return (
+            schema_mapping[op_name].format(user_instruction=user_instruction, input_column=op_kwargs['input_columns'][0])
         )
     elif op_name == "join":
-        op_signature = (
-            f"{schema_mapping[op_name].format(op_kwargs['how'], op_kwargs['user_instruction'], op_kwargs['left_on'][0], op_kwargs['right_on'][0])}"
+        return (
+            schema_mapping[op_name].format(how=op_kwargs['how'], user_instruction=user_instruction, left_on=op_kwargs['left_on'][0], right_on=op_kwargs['right_on'][0])
         )
-    return op_signature
+    elif op_name == "scan":
+        output_columns = op_kwargs["output_columns"][:2]
+        output_columns_str = ", ".join(output_columns) + ", ..."
+        return (
+            schema_mapping[op_name].format(source=op_kwargs['source'], output_columns=output_columns_str)
+        )
+    return ""
 
 
 def execute_along_lineage(leaf_node: LineageNode):
@@ -69,7 +77,7 @@ def execute_along_lineage(leaf_node: LineageNode):
 
 class LineageMixin:
     def initialize(self):
-        op_kwargs = {"datasource": "dataframe"}
+        op_kwargs = {"source": "dataframe", "output_columns": self.columns}
         data_kwargs = {"left_input_fields": [], "right_input_fields": [], "output_fields": self.columns}
         node = LineageNode(op_name="scan", op_kwargs=op_kwargs, node_fields=data_kwargs, datasource=self._data)
         self.leaf_node = node
@@ -90,7 +98,7 @@ class LineageMixin:
     def execute(self):
         return execute_along_lineage(self.leaf_node)
         
-    def print_lineage_graph(self):
+    def print_lineage_graph(self, op_signature_width: int = 100, max_instruction_print_length: int = 50):
         lineage_graph_strings = []
         op_strings_in_same_hop = []
         node_queue = deque([self.leaf_node])
@@ -102,25 +110,22 @@ class LineageMixin:
                 op_strings_in_same_hop = []
                 continue
 
-            op_info = collect_op_metadata(node, print_info=True)
+            op_info = collect_op_metadata(node, max_instruction_print_length)
             op_strings_in_same_hop.append(op_info)
 
+            node_queue.append(None)
             node_queue.append(node.left_parent)
             if node.right_parent:
                 node_queue.append(node.right_parent)
-            node_queue.append(None)
 
         stringified_lineage_graph = ""
         while lineage_graph_strings:
             ops_info = lineage_graph_strings.pop()
             ops_info_string = ""
             for op_info in ops_info:
-                if len(op_info) > 20:
-                    op_info = f"{op_info[:17] + '...':<20}\t"
-                else:
-                    op_info = f"{op_info:<20}\t"
+                op_info = f"{op_info:<{op_signature_width}}"
                 ops_info_string += op_info
-            divider = "{|:<20}\t" * len(ops_info)
+            divider = f"{'|':<{op_signature_width}}\t" * len(ops_info)
             stringified_lineage_graph += ops_info_string.strip() + "\n"
             stringified_lineage_graph += divider + "\n"
 

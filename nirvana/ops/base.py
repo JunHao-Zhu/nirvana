@@ -49,20 +49,17 @@ class BaseOperation(ABC):
             "tool": self.tool.__repr__(),
             "implementation": self.implementation,
             "assertions": self.assertions,
-            "rate_limit": self.rate_limit
+            "rate_limit": self.semaphore._value
         }
 
-    @abstractmethod
     @property
     def dependencies(self) -> list[str]:
         raise NotImplementedError("Subclasses must implement dependencies property.")
 
-    @abstractmethod
     @property
     def generated_fields(self) -> list[str]:
         raise NotImplementedError("Subclasses must implement generated_fields property.")
 
-    @property
     def has_udf(self) -> bool:
         return callable(self.tool)
 

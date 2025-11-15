@@ -9,9 +9,6 @@ import pandas as pd
 
 from nirvana.executors.llm_backbone import LLMClient
 from nirvana.lineage.abstractions import LineageNode
-from nirvana.lineage.mixin import collect_op_metadata, execute_along_lineage
-from nirvana.optim.optimize_prompt import PLAN_OPIMIZE_PROMPT
-from nirvana.optim.evaluator import Evaluator
 from nirvana.optim.rules import (
     FilterPushdown,
     FilterPullup,
@@ -60,17 +57,31 @@ class PlanCost:
     
 
 class LogicalOptimizer:
-    def __init__(self, agent: LLMClient = None, non_llm_replace: bool = True):
+    def __init__(
+            self,
+            agent: LLMClient = None,
+            filter_pullup: bool = True,
+            filter_pushdown: bool = True,
+            map_pullup: bool = True,
+            non_llm_pushdown: bool = True,
+            non_llm_replace: bool = True
+    ):
         self.agent = agent
+        self.filter_pullup = filter_pullup
+        self.filter_pushdown = filter_pushdown
+        self.map_pullup = map_pullup
+        self.non_llm_pushdown = non_llm_pushdown
         self.non_llm_replace = non_llm_replace
 
+    def clear(self):
+        pass
+
     def optimize(self, plan: LineageNode):
-        if self.non_llm_replace:
-            plan = NonLLMReplace.transform(plan)
-        plan = MapPullup.transform(plan)
-        plan = FilterPullup.transform(plan)
-        plan = FilterPushdown.transform(plan)
-        plan = NonLLMPushdown.transform(plan)
+        plan = NonLLMReplace.transform(plan) if self.non_llm_replace else plan
+        plan = MapPullup.transform(plan) if self.map_pullup else plan
+        plan = FilterPullup.transform(plan) if self.filter_pullup else plan
+        plan = FilterPushdown.transform(plan) if self.filter_pushdown else plan
+        plan = NonLLMPushdown.transform(plan) if self.non_llm_pushdown else plan
         return plan
 
 

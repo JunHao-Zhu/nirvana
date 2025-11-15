@@ -1,10 +1,12 @@
 import functools
 import asyncio
+import imp
 from typing import Any, Iterable, Callable, Tuple
 from dataclasses import dataclass, field
 import pandas as pd
 
 from nirvana.dataframe.arrays.image import ImageDtype
+from nirvana.executors.tools import FunctionCallTool
 from nirvana.ops.base import BaseOpOutputs, BaseOperation
 from nirvana.ops.prompt_templates.map_prompter import MapPrompter
 
@@ -12,18 +14,18 @@ from nirvana.ops.prompt_templates.map_prompter import MapPrompter
 def map_wrapper(
     input_data: pd.DataFrame, 
     user_instruction: str = None,
-    func: Callable = None, 
     input_column: str = None,
     output_column: str = None, 
+    func: Callable = None, 
     strategy: str = None,
     **kwargs
 ):
     map_op = MapOperation(
         user_instruction=user_instruction,
-        executor=None if func is None else func,
         implementation=strategy,
         input_columns=[input_column],
         output_columns=[output_column],
+        tool=FunctionCallTool.from_function(func=func) if func else None,
         **kwargs
     )
     outputs = asyncio.run(map_op.execute(
@@ -79,7 +81,7 @@ class MapOperation(BaseOperation):
     
     @property
     def op_kwargs(self):
-        kwargs = super().op_kwargs()
+        kwargs = super().op_kwargs
         kwargs["input_columns"] = self.input_columns
         kwargs["output_columns"] = self.output_columns
         return kwargs

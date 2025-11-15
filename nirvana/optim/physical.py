@@ -37,7 +37,7 @@ class PhysicalOptimizer:
             available_models: list[str] = ORDERED_MODELS,
     ):
         self.agent = agent
-        self.available_models = available_models
+        self.available_models = available_models if available_models else ORDERED_MODELS
 
     def should_optimize(self, op_name: str, input_data: pd.DataFrame | list[pd.DataFrame], num_samples: int) -> bool:
         if op_name == "join":
@@ -221,10 +221,9 @@ class PhysicalOptimizer:
 
     def optimize(
             self, 
-            plan: LineageNode, 
-            input_data: pd.DataFrame, 
-            num_samples: int = 10, 
-            improve_margin: float = 0.2, 
+            plan: LineageNode,
+            num_samples: int = 10,
+            improve_margin: float = 0.2,
     ):
         optimize_output = {
             "total_token_cost": 0.0

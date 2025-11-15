@@ -9,10 +9,10 @@ class NonLLMPushdown:
     @classmethod
     def transform(cls, node: LineageNode) -> LineageNode:
         if node.op_name in ["map", "filter"]:
-            last_node = node.left_parent
-            last_node = cls.transform(last_node)
+            last_node = cls.transform(node.left_parent)
 
-            if last_node.op_name == "join":
+            if last_node.op_name in ["scan", "join"]:
+                node.set_left_parent(last_node)
                 return node
             
             dependencies = node.operator.dependencies
@@ -34,6 +34,7 @@ class NonLLMPushdown:
                 del node
                 return last_node
             else:
+                node.set_left_parent(last_node)
                 return node
         
         elif node.op_name == "join":

@@ -1,39 +1,53 @@
 import asyncio
 from typing import Any, Union
+from dataclasses import dataclass, field
 import pandas as pd
-from pydantic import BaseModel
 
 from nirvana.ops.base import BaseOpOutputs
+from nirvana.ops.scan import ScanOperation
 from nirvana.ops.map import MapOperation, MapOpOutputs
 from nirvana.ops.filter import FilterOperation, FilterOpOutputs
+from nirvana.ops.rank import RankOperation, RankOpOutputs
 from nirvana.ops.reduce import ReduceOperation, ReduceOpOutputs
 from nirvana.ops.join import JoinOperation, JoinOpOutputs
 
-OpOutputsType = Union[BaseOpOutputs, MapOpOutputs, FilterOpOutputs, ReduceOpOutputs, JoinOpOutputs]
+OpOutputsType = Union[
+    BaseOpOutputs, 
+    MapOpOutputs, 
+    FilterOpOutputs, 
+    ReduceOpOutputs, 
+    JoinOpOutputs,
+    RankOpOutputs
+]
 
 op_mapping = {
+    "scan": ScanOperation,
     "map": MapOperation,
     "filter": FilterOperation,
+    "rank": RankOperation,
     "reduce": ReduceOperation,
-    "join": JoinOperation
+    "join": JoinOperation,
 }
 
 
-class NodeFields(BaseModel):
-    left_input_fields: list[str] = []
-    right_input_fields: list[str] = []
-    output_fields: list[str] = []
+@dataclass
+class NodeFields:
+    left_input_fields: list[str] = field(default_factory=list)
+    right_input_fields: list[str] = field(default_factory=list)
+    output_fields: list[str] = field(default_factory=list)
 
 
-class DataSources(BaseModel):
-    left_datasource: str = ""
-    right_datasource: str = ""
-    output_datasource: str = ""
+@dataclass
+class DataSources:
+    left_datasource: str = field(default="")
+    right_datasource: str = field(default="")
+    output_datasource: str = field(default="")
 
 
-class NodeOutput(BaseModel):
-    output: pd.DataFrame | list[Any]
-    cost: float
+@dataclass
+class NodeOutput:
+    output: pd.DataFrame = field(default=None)
+    cost: float = field(default=0.0)
 
 
 class NodeBase:
@@ -49,10 +63,10 @@ class NodeBase:
     def right_parent(self):
         return self._right_parent
     
-    def set_left_parent(self, node: "NodeBase" | None):
+    def set_left_parent(self, node: "NodeBase"):
         self._left_parent = node
 
-    def set_right_parent(self, node: "NodeBase" | None):
+    def set_right_parent(self, node: "NodeBase"):
         self._right_parent = node
 
 

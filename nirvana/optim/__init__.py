@@ -1,8 +1,12 @@
 from nirvana.optim.optimizer import OptimizeConfig
-from nirvana.optim.static_rules import rule_based_plan_rewrite
+from nirvana.optim.logical import LogicalOptimizer
+from nirvana.optim.physical import PhysicalOptimizer
+from nirvana.optim.optimizer import PlanOptimizer
 
 
 __all__ = [
     "OptimizeConfig",
-    "rule_based_plan_rewrite"
+    "LogicalOptimizer",
+    "PhysicalOptimizer",
+    "PlanOptimizer",
 ]

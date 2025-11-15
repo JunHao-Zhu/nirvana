@@ -5,6 +5,7 @@ from dataclasses import dataclass
 import pandas as pd
 
 from nirvana.dataframe.arrays.image import ImageDtype
+from nirvana.executors.tools import FunctionCallTool
 from nirvana.ops.base import BaseOpOutputs, BaseOperation
 from nirvana.ops.prompt_templates.filter_prompter import FilterPrompter
 
@@ -12,15 +13,15 @@ from nirvana.ops.prompt_templates.filter_prompter import FilterPrompter
 def filter_wrapper(
     input_data: pd.DataFrame, 
     user_instruction: str = None,
-    func: Callable = None, 
     input_column: str = None,
-    strategy: str = None, 
+    func: Callable = None,
+    strategy: str = None,
     **kwargs
 ):
     filter_op = FilterOperation(
         user_instruction=user_instruction,
         input_columns=[input_column],
-        executor=None if func is None else func,
+        tool=FunctionCallTool.from_function(func=func) if func else None,
         implementation=strategy,
         **kwargs
     )
@@ -72,7 +73,7 @@ class FilterOperation(BaseOperation):
     
     @property
     def op_kwargs(self) -> dict:
-        kwargs = super().op_kwargs()
+        kwargs = super().op_kwargs
         kwargs["input_columns"] = self.input_columns
         return kwargs
 

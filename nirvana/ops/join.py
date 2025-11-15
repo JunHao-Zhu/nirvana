@@ -75,7 +75,7 @@ class JoinOperation(BaseOperation):
     
     @property
     def op_kwargs(self) -> dict:
-        kwargs = super().op_kwargs()
+        kwargs = super().op_kwargs
         kwargs["left_on"] = self.left_on
         kwargs["right_on"] = self.right_on
         kwargs["how"] = self.how

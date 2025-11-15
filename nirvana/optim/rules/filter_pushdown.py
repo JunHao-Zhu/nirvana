@@ -9,8 +9,7 @@ class FilterPushdown:
     @classmethod
     def transform(cls, node: LineageNode) -> LineageNode:
         if node.op_name == "filter":
-            last_node = node.left_parent
-            last_node = cls.transform(last_node)
+            last_node = cls.transform(node.left_parent)
             input_columns = node.operator.input_columns
 
             if last_node.op_name == "join":
@@ -39,10 +38,11 @@ class FilterPushdown:
                     del node
                     return last_node
                 else:
+                    node.set_left_parent(last_node)
                     return node
             
-            else:
-                fields = last_node.node_fields["left_input_fields"]
+            elif last_node.op_name in ["map", "filter", "rank"]:
+                fields = last_node.node_fields.left_input_fields
                 if cls.check_pattern(input_columns, fields):
                     # swap info (eg fields) of current op, filter, and its predecessor (eg map)
                     node.node_fields.output_fields = node.node_fields.left_input_fields = last_node.node_fields.left_input_fields
@@ -51,14 +51,19 @@ class FilterPushdown:
                     last_node.set_left_parent(cls.transform(node))
                     return last_node
                 else:
+                    node.set_left_parent(last_node)
                     return node
+                
+            else:
+                node.set_left_parent(last_node)
+                return node
                 
         elif node.op_name == "join":
             node.set_left_parent(cls.transform(node.left_parent))
             node.set_right_parent(cls.transform(node.right_parent))
             return node
         
-        elif node.op_name == "map" or node.op_name == "reduce":
+        elif node.op_name in ["map", "rank", "reduce"]:
             node.set_left_parent(cls.transform(node.left_parent))
             return node
         

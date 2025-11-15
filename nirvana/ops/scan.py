@@ -5,7 +5,7 @@ from dataclasses import dataclass, field
 import pandas as pd
 
 from nirvana.dataframe.arrays.image import ImageDtype
-from nirvana.ops.base import BaseOpOutputs, BaseOperation, BaseOpInputs
+from nirvana.ops.base import BaseOpOutputs, BaseOperation
 
 
 @dataclass
@@ -40,8 +40,9 @@ class ScanOperation(BaseOperation):
     def generated_fields(self) -> list[str]:
         return self.output_columns
     
+    @property
     def op_kwargs(self):
-        kwargs = super().op_kwargs()
+        kwargs = super().op_kwargs
         kwargs["source"] = self.source
         kwargs["output_columns"] = self.output_columns
         return kwargs

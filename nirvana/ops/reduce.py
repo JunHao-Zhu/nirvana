@@ -5,6 +5,7 @@ import pandas as pd
 from pandas.api.types import is_numeric_dtype
 
 from nirvana.dataframe.arrays.image import ImageDtype
+from nirvana.executors.tools import FunctionCallTool
 from nirvana.ops.base import BaseOpOutputs, BaseOperation
 from nirvana.ops.prompt_templates.reduce_prompter import ReducePrompter
 
@@ -12,14 +13,14 @@ from nirvana.ops.prompt_templates.reduce_prompter import ReducePrompter
 def reduce_wrapper(
         input_data: Iterable[Any],
         user_instruction: str = None,
-        func: Callable = None,
         input_column: str = None,
+        func: Callable = None,
         **kwargs
 ):
     reduce_op = ReduceOperation(
         user_instruction=user_instruction,
-        executor=None if func is None else func,
         input_columns=[input_column],
+        tool=FunctionCallTool.from_function(func=func) if func else None,
         **kwargs
     )
     outputs = asyncio.run(reduce_op.execute(
@@ -59,7 +60,6 @@ class ReduceOperation(BaseOperation):
             user_instruction=user_instruction,
             **kwargs
         )
-        self.initialize_executor()
         self.prompter = ReducePrompter()
         self.input_columns = input_columns
 
@@ -73,12 +73,9 @@ class ReduceOperation(BaseOperation):
     
     @property
     def op_kwargs(self):
-        kwargs = super().op_kwargs()
+        kwargs = super().op_kwargs
         kwargs["input_columns"] = self.input_columns
         return kwargs
-    
-    def initialize_executor(self):
-        self.executor = self.llm.default_model if self.executor is None else self.executor
 
     async def _execute_by_plain_llm(self, processed_data: Iterable[Any], user_instruction: str, dtype: str, **kwargs):
         async with self.semaphore:

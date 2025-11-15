@@ -5,6 +5,7 @@ from dataclasses import dataclass, field
 import pandas as pd
 
 from nirvana.dataframe.arrays.image import ImageDtype
+from nirvana.executors.tools import FunctionCallTool
 from nirvana.ops.base import BaseOpOutputs, BaseOperation
 from nirvana.ops.prompt_templates.rank_prompter import RankPrompter
 
@@ -12,15 +13,15 @@ from nirvana.ops.prompt_templates.rank_prompter import RankPrompter
 def rank_wrapper(
     input_data: pd.DataFrame,
     user_instruction: str = None,
-    func: Callable = None,
     input_column: str = None,
+    func: Callable = None,
     strategy: str = None,
     **kwargs
 ):    
     rank_op = RankOperation(
         user_instruction=user_instruction,
         input_columns=[input_column],
-        executor=func if func else None,
+        tool=FunctionCallTool.from_function(func=func) if func else None,
         implementation=strategy if strategy else "plain",
     )
     outputs = asyncio.run(rank_op.execute(
@@ -72,7 +73,7 @@ class RankOperation(BaseOperation):
     
     @property
     def op_kwargs(self) -> dict:
-        kwargs = super().op_kwargs()
+        kwargs = super().op_kwargs
         kwargs["input_columns"] = self.input_columns
         return kwargs
 

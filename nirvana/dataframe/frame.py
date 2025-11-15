@@ -73,9 +73,9 @@ class DataFrame(LineageMixin):
             "output_columns": [output_column]
         }
         data_kwargs = {
-            "left_input_fields": self.leaf_node.data_metadata["output_fields"],
+            "left_input_fields": self.leaf_node.node_fields.output_fields,
             "right_input_fields": [],
-            "output_fields": self.leaf_node.data_metadata["output_fields"] + [output_column]
+            "output_fields": self.leaf_node.node_fields.left_input_fields + [output_column]
         }
         self.add_operator(op_name="map",
                           op_kwargs=op_kwargs,
@@ -88,9 +88,9 @@ class DataFrame(LineageMixin):
             "input_columns": [input_column],
         }
         data_kwargs = {
-            "left_input_fields": self.leaf_node.data_metadata["output_fields"],
+            "left_input_fields": self.leaf_node.node_fields.output_fields,
             "right_input_fields": [],
-            "output_fields": self.leaf_node.data_metadata["output_fields"]
+            "output_fields": self.leaf_node.node_fields.output_fields,
         }
         self.add_operator(op_name="filter",
                           op_kwargs=op_kwargs,
@@ -103,9 +103,9 @@ class DataFrame(LineageMixin):
             "input_columns": [input_column],
         }
         data_kwargs = {
-            "left_input_fields": self.leaf_node.data_metadata["output_fields"],
+            "left_input_fields": self.leaf_node.node_fields.output_fields,
             "right_input_fields": [],
-            "output_fields": None
+            "output_fields": []
         }
         self.add_operator(op_name="reduce",
                           op_kwargs=op_kwargs,
@@ -114,7 +114,7 @@ class DataFrame(LineageMixin):
         
     def semantic_join(self, other: "DataFrame", user_instruction, left_on, right_on, how, rate_limit: int = 16):
         union_fields = (
-            list(set(self.leaf_node.data_metadata["output_fields"]).union(set(other.leaf_node.data_metadata["output_fields"])))
+            list(set(self.leaf_node.node_fields.output_fields) | set(other.leaf_node.node_fields.output_fields))
         )
         op_kwargs = {
             "user_instruction": user_instruction,
@@ -123,8 +123,8 @@ class DataFrame(LineageMixin):
             "how": how,
         }
         data_kwargs = {
-            "input_left_fields": self.leaf_node.data_metadata["output_fields"],
-            "input_right_fields": other.leaf_node.data_metadata["output_fields"],
+            "input_left_fields": self.leaf_node.node_fields.output_fields,
+            "input_right_fields": other.leaf_node.node_fields.output_fields,
             "output_fields": union_fields
         }
         self.add_operator(op_name="join",
@@ -136,11 +136,11 @@ class DataFrame(LineageMixin):
     def optimize_and_execute(self, optim_config = None):
         self.create_plan_optimizer(optim_config)
         if self.optimizer.config.do_logical_optimization:
-            self.leaf_node = self.optimizer.optimize_logical_plan(self.leaf_node, "df", self.columns)
+            self.leaf_node = self.optimizer.optimize_logical_plan(self.leaf_node)
         if self.optimizer.config.do_physical_optimization:
             output, cost, runtime = self.optimizer.optimize_physical_plan(
                 self.leaf_node,
-                self._data,
+                self.nrows,
             )
         else:
             output, cost, runtime = self.execute()
