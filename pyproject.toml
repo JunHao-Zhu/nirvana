@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "nirvana"
-version = "0.1.0"
+version = "0.2.0b1"
 description = "A LLM-powered semantic data analytics processing system."
 readme = "README.md"
 authors = [{ name = "Junhao Zhu", email = "zhujunhao@zju.edu.cn" }]
