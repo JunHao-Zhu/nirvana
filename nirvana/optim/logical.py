@@ -114,13 +114,13 @@ class LogicalOptimizer:
 #                 self.num_dataset += 1
 #                 return None
 
-#             code_from_left_parent = _build_op(node.left_parent)
-#             if code_from_left_parent:
-#                 logical_plan.append(code_from_left_parent)
-#             if node.right_parent:
-#                 code_from_right_parent = _build_op(node.right_parent)
-#                 if code_from_right_parent:
-#                     logical_plan.append(code_from_right_parent)
+#             code_from_left_child = _build_op(node.left_child)
+#             if code_from_left_child:
+#                 logical_plan.append(code_from_left_child)
+#             if node.right_child:
+#                 code_from_right_child = _build_op(node.right_child)
+#                 if code_from_right_child:
+#                     logical_plan.append(code_from_right_child)
             
 #             plan_stats.append(collect_op_metadata(node, print_info=False))
 #             op_kwargs = node.op_metadata
@@ -202,8 +202,8 @@ class LogicalOptimizer:
 #                         "output_fields": list(set(left_data.columns).union(set(right_data.columns))),
 #                     }
 #                     node = LineageNode(op_name="join", op_metadata=op_kwargs, data_metadata=data_metadata)
-#                     node.set_left_parent(left_node)
-#                     node.set_right_parent(right_node)
+#                     node.set_left_child(left_node)
+#                     node.set_right_child(right_node)
 #                 elif op_kwargs["other"] not in data_name:
 #                     data_name.add(op_kwargs["other"])
 #                     left_node = sub_lineages.popleft()
@@ -214,8 +214,8 @@ class LogicalOptimizer:
 #                         "output_fields": list(set(left_node.data_metadata["columns"]).union(set(right_data.columns))),
 #                     }
 #                     node = LineageNode(op_name="join", op_metadata=op_kwargs, data_metadata=data_metadata)
-#                     node.set_left_parent(left_node)
-#                     node.set_right_parent(right_node)
+#                     node.set_left_child(left_node)
+#                     node.set_right_child(right_node)
 #                 else:
 #                     left_node = sub_lineages.popleft()
 #                     right_node = sub_lineages.popleft()
@@ -225,8 +225,8 @@ class LogicalOptimizer:
 #                         "output_fields": list(set(left_node.data_metadata["columns"]).union(set(right_node.data_metadata["columns"]))),
 #                     }
 #                     node = LineageNode(op_name="join", op_metadata=op_kwargs, data_metadata=data_metadata)
-#                     node.set_left_parent(left_node)
-#                     node.set_right_parent(right_node)
+#                     node.set_left_child(left_node)
+#                     node.set_right_child(right_node)
 #                 sub_lineages.append(node)
 #             elif op_kwargs["op_name"] == "map" or op_kwargs["op_name"] == "filter":
 #                 if op_kwargs["data_name"] not in data_name:
@@ -238,7 +238,7 @@ class LogicalOptimizer:
 #                         "output_fields": dataset.columns + [op_kwargs["output_column"]] if op_kwargs["output_column"] else dataset.columns,
 #                     }
 #                     op_node = LineageNode(op_name=op_kwargs["op_name"], op_metadata=op_kwargs, data_metadata=data_metadata)
-#                     op_node.set_left_parent(data)
+#                     op_node.set_left_child(data)
 #                 else:
 #                     last_node = sub_lineages.popleft()
 #                     data_metadata = {
@@ -246,7 +246,7 @@ class LogicalOptimizer:
 #                         "output_fields": last_node.data_metadata["columns"] + [op_kwargs["output_column"]] if op_kwargs["output_column"] else last_node.data_metadata["columns"],
 #                     }
 #                     op_node = LineageNode(op_name=op_kwargs["op_name"], op_metadata=op_kwargs, data_metadata=data_metadata)
-#                     op_node.set_left_parent(last_node)
+#                     op_node.set_left_child(last_node)
 #                 sub_lineages.append(op_node)
 #             elif op_kwargs["op_name"] == "reduce":
 #                 if op_kwargs["data_name"] not in data_name:
@@ -258,7 +258,7 @@ class LogicalOptimizer:
 #                         "output_fields": None
 #                     }
 #                     op_node = LineageNode(op_name=op_kwargs["op_name"], op_metadata=op_kwargs, data_metadata=data_metadata)
-#                     op_node.set_left_parent(data)
+#                     op_node.set_left_child(data)
 #                 else:
 #                     last_node = sub_lineages.popleft()
 #                     data_metadata = {
@@ -266,7 +266,7 @@ class LogicalOptimizer:
 #                         "output_fields": None
 #                     }
 #                     op_node = LineageNode(op_name=op_kwargs["op_name"], op_metadata=op_kwargs, data_metadata=data_metadata)
-#                     op_node.set_left_parent(last_node)
+#                     op_node.set_left_child(last_node)
 #                 sub_lineages.append(op_node)
 #         assert len(sub_lineages) == 1
 #         return sub_lineages.pop(), plan_stats

@@ -48,10 +48,10 @@ def collect_op_metadata(op_node: LineageNode, max_instruction_print_length: int 
 def execute_along_lineage(leaf_node: LineageNode):
     total_token_cost = 0
     def _execute_node(node: LineageNode) -> pd.DataFrame:
-        if node.left_parent:
-            left_node_output = _execute_node(node.left_parent)
-        if node.right_parent:
-            right_node_output = _execute_node(node.right_parent)
+        if node.left_child:
+            left_node_output = _execute_node(node.left_child)
+        if node.right_child:
+            right_node_output = _execute_node(node.right_child)
         
         if node.op_name == "scan":
             node_output = asyncio.run(node.run())
@@ -85,11 +85,11 @@ class LineageMixin:
     def add_operator(self, op_name: str, op_kwargs: dict, data_kwargs: dict, **kwargs):
         node = LineageNode(op_name, op_kwargs=op_kwargs, node_fields=data_kwargs)
         if op_name == "join":
-            node.set_left_parent(self.leaf_node)
-            node.set_right_parent(kwargs["other"].leaf_node)
+            node.set_left_child(self.leaf_node)
+            node.set_right_child(kwargs["other"].leaf_node)
             self.leaf_node = node
         else:
-            node.set_left_parent(self.leaf_node)
+            node.set_left_child(self.leaf_node)
             self.leaf_node = node
 
     def create_plan_optimizer(self, config: OptimizeConfig = None):
@@ -114,9 +114,9 @@ class LineageMixin:
             op_strings_in_same_hop.append(op_info)
 
             node_queue.append(None)
-            node_queue.append(node.left_parent)
-            if node.right_parent:
-                node_queue.append(node.right_parent)
+            node_queue.append(node.left_child)
+            if node.right_child:
+                node_queue.append(node.right_child)
 
         stringified_lineage_graph = ""
         while lineage_graph_strings:
@@ -139,10 +139,10 @@ class LineageMixin:
         # empty_lineage will delete all nodes along two upstream sub-lineages
         # So put a note here if there is a bug when deleting nodes
         def _delete_node(node: LineageNode):
-            if node.left_parent:
-                _delete_node(node.left_parent)
-            if node.right_parent:
-                _delete_node(node.right_parent)
+            if node.left_child:
+                _delete_node(node.left_child)
+            if node.right_child:
+                _delete_node(node.right_child)
             del node
             return
         _delete_node(temp_node)

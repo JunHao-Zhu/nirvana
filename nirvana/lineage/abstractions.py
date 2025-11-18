@@ -52,22 +52,22 @@ class NodeOutput:
 
 class NodeBase:
     def __init__(self):
-        self._left_parent: NodeBase | None = None
-        self._right_parent: NodeBase | None = None
+        self._left_child: NodeBase | None = None
+        self._right_child: NodeBase | None = None
 
     @property
-    def left_parent(self):
-        return self._left_parent
+    def left_child(self):
+        return self._left_child
     
     @property
-    def right_parent(self):
-        return self._right_parent
+    def right_child(self):
+        return self._right_child
     
-    def set_left_parent(self, node: "NodeBase"):
-        self._left_parent = node
+    def set_left_child(self, node: "NodeBase"):
+        self._left_child = node
 
-    def set_right_parent(self, node: "NodeBase"):
-        self._right_parent = node
+    def set_right_child(self, node: "NodeBase"):
+        self._right_child = node
 
 
 class LineageNode(NodeBase):

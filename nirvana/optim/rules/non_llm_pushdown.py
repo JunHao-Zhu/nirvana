@@ -9,10 +9,10 @@ class NonLLMPushdown:
     @classmethod
     def transform(cls, node: LineageNode) -> LineageNode:
         if node.op_name in ["map", "filter"]:
-            last_node = cls.transform(node.left_parent)
+            last_node = cls.transform(node.left_child)
 
             if last_node.op_name in ["scan", "join"]:
-                node.set_left_parent(last_node)
+                node.set_left_child(last_node)
                 return node
             
             dependencies = node.operator.dependencies
@@ -29,21 +29,21 @@ class NonLLMPushdown:
                 last_node.node_fields.output_fields = list(
                     set(last_node.node_fields.left_input_fields + last_node.operator.generated_fields)
                 )
-                new_node.set_left_parent(last_node.left_parent)
-                last_node.set_left_parent(cls.transform(new_node))
+                new_node.set_left_child(last_node.left_child)
+                last_node.set_left_child(cls.transform(new_node))
                 del node
                 return last_node
             else:
-                node.set_left_parent(last_node)
+                node.set_left_child(last_node)
                 return node
         
         elif node.op_name == "join":
-            node.set_left_parent(cls.transform(node.left_parent))
-            node.set_right_parent(cls.transform(node.right_parent))
+            node.set_left_child(cls.transform(node.left_child))
+            node.set_right_child(cls.transform(node.right_child))
             return node
 
         elif node.op_name == "reduce":
-            node.set_left_parent(cls.transform(node.left_parent))
+            node.set_left_child(cls.transform(node.left_child))
             return node
         
         else:

@@ -20,12 +20,12 @@ def build_code_from_lineage(node: LineageNode) -> str:
             )
             return None
         
-        expression_from_left_parent = _build_expression(node.left_parent)
-        if expression_from_left_parent:
-            expressions.append(expression_from_left_parent)
-        expression_from_right_parent = _build_expression(node.right_parent)
-        if expression_from_right_parent:
-            expressions.append(expression_from_right_parent)
+        expression_from_left_child = _build_expression(node.left_child)
+        if expression_from_left_child:
+            expressions.append(expression_from_left_child)
+        expression_from_right_child = _build_expression(node.right_child)
+        if expression_from_right_child:
+            expressions.append(expression_from_right_child)
 
         if node.op_name in ["filter", "reduce"]:
             expression = (
@@ -73,8 +73,8 @@ def replace_with_udf_in_lineage(node: LineageNode, udfs: deque) -> LineageNode:
     def _replace_in_node(node: LineageNode | None):
         if node.op_name == "scan" or node is None:
             return
-        _replace_in_node(node.left_parent)
-        _replace_in_node(node.right_parent)
+        _replace_in_node(node.left_child)
+        _replace_in_node(node.right_child)
 
         udf = udfs.popleft()
         if udf is None:

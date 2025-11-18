@@ -231,10 +231,10 @@ class PhysicalOptimizer:
         optimize_func = functools.partial(self.optimize_exec_model, num_samples=num_samples, improve_margin=improve_margin)
         
         def _optimize_node(node: LineageNode) -> pd.DataFrame:
-            if node.left_parent:
-                dataframe_from_left_node = _optimize_node(node.left_parent)
-            if node.right_parent:
-                dataframe_from_right_node = _optimize_node(node.right_parent)
+            if node.left_child:
+                dataframe_from_left_node = _optimize_node(node.left_child)
+            if node.right_child:
+                dataframe_from_right_node = _optimize_node(node.right_child)
 
             if node.op_name == "scan":
                 output_from_node = asyncio.run(node.run())
