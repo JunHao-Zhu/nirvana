@@ -102,44 +102,38 @@ Data lineage (a directed acyclic graph) enables lazy exeuction and logical and p
 ```
 For example, with `semantic_filter`, it creates an op node in the data lineage of dataframe `df`, and `optimize_and_execute()` optimizes the logical plan and physical plan, then executes the query processing.
 
-Data lineage includes two core abstrations: `LineageOpNode` and `LineageDataNode`. `LineageOpNode` serves the operator optimization and execution. `LineageDataNode` serves the optimizations from perspective of data, like materializing the intermediate result and reusing it. By default, no `LineageDataNode` is included in data lineage, and it is created by setting `materialize` parameter `True` when necessary.
-```python
->>> df.semantic_filter("Whether the image is a software logo?", input_column="logos", strategy="plain_llm")
-```
+The core abstractions of data lineage is `LineageNode` (found in `lineage/abstractions.py`), serving the operator optimization and execution. The usages of `LineageNode` are found in `lineage/mixin.py`.
 
-### Logical plan optimization
-An agentic optimization workflow starts after the initial logical plan given and an optimize task
-invoked. A usage example of logical plan optimization is shown as follow.
+### Plan optimization
+Considering the following semantic data analytics query,
 ```python
->>> df = nv.DataFrame(pd.read_csv("/testdata/imdb_top_1000.csv").sample(n=200).drop("Genre", axis=1))
+>>> df = nv.DataFrame(pd.read_csv("/testdata/movie_data.csv"))
 >>> df.semantic_map(user_instruction="According to the movie overview, extract the genre of each movie.", input_column="Overview", output_column="Genre")
 >>> df.semantic_filter(user_instruction="The rating is higher than 7.", input_column="IMDB_Rating")
 >>> df.semantic_filter(user_instruction="The rating is lower than 8.", input_column="IMDB_Rating")
 >>> df.semantic_reduce(user_instruction="Count the number of crime movies.", input_column="Genre")
 ```
-The initial logical plan and its cost are like, 
+Nirvana does logical optimization and physical optimization separately. You can turn on/off each optimization in `OptimizeConfig` and execute the query processing with the configure.
 ```python
->>> df.print_logical_plan()
-map: [Overview]->[Genre] (According to the movie overview, extract the genre of each movie.) =>
-filter: [IMDB_Rating]->[Bool] (The rating is higher than 7.) =>
-filter: [IMDB_Rating]->[Bool] (The rating is lower than 8.) =>
-reduce: [Genre] (Count the number of crime movies.)
->>> output, cost, runtime = df.execute()
->>> print(cost)
-84542
-```
-After logical plan optimization, the new logical plan and its cost are like,
-```python
->>> config = nv.optim.OptimizeConfig(do_logical_optimization=True, do_physical_optimization=True)
+>>> config = nv.optim.OptimizeConfig(do_logical_optimization=True, do_physical_optimization=False)
 >>> output, cost, runtime = df.optimize_and_execute(optim_config=config)
-Plan optimization is finished, here are some statistics:
-initial plan cost: 4289 -> optimized plan cost: 2572
-initial plan accuracy: 1.0 -> optimized plan accuracy: 1.0
->>> df.print_logical_plan()
-filter: [IMDB_Rating]->[Bool] (The rating is higher than 7 and lower than 8.) =>
-map: [Overview]->[Genre] (According to the movie overview, extract the genre of each movie.) =>
-reduce: [Genre] (Count the number of crime movies.)
->>> print(cost)
-46074
 ```
-Now support three transformation rules: `Filter pushdown`, `Operator fusion`, and `Non-LLM replacement`.
+
+#### Logical plan optimization
+Rule-based logical plan optimization is adopted in Nirvana. Now we support 5 transformation rules (found in `optim/rules.py`):
+- `Non-llm replacement`: Replaces NL instructions over non-image/video/audio data with an equivalent compute function (powered by LLMs).
+- `Map pullup`: Pulls up maps to the top of the query plan.
+- `Filter pullup`: Identifies cases where a filter can be applied on columns in other tables.
+- `Filter pushdown`: Pushes filters down into the query plan and duplicates filters over equivalency sets.
+- `Non-llm pushdown`: Pushes operators using non-llm functions/tools down into the query plan.
+
+The rules are applied in a sequential order as they are listed here. The knob to turn on/off each rule is defined in `OptimizeConfig`, and by default all the rules will be used. If you want to turn off the LLM-powered semantic transformation rule `Non-llm replacement`, for example, you can do this:
+```python
+>>> config = nv.optim.OptimizeConfig(do_logical_optimization=True, non_llm_replace=False)
+```
+
+#### Physical plan optimization
+In this version, physical plan optimization assigns the most cost-effective model to each operator in a query plan (found in `optim/physical.py`). To use it, you need to set `do_physical_optimization` to `True` and set hyperparameters like `sample_size` and `improve_margin` in `OptimizeConfig`.
+```python
+>>> config = nv.optim.OptimizeConfig(do_logical_optimization=True, do_physical_optimization=True, sample_size=5, improve_margin=0.2)
+```

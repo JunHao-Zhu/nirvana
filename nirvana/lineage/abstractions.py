@@ -88,7 +88,7 @@ class LineageNode(NodeBase):
     def op_name(self) -> str:
         return self.operator.op_name
 
-    async def execute_operation(self, input: pd.DataFrame | list[pd.DataFrame] | None) -> OpOutputsType:
+    async def execute_operation(self, input: pd.DataFrame | list[pd.DataFrame] | None = None) -> OpOutputsType:
         if self.op_name == "scan":
             return BaseOpOutputs(output=self.datasource, cost=0.0)
         elif self.op_name == "join":
@@ -96,7 +96,7 @@ class LineageNode(NodeBase):
         else:
             return await self.operator.execute(input_data=input)
 
-    async def collate_dataframe(self, input: pd.DataFrame | list[pd.DataFrame] | None, op_outputs: OpOutputsType | None) -> pd.DataFrame:
+    async def collate_dataframe(self, input: pd.DataFrame | list[pd.DataFrame] | None = None, op_outputs: OpOutputsType | None = None) -> pd.DataFrame:
         if self.op_name == "scan":
             return self.datasource
         elif self.op_name == "join":
@@ -116,7 +116,7 @@ class LineageNode(NodeBase):
         elif self.op_name == "reduce":
             return pd.DataFrame({"reduce_result": [op_outputs.output]})
 
-    async def run(self, input: pd.DataFrame | list[pd.DataFrame] | None) -> NodeOutput:
+    async def run(self, input: pd.DataFrame | list[pd.DataFrame] | None = None) -> NodeOutput:
         if self.op_name == "scan":
             return NodeOutput(output=self.datasource, cost=0.0)
         
