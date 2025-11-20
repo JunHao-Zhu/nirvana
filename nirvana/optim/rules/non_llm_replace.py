@@ -94,9 +94,8 @@ class NonLLMReplace:
     Replace LLM-driven evaluations on NL instructions with equivalent UDFs.
     """
 
-    rewrite_prompt = """Given a dataset and a user-specified logical plan for a data processing task, you are required to generate equivalent UDFs to replace the NL instructions over non-image/video/audio data.
-The target of transformations is to generate a plan that is semantically equivalent to the original plan but reduces LLM calls.
-The dataset is given in the form of a pandas dataframe, and a logical plan is represented by a sequence of .semantic_*(...) functions (* can be replaced with names of possible operators).
+    rewrite_prompt = """Given a dataset and a user-specified query for semantic data processing.
+Each dataset is given in the form of a pandas-like dataframe, and the query is represented by a sequence of .semantic_*(...) operators (* can be replaced with names of supported operators).
 
 The supported operators and their required arguments are as follows.
 1. map: Perform an element-wise projection specified by natural language on a given column to a new column. Required arguments:
@@ -120,11 +119,11 @@ The supported operators and their required arguments are as follows.
 - input_column: the name of column on which the operation is performed
 - func: function to use for aggregating the data
 
-Here is an example of a data processing workflow that contains only map and filter operations:
+Here is an example of a semantic data processing query that contains only map and filter operations:
 ```python
 df.semantic_map(user_instruction="map instruction", input_column="col_a", output_column="col_b")
 df.semantic_filter(user_instruction="filter instruction", input_column="col_c")
-
+```
 
 Now, you are given following dataset(s):
 {dataset_info}
@@ -133,7 +132,8 @@ and a data processing workflow as follows:
 {logical_plan}
 ```
 
-Replace the NL instruction with an equivalent compute function for as many operations as possible. There are several constraints to follow.
+You are tasked with replacing the NL instruction with an equivalent compute function for as many operations as possible. The rewrite aims to generate a plan that is semantically equivalent to the original plan but reduces LLM calls.
+There are several constraints to follow.
 - The replacement is applied only when `user_instruction` can be converted to a built-in function or a lambda expression.
 - If no appropriate replacement applied, keep the original operation.
 - Except adding argument `func`, do not change the data processing workflow.
