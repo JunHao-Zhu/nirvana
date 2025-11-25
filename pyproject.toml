@@ -1,10 +1,10 @@
 [build-system]
-requires = ["setuptools>=77.0.1"]
+requires = ["setuptools>=77.0.1", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "nirvana-ai"
-version = "0.2.0b1"
+version = "1.0.0"
 description = "A LLM-powered semantic data analytics processing system."
 readme = "README.md"
 authors = [{ name = "Junhao Zhu", email = "zhujunhao@zju.edu.cn" }]

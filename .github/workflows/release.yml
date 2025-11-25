@@ -1,80 +1,55 @@
-name: Release
+name: Publish to PyPI with uv
 
 on:
   push:
     tags:
-      - "*"
-
-permissions:
-  contents: read
+      - "v*"
 
 jobs:
   build:
     runs-on: ubuntu-latest
+
     steps:
       - uses: actions/checkout@v4
 
-      - uses: actions/setup-python@v5
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
         with:
-          python-version: "3.x"
+          enable-cache: true
+          cache-dependency-globs: uv.lock
 
-      - name: Build package
-        run: |
-          # NOTE: put your own distribution build steps here.
-          pip install --upgrade pip build
-          python3 -m build
+      - name: Install Python with uv
+        run: uv python install 3.11
+
+      - name: Build package distributions
+        run: uv build
 
       - name: Upload distributions
         uses: actions/upload-artifact@v4
         with:
-          name: python-package-distributions
+          name: dist
           path: dist/
 
-  pypi-publish:
+  publish:
+    needs: build
     runs-on: ubuntu-latest
-    needs:
-      - build
-    permissions:
-      # IMPORTANT: this permission is mandatory for trusted publishing
-      id-token: write
-    # Dedicated environments with protections for publishing are strongly recommended.
-    # For more information, see: https://docs.github.com/en/actions/deployment/targeting-different-environments/using-environments-for-deployment#deployment-protection-rules
+
     environment:
       name: pypi
       url: https://pypi.org/p/nirvana-ai
-      # OPTIONAL: uncomment and update to include your PyPI project URL in the deployment status:
-      # url: https://pypi.org/p/YOURPROJECT
-      #
-      # ALTERNATIVE: if your GitHub Release name is the PyPI project version string
-      # ALTERNATIVE: exactly, uncomment the following line instead:
-      # url: https://pypi.org/project/YOURPROJECT/${{ github.event.release.name }}
+    
+    permissions:
+      contents: read
+      id-token: write
+    
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Set up Python 3.10
-        uses: actions/setup-python@v5
+      - name: Download distributions
+        uses: actions/download-artifact@v4
         with:
-          python-version: "3.10"
+          name: dist
+          path: dist/
 
-      - name: Install uv
-        run: |
-          curl -LsSf https://astral.sh/uv/install.sh | sh
-          echo "$HOME/.local/bin" >> $GITHUB_PATH
-
-      - name: Update PATH
-        run: echo "$HOME/.local/bin" >> $GITHUB_PATH
-
-      - name: Ensure clean venv and sync deps
-        run: |
-          uv venv
-          uv sync --all-extras
-
-      - name: Build distributions
-        run: uv build
-
-      - name: Verify artifacts
-        run: ls -la dist
-
-      - name: Publish package distributions to PyPI
+      - name: Publish to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          package-dir: dist/
