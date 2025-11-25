@@ -3,7 +3,7 @@ requires = ["setuptools>=77.0.1"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "nirvana"
+name = "nirvana-ai"
 version = "0.2.0b1"
 description = "A LLM-powered semantic data analytics processing system."
 readme = "README.md"
