@@ -16,7 +16,7 @@ jobs:
         uses: astral-sh/setup-uv@v6
         with:
           enable-cache: true
-          cache-dependency-globs: uv.lock
+          cache-dependency-glob: uv.lock
 
       - name: Install Python with uv
         run: uv python install 3.11
