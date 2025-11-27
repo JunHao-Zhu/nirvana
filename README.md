@@ -1,8 +1,21 @@
 # Nirvana
+<!--- BADGES: START --->
+[![Paper](https://img.shields.io/badge/Paper-arXiv-red)](https://arxiv.org/abs/2511.19830)
+[![PyPI](https://img.shields.io/pypi/v/nirvana-ai)](https://pypi.org/project/nirvana-ai/)
+<!--- BADGES: END --->
 
-A system prototype for [Beyond Relational: Semantic-Aware Multi-Modal Analytics with LLM-Native Query Optimization]()
+An LLM-powered semantic data analytics programming framework.
 
 ## Tutorial
+
+### Installation
+```bash
+pip install nirvana-ai
+```
+To install the latest version from `main`:
+```bash
+pip install git+https://github.com/JunHao-Zhu/nirvana.git
+```
 
 ### LLM backbone configuration
 Before using semantic operators, first configure the llm settings used in the system. Taking OpenAI as an example,

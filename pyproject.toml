@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "nirvana-ai"
 version = "1.0.0"
-description = "A LLM-powered semantic data analytics processing system."
+description = "An LLM-powered semantic data analytics programming framework."
 readme = "README.md"
 authors = [{ name = "Junhao Zhu", email = "zhujunhao@zju.edu.cn" }]
 license = { file = "LICENSE" }
@@ -29,13 +29,22 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = [
-    "pytest>=6.2.5",
+    "pytest>=9.0.1",
 ]
 
 [tool.setuptools.packages.find]
 where = ["."]
 include = ["nirvana", "nirvana.*"]
 exclude = ["tests", "tests.*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+filterwarnings = [
+    "error",
+    "ignore::DeprecationWarning",
+    "ignore::ResourceWarning",
+    "ignore::UserWarning",
+]
 
 [project.urls]
 repository = "https://github.com/JunHao-Zhu/nirvana"
