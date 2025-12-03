@@ -189,7 +189,7 @@ class MapOperation(BaseOperation):
         tasks = []
         for data in processed_data:
             if pd.isna(data):
-                tasks.append(asyncio.create_task(asyncio.sleep(0, result=(None, 0.0))))
+                tasks.append(asyncio.create_task(asyncio.sleep(0, result=None)))
             elif self.has_udf():
                 tasks.append(asyncio.create_task(self._execute_by_func(data, self.user_instruction, self.tool, execution_func)))
             else:

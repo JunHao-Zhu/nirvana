@@ -44,9 +44,6 @@ def dataframe_with_nan():
 @pytest.fixture
 def mock_llm_client():
     """Create a mock LLM client for testing."""
-    # Create a proper async mock
-    mock_client = AsyncMock(spec=LLMClient)
-    mock_client.default_model = "gpt-4"
     
     async def mock_call(messages, parse_tags=False, parse_code=False, **kwargs):
         """Mock LLM call that returns structured output."""
@@ -69,8 +66,9 @@ def mock_llm_client():
         
         return result
     
-    # Set the __call__ method to be the async function
-    mock_client.__call__ = mock_call
+    # Create a proper async mock
+    mock_client = AsyncMock(spec=LLMClient, side_effect=mock_call)
+    mock_client.default_model = "gpt-4"
     return mock_client
 
 
