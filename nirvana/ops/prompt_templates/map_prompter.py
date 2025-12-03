@@ -5,18 +5,21 @@ class MapPrompter:
     def __init__(self):
         self.system_instruction = (
             "You are a helpful assistant helping the user make sense of their data. "
-            "You are performing a map operation (one input: one output) to "
-            "project the given data based on the user's instruction."
+            "You are performing a map operation to project the given data into correct values for a set of output fields based on the user's instruction."
         )
-        self.output_format = (
-            "Output the result of the map operation concisely in the following format.\n"
-            "<output> LLM output </output>\n"
-        )
+        self.output_format: str = None
+
+    def prepara_output_format(self, output_columns: list[str]):
+        output_format = "Output the result of the map operation (each field) concisely in the following format.\n"
+        for column_name in output_columns:
+            output_format += f"<{column_name}> fill in correct value </{column_name}>\n"
+        return output_format
 
     def generate_prompt(
             self, 
             data: Any,
             user_instruction: str,
+            output_columns: list[str],
             dtype: str = "str"
     ):
         """
@@ -38,6 +41,8 @@ class MapPrompter:
             ValueError: If the type of `data` is not supported.
         """
         # 1. Prepare system message
+        if self.output_format is None:
+            self.output_format = self.prepara_output_format(output_columns=output_columns)
         sys_message = [
             {"role": "system", "content": self.system_instruction},
             {"role": "system", "content": self.output_format}
@@ -62,6 +67,7 @@ class MapPrompter:
             self,
             data: Any,
             user_instruction: str,
+            output_columns: list[str],
             dtype: str,
             demos: List[Dict[str, Any]]
     ):
@@ -83,26 +89,28 @@ class MapPrompter:
             ValueError: If the type of `data` or `demo["data"]` is not supported.
         """
         # 1. Prepare system message
+        if self.output_format is None:
+            self.output_format = self.prepara_output_format(output_columns=output_columns)
         sys_message = [
             {"role": "system", "content": self.system_instruction},
             {"role": "system", "content": self.output_format}
         ]
 
         # 2. Prepare demonstration message
-        demos_message = []
+        demos_message = [{"role": "assistant", "content": "Several examples are shown below."}]
         for demo in demos:
             demo_content = []
             if dtype == "str":
                 demo_content = [
                     {"type": "input_text", "text": demo["data"]},
                     {"type": "input_text", "text": user_instruction},
-                    {"type": "input_text", "text": demo["answer"]}
+                    {"type": "input_text", "text": "Answer:\n" + demo["answer"]}
                 ]
             elif dtype == "image":
                 demo_content = [
                     {"type": "input_image", "image_url": demo["data"]},
                     {"type": "input_text", "text": user_instruction},
-                    {"type": "input_text", "text": demo["answer"]}
+                    {"type": "input_text", "text": "Answer:\n" + demo["answer"]}
                 ]
             else:
                 raise ValueError(f"Data type {dtype} is not supported.")
@@ -169,10 +177,11 @@ class MapPrompter:
             data: Any,
             answer: Any,
             user_instruction: str,
+            output_columns: list[str],
             feedback: str,
             dtype: str = "str"
     ):
-        initial_generate_prompt = self.generate_prompt(data, user_instruction, dtype)
+        initial_generate_prompt = self.generate_prompt(data, user_instruction, output_columns, dtype)
         refine_context =(
             "There is feedback from your previous output.\n"
             f"Output:\n{answer}\nFeedback:\n{feedback}\n"

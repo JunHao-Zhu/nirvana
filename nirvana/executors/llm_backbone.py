@@ -1,39 +1,53 @@
 import logging
+import os
 import re
 from pathlib import Path
-from typing import Union, Optional, List, Dict, Any
-from pydantic import BaseModel, Field
+from typing import Any
+
 import numpy as np
 from openai import AsyncOpenAI
+from pydantic import BaseModel, Field
+
+from nirvana.executors.constants import MODEL_PRICING, LLMProviders
 
 logger = logging.getLogger(__name__)
 
 
-MODEL_PRICING = { # pricing policies (in US dollar per 1k tokens)
-    # models from OpenAI
-    "gpt-5-2025-08-07": {"Input": 0.00125, "Cache": 0.000125, "Output": 0.01},
-    "gpt-5-mini-2025-08-07": {"Input": 0.00025, "Cache": 0.000025, "Output": 0.002},
-    "gpt-5-nano-2025-08-07": {"Input": 0.00005, "Cache": 0.000005, "Output": 0.0004},
-    "gpt-4.1-2025-04-14": {"Input": 0.002, "Cache": 0.0005, "Output": 0.008},
-    "gpt-4.1-mini-2025-04-14": {"Input": 0.0004, "Cache": 0.0001, "Output": 0.0016},
-    "gpt-4.1-nano-2025-04-14": {"Input": 0.0001, "Cache": 0.000025, "Output": 0.0004},
-    "gpt-4o-2024-08-06": {"Input": 0.0025, "Cache": 0.00125, "Output": 0.01},
-    "gpt-4o-mini-2024-07-18": {"Input": 0.00015, "Cache": 0.000075, "Output": 0.0006},
-    "text-embedding-3-large": {"Input": 0.00013,},
-    # models from DeepSeek
-    "deepseek-chat": {"Input": 0.00027, "Cache": 0.00007, "Output": 0.0011},
-    # models from Qwen
-    "qwen-max-latest": {"Input": 0.00033, "Output": 0.0013},
-}
-
-
-def _get_api_key_from_file(file):
+def _get_api_key_from_file(file: Path) -> str:
     with open(file, 'r') as api_file:
         api_key = api_file.readline()
     return api_key
 
 
-def _create_client(api_key, **kwargs):
+def _get_openai_compatible_provider_info(
+    model_name: str,
+    api_key: str | Path | None = None,
+    base_url: str | None = None
+) -> tuple[str, str]:
+    """Infer provider-specific settings (API key and base URL) from the model name."""
+
+    if isinstance(api_key, Path):
+        api_key = _get_api_key_from_file(api_key)
+
+    if model_name.startswith("gpt") or model_name.startswith("text-embedding"):
+        base_url = LLMProviders.OPENAI
+        api_key = api_key or os.getenv("OPENAI_API_KEY", "")
+    elif model_name.startswith("deepseek"):
+        base_url = LLMProviders.DEEPSEEK
+        api_key = api_key or os.getenv("DEEPSEEK_API_KEY", "")
+    elif model_name.startswith("qwen"):
+        base_url = LLMProviders.QWEN
+        api_key = api_key or os.getenv("QWEN_API_KEY", "")
+    elif model_name.startswith("gemini"):
+        base_url = LLMProviders.GEMINI
+        api_key = api_key or os.getenv("GEMINI_API_KEY", "")
+    else:
+        raise ValueError(f"Unsupported model: {model_name}. Litellm will be used as the underlying backend in the next version.")
+
+    return api_key, base_url
+
+
+def _create_client(api_key: str, **kwargs):
     assert api_key != "", "API key is required."
     client = AsyncOpenAI(api_key=api_key, **kwargs)
     return client
@@ -46,18 +60,37 @@ class LLMArguments(BaseModel):
 
 
 class LLMClient:
-    default_model: Optional[str] = None
+    default_model: str | None = None
     client = None
     config: LLMArguments = LLMArguments()
 
     @classmethod
-    def configure(cls, model_name: str = None, api_key: Union[str, Path] = None, **kwargs):
+    def configure(
+        cls,
+        model_name: str,
+        api_key: str | Path | None = None,
+        base_url: str | None = None,
+        **kwargs,
+    ):
+        """
+        Configure the shared LLM client.
+
+        The provider (OpenAI / DeepSeek / Qwen) is inferred from ``model_name``,
+        and appropriate defaults for ``base_url`` and ``api_key`` are applied.
+        Users can still override both ``api_key`` and ``base_url`` explicitly.
+        """
         cls.default_model = model_name
-        api_key = api_key if isinstance(api_key, str) else _get_api_key_from_file(api_key)
-        cls.client = _create_client(api_key, **kwargs)
+        api_key, base_url = _get_openai_compatible_provider_info(
+            model_name=model_name,
+            api_key=api_key,
+            base_url=base_url,
+        )
+        cls.client = _create_client(api_key=api_key, base_url=base_url, **kwargs)
         return cls()
 
-    async def create_embedding(self, text: Union[list[str], str], embed_model: str = "text-embedding-3-large"):
+    async def create_embedding(self, text: list[str] | str, embed_model: str = "text-embedding-3-large"):
+        api_key, base_url = _get_openai_compatible_provider_info(model_name=embed_model)
+        self.client = _create_client(api_key=api_key, base_url=base_url)
         response = await self.client.embeddings.create(
             input=text, model=embed_model
         )
@@ -65,12 +98,15 @@ class LLMClient:
         return np.array([data.embedding for data in response.data]).squeeze(), cost
 
     async def __call__(self,
-            messages: List[Dict[str, str]],
-            parse_tags: bool = False,
-            parse_code: bool = False,
-            **kwargs,
-    ) -> Dict[str, Any]:
-        model_name = kwargs.get("model", self.default_model)
+        messages: list[dict[str, str]],
+        parse_tags: bool = False,
+        parse_code: bool = False,
+        **kwargs,
+    ) -> dict[str, Any]:
+        model_name = kwargs.pop("model", None)
+        if model_name is not None:
+            api_key, base_url = _get_openai_compatible_provider_info(model_name=model_name)
+            self.client = _create_client(api_key=api_key, base_url=base_url, **kwargs)
         timeout = 0
         success = False
         while not success and timeout < self.config.max_timeouts:
@@ -91,7 +127,7 @@ class LLMClient:
         outputs = dict()
         outputs["raw_output"] = llm_output
         if parse_tags:
-            tags: List[str] = kwargs["tags"]
+            tags: list[str] = kwargs["tags"]
             for tag in tags:
                 outputs[tag] = self._extract_xml(llm_output, tag)
         elif parse_code:

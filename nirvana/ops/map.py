@@ -1,8 +1,9 @@
+from collections import defaultdict
 import functools
 import asyncio
-import imp
 from typing import Any, Iterable, Callable, Tuple
 from dataclasses import dataclass, field
+from numpy import amax
 import pandas as pd
 
 from nirvana.dataframe.arrays.image import ImageDtype
@@ -15,7 +16,7 @@ def map_wrapper(
     input_data: pd.DataFrame, 
     user_instruction: str = None,
     input_column: str = None,
-    output_column: str = None, 
+    output_columns: list[str] = None, 
     func: Callable = None, 
     strategy: str = None,
     **kwargs
@@ -24,7 +25,7 @@ def map_wrapper(
         user_instruction=user_instruction,
         implementation=strategy,
         input_columns=[input_column],
-        output_columns=[output_column],
+        output_columns=output_columns,
         tool=FunctionCallTool.from_function(func=func) if func else None,
         **kwargs
     )
@@ -37,14 +38,17 @@ def map_wrapper(
 
 @dataclass
 class MapOpOutputs(BaseOpOutputs):
-    field_name: str | None = field(default=None)
-    output: Iterable[Any] = field(default_factory=list)
+    field_name: list[str] | None = field(default=None)
+    output: dict[str, Iterable] = field(default_factory=list)
 
     def __add__(self, other: "MapOpOutputs"):
         assert self.field_name == other.field_name, "Cannot merge MapOpOutputs with different field names."
+        map_output = dict()
+        for name in self.field_name:
+            map_output[name] = self.output[name] + other.output[name]
         return MapOpOutputs(
             field_name=self.field_name,
-            output=self.output + other.output,
+            output=map_output,
             cost=self.cost + other.cost
         )
 
@@ -90,25 +94,25 @@ class MapOperation(BaseOperation):
         async with self.semaphore:
             if dtype == "str":
                 data = f"{kwargs['field_name']}: {str(data)}"
-            full_prompt = self.prompter.generate_prompt(data, user_instruction, dtype)
-            output = await self.llm(full_prompt, parse_tags=True, tags=["output"], **kwargs)
-            return output["output"], output["cost"]
+            full_prompt = self.prompter.generate_prompt(data, user_instruction, self.output_columns, dtype)
+            output = await self.llm(full_prompt, parse_tags=True, tags=self.output_columns, **kwargs)
+            return output
 
     async def _execute_by_fewshot_llm(self, data: Any, user_instruction: str, dtype: str, demos, **kwargs):
         async with self.semaphore:
             if dtype == "str":
                 data = f"{kwargs['field_name']}: {str(data)}"
-            full_prompt = self.prompter.generate_fewshot_prompt(data, user_instruction, dtype, demos)
-            output = await self.llm(full_prompt, parse_tags=True, tags=["output"], **kwargs)
-            return output["output"], output["cost"]
+            full_prompt = self.prompter.generate_fewshot_prompt(data, user_instruction, self.output_columns, dtype, demos)
+            output = await self.llm(full_prompt, parse_tags=True, tags=self.output_columns, **kwargs)
+            return output
         
     async def _execute_by_self_refine(self, data: Any, user_instruction: str, dtype: str, **kwargs):
         async with self.semaphore:
             self_refine_cost = 0.0
             if dtype == "str":
                 data = f"{kwargs['field_name']}: {str(data)}"
-            generate_prompt = self.prompter.generate_prompt(data, user_instruction, dtype)
-            output = await self.llm(generate_prompt, parse_tags=True, tags=["output"], **kwargs)
+            generate_prompt = self.prompter.generate_prompt(data, user_instruction, self.output_columns, dtype)
+            output = await self.llm(generate_prompt, parse_tags=True, tags=self.output_columns, **kwargs)
             self_refine_cost += output["cost"]
 
             evaluate_prompt = self.prompter.generate_evaluate_prompt(data, output["raw_output"], user_instruction, dtype)
@@ -116,12 +120,14 @@ class MapOperation(BaseOperation):
             self_refine_cost += evaluate_output["cost"]
             
             if "pass" in evaluate_output["evaluation"].lower():
-                return output["output"], self_refine_cost
+                output["cost"] = self_refine_cost
+                return output
             else:
-                refine_prompt = self.prompter.generate_refine_prompt(data, output["raw_output"], user_instruction, evaluate_output["feedback"], dtype)
-                refine_output = await self.llm(refine_prompt, parse_tags=True, tags=["output"], **kwargs)
+                refine_prompt = self.prompter.generate_refine_prompt(data, output["raw_output"], user_instruction, self.output_columns, evaluate_output["feedback"], dtype)
+                refine_output = await self.llm(refine_prompt, parse_tags=True, tags=self.output_columns, **kwargs)
                 self_refine_cost += refine_output["cost"]
-                return refine_output["output"], self_refine_cost
+                refine_output["cost"] = self_refine_cost
+                return refine_output
 
     async def _execute_by_func(self, data: Any, user_instruction: str, func: Callable, llm_call: Callable, **kwargs):
         try:
@@ -130,13 +136,19 @@ class MapOperation(BaseOperation):
         except Exception as e:
             return await llm_call(data, user_instruction)
     
-    def _postprocess_map_outputs(self, results: Iterable[Tuple[Any, float]]):
-        outputs, costs = [], 0.0
-        for output, cost in results:
-            output = output if output is not None else "None"
-            outputs.append(output)
-            costs += cost
-        return outputs, costs
+    def _postprocess_map_outputs(self, results: Iterable[dict], output_columns: list[str]):
+        outputs = {column: [] for column in output_columns}
+        total_cost = 0.0
+        for llm_response in results:
+            if llm_response is None:
+                for column in output_columns:
+                    outputs[column].append(None)
+                continue
+
+            for column in output_columns:
+                outputs[column].append(llm_response.get(column, None))
+            total_cost += llm_response.get("cost", 0.0)
+        return outputs, total_cost
 
     async def execute(
             self, 
@@ -148,7 +160,7 @@ class MapOperation(BaseOperation):
             raise ValueError("Neither `user_instruction` nor `func` is given.")
         
         if input_data.empty:
-            return MapOpOutputs(field_name=self.output_columns[0], output=None)
+            return MapOpOutputs(field_name=self.output_columns, output=[])
 
         processed_data = input_data[self.input_columns[0]]
         if isinstance(processed_data.dtype, ImageDtype):
@@ -171,7 +183,7 @@ class MapOperation(BaseOperation):
         tasks = []
         for data in processed_data:
             if pd.isna(data):
-                tasks.append(asyncio.create_task(asyncio.sleep(0, result=("None", 0.0))))
+                tasks.append(asyncio.create_task(asyncio.sleep(0, result=(None, 0.0))))
             elif self.has_udf():
                 tasks.append(asyncio.create_task(self._execute_by_func(data, self.user_instruction, self.tool, execution_func)))
             else:
@@ -183,7 +195,7 @@ class MapOperation(BaseOperation):
         # Process results
         map_results, token_cost = self._postprocess_map_outputs(results)
         return MapOpOutputs(
-            field_name=self.output_columns[0],
+            field_name=self.output_columns,
             output=map_results,
             cost=token_cost
         )

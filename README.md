@@ -42,16 +42,16 @@ Operator `map`: Perform a projecton on the target data based on a predicate (the
 ...         "When the menace known as the Joker wreaks havoc and chaos on the people of Gotham, Batman must accept one of the greatest psychological and physical tests of his ability to fight injustice."
 ...     ]
 ... })
->>> nv.ops.map(df, "According to the movie overview, extract the genre of each movie.", input_column="overview", output_column = "genre", strategy="plain_llm")
+>>> nv.ops.map(df, "According to the movie overview, extract the genre of each movie.", input_column="overview", output_columns = ["genre"], strategy="plain")
 MapOpOutputs(
-    field_name = "genre",
-    output = ["crime, drama", "action, thriller, superhero"]
+    field_name = ["genre"],
+    output = {"genre": ["crime, drama", "action, thriller, superhero"]}
 )
 ```
 
 Operator `filter`: Evaluate a condition on the target data (returning either True or False) (the code refers to ops/filter.py (execution) and prompt_templates/filter_prompter.py (prompts))
 ```python
->>> nv.ops.filter(df, "Whether the movie is released after 2000?", input_column="title", strategy="plain_llm")
+>>> nv.ops.filter(df, "Whether the movie is released after 2000?", input_column="title", strategy="plain")
 FilterOpOutputs(
     output = [False, True]
 )

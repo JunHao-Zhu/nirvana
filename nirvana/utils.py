@@ -9,7 +9,7 @@ from nirvana.optim.optimizer import PlanOptimizer
 
 
 def configure_llm_backbone(
-        model_name: str = None, api_key: Union[str, Path] = None, **kwargs
+    model_name: str = None, api_key: Union[str, Path] = None, **kwargs
 ):
     """
     Configures the LLM (Large Language Model) backbone by initializing and setting it 

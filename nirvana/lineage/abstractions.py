@@ -137,7 +137,7 @@ class LineageNode(NodeBase):
             op_outputs = await self.operator.execute(input_data=input)
             if op_outputs.output is None:
                 return NodeOutput(output=input, cost=op_outputs.cost)
-            input[op_outputs.field_name] = op_outputs.output
+            input.join(pd.DataFrame(op_outputs.output))
             return NodeOutput(output=input, cost=op_outputs.cost)
         
         elif self.op_name == "reduce":
