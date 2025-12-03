@@ -131,8 +131,14 @@ class MapOperation(BaseOperation):
 
     async def _execute_by_func(self, data: Any, user_instruction: str, func: Callable, llm_call: Callable, **kwargs):
         try:
-            output = func(data)
-            return output, 0.0
+            if len(self.output_columns) > 1:
+                raise NotImplementedError(
+                    "For now, the function tool is allowed to process one-to-one mapping. ",
+                    "How to accommodate one-to-many map function with any output needs addressed."
+                )
+            map_result = func(data)
+            output = {self.output_columns[0]: map_result, "cost": 0.0}
+            return output
         except Exception as e:
             return await llm_call(data, user_instruction)
     
@@ -193,7 +199,7 @@ class MapOperation(BaseOperation):
         results = await asyncio.gather(*tasks)
         
         # Process results
-        map_results, token_cost = self._postprocess_map_outputs(results)
+        map_results, token_cost = self._postprocess_map_outputs(results, self.output_columns)
         return MapOpOutputs(
             field_name=self.output_columns,
             output=map_results,

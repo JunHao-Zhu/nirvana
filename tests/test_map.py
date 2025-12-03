@@ -44,7 +44,8 @@ def dataframe_with_nan():
 @pytest.fixture
 def mock_llm_client():
     """Create a mock LLM client for testing."""
-    mock_client = MagicMock(spec=LLMClient)
+    # Create a proper async mock
+    mock_client = AsyncMock(spec=LLMClient)
     mock_client.default_model = "gpt-4"
     
     async def mock_call(messages, parse_tags=False, parse_code=False, **kwargs):
@@ -68,7 +69,8 @@ def mock_llm_client():
         
         return result
     
-    mock_client.__call__ = AsyncMock(side_effect=mock_call)
+    # Set the __call__ method to be the async function
+    mock_client.__call__ = mock_call
     return mock_client
 
 
@@ -186,7 +188,7 @@ class TestMapOperation:
             
             return result
         
-        mock_llm_client.__call__ = AsyncMock(side_effect=mock_call_with_eval)
+        mock_llm_client.__call__ = mock_call_with_eval
         MapOperation.set_llm(mock_llm_client)
         
         op = MapOperation(
@@ -385,8 +387,7 @@ class TestMapOpOutputs:
 class TestMapWrapper:
     """Test suite for map_wrapper function."""
     
-    @pytest.mark.asyncio
-    async def test_map_wrapper_basic(self, sample_dataframe, mock_llm_client):
+    def test_map_wrapper_basic(self, sample_dataframe, mock_llm_client):
         """Test the map_wrapper function with basic usage."""
         MapOperation.set_llm(mock_llm_client)
         
@@ -404,8 +405,7 @@ class TestMapWrapper:
         assert "genre" in result.output
         assert len(result.output["genre"]) == 3
     
-    @pytest.mark.asyncio
-    async def test_map_wrapper_with_udf(self, sample_dataframe, mock_llm_client):
+    def test_map_wrapper_with_udf(self, sample_dataframe, mock_llm_client):
         """Test the map_wrapper function with user-defined function."""
         MapOperation.set_llm(mock_llm_client)
         
@@ -497,7 +497,7 @@ class TestMapOperationIntegration:
                         result[tag] = "9.2"
             return result
         
-        mock_llm_client.__call__ = AsyncMock(side_effect=mock_call_multi)
+        mock_llm_client.__call__ = mock_call_multi
         MapOperation.set_llm(mock_llm_client)
         
         op = MapOperation(
