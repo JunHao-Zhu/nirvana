@@ -47,7 +47,11 @@ jobs:
             mkdocs-material-
       
       - name: Build documentation
-        run: nv run mkdocs build
+        run: |
+          cd docs
+          nv run mkdocs build
       
       - name: Deploy to GitHub Pages
-        run: nv run mkdocs gh-deploy --force
+        run: |
+          cd docs
+          nv run mkdocs gh-deploy --force
