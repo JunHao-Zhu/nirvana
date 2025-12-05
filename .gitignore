@@ -21,3 +21,6 @@ experiments/*.pdf
 experiments/*.svg
 experiments/*.ipynb
 
+# MkDocs
+site/
+

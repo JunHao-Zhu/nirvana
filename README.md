@@ -2,9 +2,12 @@
 <!--- BADGES: START --->
 [![Paper](https://img.shields.io/badge/Paper-arXiv-red)](https://arxiv.org/abs/2511.19830)
 [![PyPI](https://img.shields.io/pypi/v/nirvana-ai)](https://pypi.org/project/nirvana-ai/)
+[![Documentation](https://img.shields.io/badge/Documentation-docs-green)](https://JunHao-Zhu.github.io/nirvana)
 <!--- BADGES: END --->
 
 An LLM-powered semantic data analytics programming framework.
+
+> 📖 **Documentation**: Full documentation is available at [docs/](docs/) or build locally with `mkdocs serve`.
 
 ## Tutorial
 
