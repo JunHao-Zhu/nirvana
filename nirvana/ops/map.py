@@ -1,4 +1,3 @@
-from collections import defaultdict
 import functools
 import asyncio
 from typing import Any, Iterable, Callable, Tuple

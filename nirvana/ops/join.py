@@ -1,7 +1,9 @@
+import warnings
+
 import asyncio
 import functools
 import pandas as pd
-from typing import Any, Iterable, Callable
+from typing import Any, Iterable, Callable, Literal
 from dataclasses import dataclass, field
 
 from nirvana.dataframe.arrays.image import ImageDtype
@@ -16,6 +18,7 @@ def join_wrapper(
     left_on: str,
     right_on: str,
     how: str = "inner",
+    strategy: Literal["nest", "block"] = "nest",
     **kwargs
 ):
     join_op = JoinOperation(
@@ -23,13 +26,13 @@ def join_wrapper(
         left_on=[left_on],
         right_on=[right_on],
         how=how,
-        **kwargs
+        implementation=strategy,
     )
-    outputs = join_op.execute(
+    outputs = asyncio.run(join_op.execute(
         left_data=left_data,
         right_data=right_data,
         **kwargs
-    )
+    ))
     return outputs
 
 
@@ -43,8 +46,6 @@ class JoinOpOutputs(BaseOpOutputs):
 class JoinOperation(BaseOperation):
     """
     Join operator: Join values of two columns against a specific user's instruction.
-
-    TODO: test the join operator
     """
     implementation_options = ["nest", "block"]
     
@@ -86,7 +87,7 @@ class JoinOperation(BaseOperation):
         left_ids = left_values.index
         right_ids = right_values.index
         data_id_pairs = [(left_id, right_id) for left_id in left_ids for right_id in right_ids]
-        return data_id_pairs, left_ids.tolist(), right_ids.tolist()
+        return data_id_pairs
     
     async def _execute_by_func(self, left_value: Any, right_value: Any, user_instruction: str, func: Callable, llm_call: Callable, **kwargs):
         try:
@@ -94,6 +95,7 @@ class JoinOperation(BaseOperation):
             output = {"output": join_result, "cost": 0.0}
             return output
         except Exception as e:
+            warnings.warn(f"Evaluation by UDF failed with error {e}. Switch to LLM evaluation.")
             return await llm_call(left_value, right_value, user_instruction)
 
     async def _pairwise_evaluate(self, left_value: Any, right_value: Any, user_instruction: str, left_dtype: str, right_dtype: str, **kwargs):
@@ -111,8 +113,6 @@ class JoinOperation(BaseOperation):
         data_id_pairs: list[tuple], 
         results: Iterable[dict],
         how: str = "inner",
-        left_ids: list[int] = None,
-        right_ids: list[int] = None
     ):
         join_outputs, total_cost = [], 0.0
         for result in results:
@@ -131,18 +131,16 @@ class JoinOperation(BaseOperation):
                 join_outputs.append(False)
             total_cost += cost
 
+        key_mapping = {}
         joined_pairs = []
-        left_keys, right_keys = left_ids, right_ids
-        for i, output in enumerate(join_outputs):
-            id_in_left, id_in_right = i // len(right_ids), i % len(right_ids)
-            if output:
-                if how == "inner" or how == "left":
-                    right_keys[id_in_right] = left_keys[id_in_left]
-                else:
-                    left_keys[id_in_left] = right_keys[id_in_right]
-                joined_pairs.append(data_id_pairs[i])
-
-        return joined_pairs, left_keys, right_keys, total_cost
+        for can_join, (left_key, right_key) in zip(join_outputs, data_id_pairs):
+            if can_join:
+                joined_pairs.append((left_key, right_key))
+                key_mapping[left_key] = right_key
+        if how == "inner" or how == "left":
+            return joined_pairs, list(key_mapping.keys()), list(key_mapping.keys()), total_cost
+        else:
+            return joined_pairs, list(key_mapping.values()), list(key_mapping.values()), total_cost
         
     async def _nested_join(
         self, 
@@ -150,18 +148,23 @@ class JoinOperation(BaseOperation):
         right_data: pd.DataFrame, 
         user_instruction: str, 
         left_dtype: str, 
-        right_dtype: str, 
+        right_dtype: str,
         **kwargs
     ):
-        execution_func = functools.partial(self._pairwise_evaluate, left_dtype=left_dtype, right_dtype=right_dtype, **kwargs)
+        cache = kwargs.pop("cache", None)
+        execution_func = functools.partial(self._pairwise_evaluate, left_dtype=left_dtype, right_dtype=right_dtype, model=self.model, **kwargs)
         # Prepare candidate pairs
-        data_id_pairs, left_ids, right_ids = self._prepare_nested_join_pairs(left_data, right_data)
+        data_id_pairs = self._prepare_nested_join_pairs(left_data, right_data)
+        
         tasks = []
         for left_id, right_id in data_id_pairs:
             left_value = left_data.loc[left_id, self.left_on[0]]
             right_value = right_data.loc[right_id, self.right_on[0]]
             if pd.isna(left_value) or pd.isna(right_value):
                 tasks.append(asyncio.create_task(asyncio.sleep(0, result=None)))
+            elif cache is not None and (left_id, right_id) in cache:
+                join_result = {"output": cache[(left_id, right_id)], "cost": 0.0}
+                tasks.append(asyncio.create_task(asyncio.sleep(0, result=join_result)))
             elif self.has_udf():
                 tasks.append(asyncio.create_task(self._execute_by_func(left_value, right_value, user_instruction, self.tool, execution_func)))
             else:
@@ -171,7 +174,7 @@ class JoinOperation(BaseOperation):
         results = await asyncio.gather(*tasks)
 
         joined_pairs, left_join_keys, right_join_keys, token_cost = self._postprocess_nested_join_outputs(
-            data_id_pairs, results, self.how, left_ids, right_ids
+            data_id_pairs, results, self.how
         )
         return JoinOpOutputs(
             output=joined_pairs,
@@ -190,16 +193,16 @@ class JoinOperation(BaseOperation):
         left_batches, left_keys = [], []
         start_idx = 0
         while start_idx < len(left_values):
-            left_batches.append(left_values.loc[start_idx:start_idx+batch_size-1].tolist())
-            left_keys.append(left_values.index[start_idx:start_idx+batch_size-1].tolist())
+            left_batches.append(left_values.iloc[start_idx : start_idx+batch_size].tolist())
+            left_keys.append(left_values.index[start_idx : start_idx+batch_size].tolist())
             start_idx += batch_size
         
         # Prepare right batches
         right_batches, right_keys = [], []
         start_idx = 0
         while start_idx < len(right_values):
-            right_batches.append(right_values.loc[start_idx:start_idx+batch_size-1].tolist())
-            right_keys.append(right_values.index[start_idx:start_idx+batch_size-1].tolist())
+            right_batches.append(right_values.iloc[start_idx : start_idx+batch_size].tolist())
+            right_keys.append(right_values.index[start_idx : start_idx+batch_size].tolist())
             start_idx += batch_size
         
         return left_batches, left_keys, right_batches, right_keys
@@ -214,6 +217,7 @@ class JoinOperation(BaseOperation):
         self,
         results: Iterable[dict],
         how: str,
+        batch_ids_pairs: list[tuple],
         left_keys_in_batches: list[list],
         right_keys_in_batches: list[list],
     ):
@@ -231,22 +235,20 @@ class JoinOperation(BaseOperation):
             return joined_pairs
         
         joined_pairs, total_cost = [], 0.0
-        for batch_id, result in enumerate(results):
+        for (left_batch_id, right_batch_id), result in zip(batch_ids_pairs, results):
             output, cost = result["output"], result["cost"]
-            joined_pairs_per_block = _extract_pairs_from_llm_output(output, left_keys_in_batches[batch_id], right_keys_in_batches[batch_id])
+            joined_pairs_per_block = _extract_pairs_from_llm_output(output, left_keys_in_batches[left_batch_id], right_keys_in_batches[right_batch_id])
             joined_pairs.extend(joined_pairs_per_block)
             total_cost += cost
 
         key_mapping = {}
+        for left_key, right_key in joined_pairs:
+            key_mapping[left_key] = right_key
         if how == "inner" or how == "left":
-            for left_key, right_key in joined_pairs:
-                key_mapping[left_key] = right_key
-            return joined_pairs, list(key_mapping.keys()), list(key_mapping.values()), total_cost
+            return joined_pairs, list(key_mapping.keys()), list(key_mapping.keys()), total_cost
         else:
-            for right_key, left_key in joined_pairs:
-                key_mapping[right_key] = left_key
-            return joined_pairs, list(key_mapping.values()), list(key_mapping.keys()), total_cost
-        
+            return joined_pairs, list(key_mapping.values()), list(key_mapping.values()), total_cost
+    
     async def _block_join(
         self,
         left_data: pd.DataFrame,
@@ -257,19 +259,26 @@ class JoinOperation(BaseOperation):
         right_dtype: str,
         **kwargs
     ):
+        cache = kwargs.pop("cache", None)
         # Prepare batches
         left_values = left_data[self.left_on[0]].map(lambda x: f"{self.left_on}: {str(x)}") if left_dtype == "str" else left_data[self.left_on[0]]
         right_values = right_data[self.right_on[0]].map(lambda x: f"{self.right_on}: {str(x)}") if right_dtype == "str" else right_data[self.right_on[0]]
         left_batches, left_keys, right_batches, right_keys = self._prepare_join_batches(left_values, right_values, batch_size=batch_size)
 
-        tasks = []
-        for left_batch, right_batch in zip(left_batches, right_batches):
-            tasks.append(asyncio.create_task(self._batchwise_evaluate(left_batch, right_batch, user_instruction, left_dtype, right_dtype, **kwargs)))
+        tasks, batch_ids_pairs = [], []
+        for left_batch_id, left_batch in enumerate(left_batches):
+            for right_batch_id, right_batch in enumerate(right_batches):
+                batch_ids_pairs.append((left_batch_id, right_batch_id))
+                if cache is not None and (left_batch_id, right_batch_id) in cache:
+                    join_result = {"output": cache[(left_batch_id, right_batch_id)], "cost": 0.0}
+                    tasks.append(asyncio.create_task(asyncio.sleep(0, result=join_result)))
+                else:
+                    tasks.append(asyncio.create_task(self._batchwise_evaluate(left_batch, right_batch, user_instruction, left_dtype, right_dtype, model=self.model, **kwargs)))
         # Wait for all tasks to complete
         results = await asyncio.gather(*tasks)
 
         joined_pairs, left_join_keys, right_join_keys, token_cost = self._postprocess_block_join_outputs(
-            results, self.how, left_keys, right_keys
+            results, self.how, batch_ids_pairs, left_keys, right_keys
         )
         return JoinOpOutputs(
             output=joined_pairs,
@@ -284,9 +293,8 @@ class JoinOperation(BaseOperation):
         right_data: pd.DataFrame,
         **kwargs
     ):
-        assert left_data[self.left_on[0]].dtype == right_data[self.right_on[0]].dtype, (
-            "Data types of columns to join must be the same."
-        )
+        if self.user_instruction is None and not self.has_udf():
+            raise ValueError("`user_instruction` or `tool` (e.g., a UDF) is required.")
         if left_data.empty or right_data.empty:
             return JoinOpOutputs(
                 output=[],
@@ -299,12 +307,11 @@ class JoinOperation(BaseOperation):
         right_dtype = "image" if isinstance(right_data[self.right_on[0]].dtype, ImageDtype) else "str"
 
         if self.implementation == "nest":
-            join_func = functools.partial(self._nested_join, left_dtype=left_dtype, right_dtype=right_dtype, **kwargs)
+            return await self._nested_join(left_data, right_data, self.user_instruction, left_dtype, right_dtype, **kwargs)
         elif self.implementation == "block":
             if self.has_udf():
-                raise ValueError("The block join implementation does not support user-defined functions.")
-            join_func = functools.partial(self._block_join, batch_size=kwargs.get("batch_size", 5), left_dtype=left_dtype, right_dtype=right_dtype, **kwargs)
+                warnings.warn("The block semantic join does not support user-defined functions for now.")
+            batch_size = kwargs.pop("batch_size", 5)
+            return await self._block_join(left_data, right_data, self.user_instruction, batch_size, left_dtype, right_dtype, **kwargs)
         else:
-            raise ValueError(f"The optional implementations available for join are {self.implementation_options}. Strategy {self.implementation} is not available.")
-        
-        return await join_func(left_data, right_data, self.user_instruction)
+            raise ValueError(f"The optional implementations available for join are {self.implementation_options}. Strategy {self.implementation} is not supported.")
