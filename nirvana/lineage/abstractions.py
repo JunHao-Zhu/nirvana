@@ -20,7 +20,7 @@ OpOutputsType = Union[
     RankOpOutputs
 ]
 
-op_mapping = {
+OpMapping = {
     "scan": ScanOperation,
     "map": MapOperation,
     "filter": FilterOperation,
@@ -80,7 +80,7 @@ class LineageNode(NodeBase):
             **kwargs
     ):
         super().__init__()
-        self.operator = op_mapping[op_name](**op_kwargs)
+        self.operator = OpMapping[op_name](**op_kwargs)
         self.node_fields = NodeFields(**node_fields)
         self.datasource = datasource
 
@@ -113,6 +113,8 @@ class LineageNode(NodeBase):
                 return input
             input[op_outputs.field_name] = op_outputs.output
             return input
+        elif self.op_name == "rank":
+            return input.iloc[op_outputs.ranked_indices]
         elif self.op_name == "reduce":
             return pd.DataFrame({"reduce_result": [op_outputs.output]})
 
@@ -139,6 +141,11 @@ class LineageNode(NodeBase):
                 return NodeOutput(output=input, cost=op_outputs.cost)
             input.join(pd.DataFrame(op_outputs.output))
             return NodeOutput(output=input, cost=op_outputs.cost)
+        
+        elif self.op_name == "rank":
+            op_outputs = await self.operator.execute(input_data=input)
+            output = input.iloc[op_outputs.ranked_indices]
+            return NodeOutput(output=output, cost=op_outputs.cost)
         
         elif self.op_name == "reduce":
             op_outputs = await self.operator.execute(input_data=input)

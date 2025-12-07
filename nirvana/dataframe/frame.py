@@ -133,6 +133,22 @@ class DataFrame(LineageMixin):
                           other=other,
                           rate_limit=rate_limit)
         
+    def semantic_rank(self, user_instruction, input_column, descend=True, rate_limit: int = 16):
+        op_kwargs = {
+            "user_instruction": user_instruction,
+            "input_columns": [input_column],
+            "descend": descend,
+        }
+        data_kwargs = {
+            "left_input_fields": self.leaf_node.node_fields.output_fields,
+            "right_input_fields": [],
+            "output_fields": self.leaf_node.node_fields.output_fields,
+        }
+        self.add_operator(op_name="rank",
+                          op_kwargs=op_kwargs,
+                          data_kwargs=data_kwargs,
+                          rate_limit=rate_limit)
+    
     def optimize_and_execute(self, optim_config = None):
         self.create_plan_optimizer(optim_config)
         if self.optimizer.config.do_logical_optimization:

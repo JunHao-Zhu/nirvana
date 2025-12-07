@@ -69,15 +69,17 @@ ReduceOpOutputs(
 ```
 > The current version of the reduce operator is simple. In the next step, we will implement it using several optimizations, like `summarize and aggregate` and `incremental aggregation`.
 
-Operator `rank`: Rank a set of data based on the user instruction by quicksort (under intensive testing)
+Operator `rank`: Rank a set of data based on the user instruction by quicksort.
 ```python
->>> nv.ops.rank(df, "rank the movies by their relevance to DC Comics.", input_column="title")
+>>> nv.ops.rank(df, "rank the movies by their relevance to DC Comics.", input_column="title", descend=True)
 RankOpOutputs(
-    output = [2, 1]
+    ranking = [2, 1],
+    ranked_indices = [1, 0]
 )
 ```
+`descend=True`: order values in descending order from the highest satisfied value to the lowest satisfied value.
 
-Operator `join`: Join values of two columns against a specific user's instruction (under intensive testing). The current implementation has inherent quadratic complexity which we aim to avoid.
+Operator `join`: Join values of two columns against a specific user's instruction. Two implementation options are avilable: (1) Nested Join (`nest`): applyies quadratic evaluations; (2) Block Join (`block`): applies batch-wise evaluation, which might reduce the cost.
 ```python
 # left_data: clinical_note
 # | name | age | gender | symptom |
