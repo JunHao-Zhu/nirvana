@@ -111,7 +111,7 @@ class TestJoinOperation:
             left_on=["symptom"],
             right_on=["medical_use"],
             how="inner",
-            implementation="nest"
+            strategy="nest"
         )
         
         assert op.op_name == "join"
@@ -171,7 +171,7 @@ class TestJoinOperation:
             left_on=["symptom"],
             right_on=["medical_use"],
             how="inner",
-            implementation="nest"
+            strategy="nest"
         )
         cache = {(1, 1): "True", (3, 7): "True"}
         result = await op.execute(left_data=left_dataframe, right_data=right_dataframe, cache=cache)
@@ -193,7 +193,7 @@ class TestJoinOperation:
             left_on=["symptom"],
             right_on=["medical_use"],
             how="inner",
-            implementation="block",
+            strategy="block",
         )
         cache = {(0, 0): "L0-R0", (1, 1): "L0-R0"}
         result = await op.execute(left_data=left_dataframe, right_data=right_dataframe, batch_size=2, cache=cache)
@@ -213,7 +213,7 @@ class TestJoinOperation:
             left_on=["symptom"],
             right_on=["medical_use"],
             how="inner",
-            implementation="nest"
+            strategy="nest"
         )
         cache = {(3, 7): "True"}
         result = await op.execute(left_data=dataframe_with_nan, right_data=right_dataframe, cache=cache)
@@ -239,7 +239,7 @@ class TestJoinOperation:
             left_on=["symptom"],
             right_on=["medical_use"],
             how="inner",
-            implementation="nest",
+            strategy="nest",
             tool=tool
         )
         result = await op.execute(left_data=left_dataframe, right_data=right_dataframe)
@@ -264,7 +264,7 @@ class TestJoinOperation:
             left_on=["symptom"],
             right_on=["medical_use"],
             how="inner",
-            implementation="nest",
+            strategy="nest",
             tool=tool
         )
         
@@ -289,7 +289,7 @@ class TestJoinOperation:
                 left_on=["symptom"],
                 right_on=["medical_use"],
                 how=join_type,
-                implementation="nest"
+                strategy="nest"
             )
             cache = {(1, 1): "True", (3, 7): "True"}
             result = await op.execute(left_data=left_dataframe, right_data=right_dataframe, cache=cache)
@@ -304,8 +304,8 @@ class TestJoinOperation:
                 assert result.right_join_keys == [1, 7]
     
     @pytest.mark.asyncio
-    async def test_execute_unsupported_implementation(self, left_dataframe, right_dataframe, mock_llm_client):
-        """Test that execute raises ValueError for unsupported implementation."""
+    async def test_execute_unsupported_strategy(self, left_dataframe, right_dataframe, mock_llm_client):
+        """Test that execute raises ValueError for unsupported strategy."""
         JoinOperation.set_llm(mock_llm_client)
         
         op = JoinOperation(
@@ -313,7 +313,7 @@ class TestJoinOperation:
             left_on=["symptom"],
             right_on=["medical_use"],
             how="inner",
-            implementation="unsupported"
+            strategy="unsupported"
         )
         with pytest.raises(ValueError, match="Strategy unsupported is not supported"):
             await op.execute(left_data=left_dataframe, right_data=right_dataframe)
@@ -335,7 +335,7 @@ class TestJoinOperation:
             left_on=["symptom"],
             right_on=["medical_use"],
             how="inner",
-            implementation="block",
+            strategy="block",
             tool=tool
         )
         
@@ -440,7 +440,7 @@ class TestJoinOperationIntegration:
             left_on=["symptom"],
             right_on=["medical_use"],
             how="inner",
-            implementation="nest"
+            strategy="nest"
         )
         
         # Simulate results with different output formats
@@ -469,7 +469,7 @@ class TestJoinOperationIntegration:
             left_on=["symptom"],
             right_on=["medical_use"],
             how="inner",
-            implementation="block"
+            strategy="block"
         )
         
         # Simulate batch results
@@ -519,7 +519,7 @@ class TestJoinOperationIntegration:
             left_on=["symptom"],
             right_on=["medical_use"],
             how="inner",
-            implementation="block"
+            strategy="block"
         )
         left_values = pd.Series(["a", "b", "c", "d"], index=[0, 1, 2, 3])
         right_values = pd.Series(["x", "y"], index=[4, 5])

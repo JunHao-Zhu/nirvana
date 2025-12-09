@@ -1,21 +1,21 @@
 import asyncio
-from typing import Any, Iterable, Callable
+from typing import Any, Iterable, Callable, Literal
 from dataclasses import dataclass, field
 import pandas as pd
 from pandas.api.types import is_numeric_dtype
 
 from nirvana.dataframe.arrays.image import ImageDtype
-from nirvana.executors.tools import FunctionCallTool
+from nirvana.executors.tools import BaseTool, FunctionCallTool
 from nirvana.ops.base import BaseOpOutputs, BaseOperation
 from nirvana.ops.prompt_templates.reduce_prompter import ReducePrompter
 
 
 def reduce_wrapper(
-        input_data: Iterable[Any],
-        user_instruction: str = None,
-        input_column: str = None,
-        func: Callable = None,
-        **kwargs
+    input_data: Iterable[Any],
+    user_instruction: str = None,
+    input_column: str = None,
+    func: Callable = None,
+    **kwargs
 ):
     reduce_op = ReduceOperation(
         user_instruction=user_instruction,
@@ -50,15 +50,26 @@ class ReduceOperation(BaseOperation):
     """
 
     def __init__(
-            self,
-            user_instruction: str = "",
-            input_columns: list[str] = [],
-            **kwargs,
+        self,
+        user_instruction: str = "",
+        input_columns: list[str] = [],
+        context: list[dict] | str | None = None,
+        model: str | None = None,
+        tool: BaseTool | None = None,
+        strategy: Literal["plain"] = "plain",
+        rate_limit: int = 16,
+        assertions: list[Callable] | None = [],
+        **kwargs,
     ):
         super().__init__(
             op_name="reduce",
             user_instruction=user_instruction,
-            **kwargs
+            context=context,
+            model=model,
+            tool=tool,
+            strategy=strategy,
+            rate_limit=rate_limit,
+            assertions=assertions,
         )
         self.prompter = ReducePrompter()
         self.input_columns = input_columns
@@ -91,10 +102,10 @@ class ReduceOperation(BaseOperation):
             return await llm_call(processed_data, user_instruction, dtype, **kwargs)
 
     async def execute(
-            self,
-            input_data: pd.DataFrame,
-            *args,
-            **kwargs
+        self,
+        input_data: pd.DataFrame,
+        *args,
+        **kwargs
     ):
         if self.user_instruction is None and not self.has_udf():
             raise ValueError("Neither `user_instruction` nor `func` is given.")

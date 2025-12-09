@@ -17,22 +17,22 @@ class BaseOperation(ABC):
     llm: LLMClient = None
 
     def __init__(
-            self, 
-            op_name: str,
-            user_instruction: str = "",
-            context: list[dict] | str | None = None,
-            model: str | None = None,
-            tool: BaseTool | None = None,
-            implementation: str | None = "plain",
-            rate_limit: int = 16,
-            assertions: list[Callable] | None = [],
+        self, 
+        op_name: str,
+        user_instruction: str = "",
+        context: list[dict] | str | None = None,
+        model: str | None = None,
+        tool: BaseTool | None = None,
+        strategy: str | None = "plain",
+        rate_limit: int = 16,
+        assertions: list[Callable] | None = [],
     ):
         self.op_name = op_name
         self.user_instruction = user_instruction
         self.context = context
         self.model = model if model else self.llm.default_model
         self.tool = tool
-        self.implementation = "plain" if implementation is None else implementation
+        self.strategy = "plain" if strategy is None else strategy
         self.semaphore = asyncio.Semaphore(rate_limit)
         self.assertions = assertions
 
@@ -47,7 +47,7 @@ class BaseOperation(ABC):
             "context": self.context,
             "model": self.model,
             "tool": self.tool.__repr__(),
-            "implementation": self.implementation,
+            "strategy": self.strategy,
             "assertions": self.assertions,
             "rate_limit": self.semaphore._value
         }

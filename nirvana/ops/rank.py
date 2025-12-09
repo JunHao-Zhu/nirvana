@@ -1,12 +1,12 @@
 import warnings
 
 import asyncio
-from typing import Any, Callable
+from typing import Any, Callable, Literal
 from dataclasses import dataclass, field
 import pandas as pd
 
 from nirvana.dataframe.arrays.image import ImageDtype
-from nirvana.executors.tools import FunctionCallTool
+from nirvana.executors.tools import BaseTool, FunctionCallTool
 from nirvana.ops.base import BaseOpOutputs, BaseOperation
 from nirvana.ops.prompt_templates.rank_prompter import RankPrompter
 
@@ -25,7 +25,7 @@ def rank_wrapper(
         input_columns=[input_column],
         descend=descend,
         tool=FunctionCallTool.from_function(func=func) if func else None,
-        implementation=strategy if strategy else "plain",
+        strategy="plain",
     )
     outputs = asyncio.run(rank_op.execute(
         input_data=input_data,
@@ -44,20 +44,36 @@ class RankOpOutputs(BaseOpOutputs):
 
 class RankOperation(BaseOperation):
     """
-    Rank operator: Ranks values in a column according to an NL-specified ranking function.
+    RankOperation ranks the rows of a DataFrame column according to a user-specified natural language instruction.
+
+    Args:
+        user_instruction (str): The natural language instruction for ranking the rows of the DataFrame column.
+        input_column (str): The name of the DataFrame column to be ranked.
+        descend (bool): Whether to rank in descending order (True) or ascending order (False).
     """
     
     def __init__(
-            self,
-            user_instruction: str = "",
-            input_columns: list[str] = [],
-            descend: bool = True,
-            **kwargs,
+        self,
+        user_instruction: str = "",
+        input_columns: list[str] = [],
+        descend: bool = True,
+        context: list[dict] | str | None = None,
+        model: str | None = None,
+        tool: BaseTool | None = None,
+        strategy: Literal["plain"] = "plain",
+        rate_limit: int = 16,
+        assertions: list[Callable] | None = [],
+        **kwargs,
     ):
         super().__init__(
             op_name="rank",
             user_instruction=user_instruction,
-            **kwargs
+            context=context,
+            model=model,
+            tool=tool,
+            strategy=strategy,  
+            rate_limit=rate_limit,
+            assertions=assertions,
         )
         self.prompter = RankPrompter()
         self.input_columns = input_columns
@@ -164,7 +180,7 @@ class RankOperation(BaseOperation):
             dtype = "str"
 
         if self.has_udf():
-            warnings.warn("The udf is not supported in the current Rank operator implementation. Still resort to LLM-based ranking.")
+            warnings.warn("The udf is not supported in the current Rank operator implementation. Switch to LLM-based ranking.")
 
         low, high = 0, len(processed_data) - 1
         ranking = list(range(len(processed_data)))

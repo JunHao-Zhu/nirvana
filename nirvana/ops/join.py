@@ -7,6 +7,7 @@ from typing import Any, Iterable, Callable, Literal
 from dataclasses import dataclass, field
 
 from nirvana.dataframe.arrays.image import ImageDtype
+from nirvana.executors.tools import BaseTool, FunctionCallTool
 from nirvana.ops.base import BaseOpOutputs, BaseOperation
 from nirvana.ops.prompt_templates.join_prompter import JoinPrompter
 
@@ -26,7 +27,7 @@ def join_wrapper(
         left_on=[left_on],
         right_on=[right_on],
         how=how,
-        implementation=strategy,
+        strategy=strategy,
     )
     outputs = asyncio.run(join_op.execute(
         left_data=left_data,
@@ -47,7 +48,7 @@ class JoinOperation(BaseOperation):
     """
     Join operator: Join values of two columns against a specific user's instruction.
     """
-    implementation_options = ["nest", "block"]
+    strategy_options = ["nest", "block"]
     
     def __init__(
         self,
@@ -55,12 +56,23 @@ class JoinOperation(BaseOperation):
         left_on: list[str] = [],
         right_on: list[str] = [],
         how: str = "inner",
+        context: list[dict] | str | None = None,
+        model: str | None = None,
+        tool: BaseTool | None = None,
+        strategy: Literal["nest", "block"] = "nest",
+        rate_limit: int = 16,
+        assertions: list[Callable] | None = [],
         **kwargs,
     ):
         super().__init__(
             op_name="join", 
             user_instruction=user_instruction,
-            **kwargs
+            context=context,
+            model=model,
+            tool=tool,
+            strategy=strategy,
+            rate_limit=rate_limit,
+            assertions=assertions,
         )
         self.prompter = JoinPrompter()
         self.left_on = left_on
@@ -306,12 +318,12 @@ class JoinOperation(BaseOperation):
         left_dtype = "image" if isinstance(left_data[self.left_on[0]].dtype, ImageDtype) else "str"
         right_dtype = "image" if isinstance(right_data[self.right_on[0]].dtype, ImageDtype) else "str"
 
-        if self.implementation == "nest":
+        if self.strategy == "nest":
             return await self._nested_join(left_data, right_data, self.user_instruction, left_dtype, right_dtype, **kwargs)
-        elif self.implementation == "block":
+        elif self.strategy == "block":
             if self.has_udf():
                 warnings.warn("The block semantic join does not support user-defined functions for now.")
             batch_size = kwargs.pop("batch_size", 5)
             return await self._block_join(left_data, right_data, self.user_instruction, batch_size, left_dtype, right_dtype, **kwargs)
         else:
-            raise ValueError(f"The optional implementations available for join are {self.implementation_options}. Strategy {self.implementation} is not supported.")
+            raise ValueError(f"The optional strategies available for join are {self.strategy_options}. Strategy {self.strategy} is not supported.")

@@ -82,7 +82,7 @@ class TestMapOperation:
             user_instruction="Extract genre from the movie overview",
             input_columns=["overview"],
             output_columns=["genre"],
-            implementation="plain"
+            strategy="plain"
         )
         
         assert op.op_name == "map"
@@ -96,7 +96,7 @@ class TestMapOperation:
             user_instruction="Extract genre from the movie overview",
             input_columns=["overview"],
             output_columns=["genre"],
-            implementation="plain"
+            strategy="plain"
         )
         
         kwargs = op.op_kwargs
@@ -132,7 +132,7 @@ class TestMapOperation:
             user_instruction="Extract the genre of each movie from the movie overview.",
             input_columns=["overview"],
             output_columns=["genre"],
-            implementation="plain"
+            strategy="plain"
         )
         
         result = await op.execute(input_data=sample_dataframe)
@@ -152,7 +152,7 @@ class TestMapOperation:
             user_instruction="Extract the genre of each movie.",
             input_columns=["overview"],
             output_columns=["genre"],
-            implementation="plain"
+            strategy="plain"
         )
         
         result = await op.execute(input_data=dataframe_with_nan)
@@ -193,7 +193,7 @@ class TestMapOperation:
             user_instruction="Extract the genre of each movie.",
             input_columns=["overview"],
             output_columns=["genre"],
-            implementation="self_refine"
+            strategy="self_refine"
         )
         
         result = await op.execute(input_data=sample_dataframe)
@@ -217,7 +217,7 @@ class TestMapOperation:
             user_instruction="Extract the genre of each movie.",
             input_columns=["overview"],
             output_columns=["genre"],
-            implementation="fewshot",
+            strategy="fewshot",
             context=demos
         )
         
@@ -308,10 +308,10 @@ class TestMapOperation:
             user_instruction="Extract genre",
             input_columns=["overview"],
             output_columns=["genre"],
-            implementation="unsupported_strategy"
+            strategy="unsupported_strategy"
         )
         
-        with pytest.raises(NotImplementedError, match="Strategy unsupported_strategy is not implemented."):
+        with pytest.raises(NotImplementedError, match="Strategy unsupported_strategy is not supported."):
             await op.execute(input_data=sample_dataframe)
     
     @pytest.mark.asyncio
@@ -323,7 +323,7 @@ class TestMapOperation:
             user_instruction="Extract genre",
             input_columns=["overview"],
             output_columns=["genre"],
-            implementation="fewshot"
+            strategy="fewshot"
         )
         
         with pytest.raises(AssertionError, match="Few-shot examples must be provided"):
@@ -442,7 +442,7 @@ class TestMapOperationIntegration:
             user_instruction="Extract the main topic.",
             input_columns=["text"],
             output_columns=["topic"],
-            implementation="plain"
+            strategy="plain"
         )
         
         result = await op.execute(input_data=df)
@@ -502,7 +502,7 @@ class TestMapOperationIntegration:
             user_instruction="Extract genre and rating.",
             input_columns=["overview"],
             output_columns=["genre", "rating"],
-            implementation="plain"
+            strategy="plain"
         )
         
         result = await op.execute(input_data=sample_dataframe)

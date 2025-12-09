@@ -1,12 +1,12 @@
 import functools
 import asyncio
-from typing import Any, Iterable, Callable, Tuple
+from typing import Any, Iterable, Callable, Literal
 from dataclasses import dataclass, field
 from numpy import amax
 import pandas as pd
 
 from nirvana.dataframe.arrays.image import ImageDtype
-from nirvana.executors.tools import FunctionCallTool
+from nirvana.executors.tools import BaseTool, FunctionCallTool
 from nirvana.ops.base import BaseOpOutputs, BaseOperation
 from nirvana.ops.prompt_templates.map_prompter import MapPrompter
 
@@ -22,7 +22,7 @@ def map_wrapper(
 ):
     map_op = MapOperation(
         user_instruction=user_instruction,
-        implementation=strategy,
+        strategy=strategy,
         input_columns=[input_column],
         output_columns=output_columns,
         tool=FunctionCallTool.from_function(func=func) if func else None,
@@ -56,19 +56,30 @@ class MapOperation(BaseOperation):
     """
     Map operator: Applies an LLM to perform a transformation on a column, producing a new column as output
     """
-    implementation_options = ["plain", "self-refine", "vote"]
+    strategy_options = ["plain", "fewshot", "self-refine"]
     
     def __init__(
-            self,
-            user_instruction: str = "",
-            input_columns: list[str] = [],
-            output_columns: list[str] = [],
-            **kwargs,
+        self,
+        user_instruction: str = "",
+        input_columns: list[str] = [],
+        output_columns: list[str] = [],
+        context: list[dict] | str | None = None,
+        model: str | None = None,
+        tool: BaseTool | None = None,
+        strategy: Literal["plain", "fewshot", "self-refine"] = "plain",
+        rate_limit: int = 16,
+        assertions: list[Callable] | None = [],
+        **kwargs,
     ):
         super().__init__(
             op_name="map",
             user_instruction=user_instruction,
-            **kwargs
+            context=context,
+            model=model,
+            tool=tool,
+            strategy=strategy,
+            rate_limit=rate_limit,
+            assertions=assertions,
         )
         self.prompter = MapPrompter()
         self.input_columns = input_columns
@@ -156,10 +167,10 @@ class MapOperation(BaseOperation):
         return outputs, total_cost
 
     async def execute(
-            self, 
-            input_data: pd.DataFrame,
-            *args, 
-            **kwargs
+        self, 
+        input_data: pd.DataFrame,
+        *args, 
+        **kwargs
     ):  
         if self.user_instruction is None and not self.has_udf():
             raise ValueError("Neither `user_instruction` nor `func` is given.")
@@ -173,17 +184,17 @@ class MapOperation(BaseOperation):
         else:
             dtype = "str"
         
-        if self.implementation == "plain":
+        if self.strategy == "plain":
             execution_func = functools.partial(self._execute_by_plain_llm, dtype=dtype, field_name=self.input_columns[0], model=self.model, **kwargs)
-        elif self.implementation == "fewshot":
+        elif self.strategy == "fewshot":
             assert self.context is not None, "Few-shot examples must be provided in the context for in-context learning."
             demos = self.context
             execution_func = functools.partial(self._execute_by_fewshot_llm, dtype=dtype, demos=demos, field_name=self.input_columns[0], model=self.model, **kwargs)
-        elif self.implementation == "self_refine":
+        elif self.strategy == "self_refine":
             execution_func = functools.partial(self._execute_by_self_refine, dtype=dtype, field_name=self.input_columns[0], model=self.model, **kwargs)
         else:
-            raise NotImplementedError(f"Strategy {self.implementation} is not implemented.")
-        
+            raise NotImplementedError(f"The optional strategies available for map are {self.strategy_options}. Strategy {self.strategy} is not supported.")
+
         # Create tasks for all data points
         tasks = []
         for data in processed_data:

@@ -1,11 +1,11 @@
 import functools
 import asyncio
-from typing import Any, Union, Iterable, Callable, Tuple
+from typing import Any, Iterable, Callable, Literal
 from dataclasses import dataclass
 import pandas as pd
 
 from nirvana.dataframe.arrays.image import ImageDtype
-from nirvana.executors.tools import FunctionCallTool
+from nirvana.executors.tools import BaseTool, FunctionCallTool
 from nirvana.ops.base import BaseOpOutputs, BaseOperation
 from nirvana.ops.prompt_templates.filter_prompter import FilterPrompter
 
@@ -22,7 +22,7 @@ def filter_wrapper(
         user_instruction=user_instruction,
         input_columns=[input_column],
         tool=FunctionCallTool.from_function(func=func) if func else None,
-        implementation=strategy,
+        strategy=strategy,
         **kwargs
     )
     outputs = asyncio.run(filter_op.execute(
@@ -47,18 +47,29 @@ class FilterOperation(BaseOperation):
     """
     Filter operator: Uses an LLM to evaluate a natural language predicate on a column
     """
-    implementation_options = ["plain", "self-refine", "vote"]
+    strategy_options = ["plain", "fewshot", "self_refine"]
     
     def __init__(
-            self,
-            user_instruction: str = "",
-            input_columns: list[str] = [],
-            **kwargs,
+        self,
+        user_instruction: str = "",
+        input_columns: list[str] = [],
+        context: list[dict] | str | None = None,
+        model: str | None = None,
+        tool: BaseTool | None = None,
+        strategy: Literal["plain", "fewshot", "self-refine"] = "plain",
+        rate_limit: int = 16,
+        assertions: list[Callable] | None = [],
+        **kwargs,
     ):
         super().__init__(
             op_name="filter",
             user_instruction=user_instruction,
-            **kwargs
+            context=context,
+            model=model,
+            tool=tool,
+            strategy=strategy,
+            rate_limit=rate_limit,
+            assertions=assertions,
         )
         self.prompter = FilterPrompter()
         self.input_columns = input_columns
@@ -121,7 +132,7 @@ class FilterOperation(BaseOperation):
         except Exception as e:
             return await llm_call(data, user_instruction)
     
-    def _postprocess_filter_outputs(self, results: Iterable[Tuple[Any, float]]):
+    def _postprocess_filter_outputs(self, results: Iterable[tuple[Any, float]]):
         outputs, costs = [], 0.0
         for output, cost in results:
             if output is None:
@@ -138,10 +149,10 @@ class FilterOperation(BaseOperation):
         return outputs, costs
 
     async def execute(
-            self, 
-            input_data: pd.DataFrame,
-            *args, 
-            **kwargs
+        self, 
+        input_data: pd.DataFrame,
+        *args, 
+        **kwargs
     ):
         if self.user_instruction is None and not self.has_udf():
             raise ValueError("Neither `user_instruction` nor `func` is given.")
@@ -155,16 +166,16 @@ class FilterOperation(BaseOperation):
         else:
             dtype = "str"
 
-        if self.implementation == "plain":
+        if self.strategy == "plain":
             execution_func = functools.partial(self._execute_by_plain_llm, dtype=dtype, field_name=self.input_columns[0], model=self.model, **kwargs)
-        elif self.implementation == "fewshot":
+        elif self.strategy == "fewshot":
             assert self.context is not None, "Few-shot examples must be provided in the context for in-context learning."
             demos = self.context
             execution_func = functools.partial(self._execute_by_fewshot_llm, dtype=dtype, demos=demos, field_name=self.input_columns[0], model=self.model, **kwargs)
-        elif self.implementation == "self_refine":
+        elif self.strategy == "self_refine":
             execution_func = functools.partial(self._execute_by_self_refine, dtype=dtype, field_name=self.input_columns[0], model=self.model, **kwargs)
         else:
-            raise NotImplementedError(f"Strategy {self.implementation} is not implemented.")
+            raise ValueError(f"The optional strategies available for filter are {self.strategy_options}. Strategy {self.strategy} is not supported.")
 
         # Create tasks for all data points
         tasks = []
