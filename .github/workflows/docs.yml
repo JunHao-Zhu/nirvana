@@ -3,7 +3,7 @@ name: Update nirvana docs
 on:
   push:
     branches:
-      - dev
+      - main
     paths:
       - "docs/**"
   pull_request:
