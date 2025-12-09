@@ -2,22 +2,74 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
     <url>
          <loc>https://junhao-zhu.github.io/nirvana/</loc>
-         <lastmod>2025-12-04</lastmod>
+         <lastmod>2025-12-09</lastmod>
     </url>
     <url>
          <loc>https://junhao-zhu.github.io/nirvana/api_reference/</loc>
-         <lastmod>2025-12-04</lastmod>
+         <lastmod>2025-12-09</lastmod>
     </url>
     <url>
          <loc>https://junhao-zhu.github.io/nirvana/development/</loc>
-         <lastmod>2025-12-04</lastmod>
+         <lastmod>2025-12-09</lastmod>
     </url>
     <url>
          <loc>https://junhao-zhu.github.io/nirvana/get_started/</loc>
-         <lastmod>2025-12-04</lastmod>
+         <lastmod>2025-12-09</lastmod>
     </url>
     <url>
          <loc>https://junhao-zhu.github.io/nirvana/tutorial/</loc>
-         <lastmod>2025-12-04</lastmod>
+         <lastmod>2025-12-09</lastmod>
+    </url>
+    <url>
+         <loc>https://junhao-zhu.github.io/nirvana/api/executor/llm/</loc>
+         <lastmod>2025-12-09</lastmod>
+    </url>
+    <url>
+         <loc>https://junhao-zhu.github.io/nirvana/api/executor/tools/</loc>
+         <lastmod>2025-12-09</lastmod>
+    </url>
+    <url>
+         <loc>https://junhao-zhu.github.io/nirvana/api/frame/dataframe/</loc>
+         <lastmod>2025-12-09</lastmod>
+    </url>
+    <url>
+         <loc>https://junhao-zhu.github.io/nirvana/api/ops/filter/</loc>
+         <lastmod>2025-12-09</lastmod>
+    </url>
+    <url>
+         <loc>https://junhao-zhu.github.io/nirvana/api/ops/join/</loc>
+         <lastmod>2025-12-09</lastmod>
+    </url>
+    <url>
+         <loc>https://junhao-zhu.github.io/nirvana/api/ops/map/</loc>
+         <lastmod>2025-12-09</lastmod>
+    </url>
+    <url>
+         <loc>https://junhao-zhu.github.io/nirvana/api/ops/rank/</loc>
+         <lastmod>2025-12-09</lastmod>
+    </url>
+    <url>
+         <loc>https://junhao-zhu.github.io/nirvana/api/ops/reduce/</loc>
+         <lastmod>2025-12-09</lastmod>
+    </url>
+    <url>
+         <loc>https://junhao-zhu.github.io/nirvana/api/optimizer/optimizer/</loc>
+         <lastmod>2025-12-09</lastmod>
+    </url>
+    <url>
+         <loc>https://junhao-zhu.github.io/nirvana/concepts/data_lineage/</loc>
+         <lastmod>2025-12-09</lastmod>
+    </url>
+    <url>
+         <loc>https://junhao-zhu.github.io/nirvana/concepts/operators/</loc>
+         <lastmod>2025-12-09</lastmod>
+    </url>
+    <url>
+         <loc>https://junhao-zhu.github.io/nirvana/concepts/optimizers/logical_optimizer/</loc>
+         <lastmod>2025-12-09</lastmod>
+    </url>
+    <url>
+         <loc>https://junhao-zhu.github.io/nirvana/concepts/optimizers/physical_optimizer/</loc>
+         <lastmod>2025-12-09</lastmod>
     </url>
 </urlset>
