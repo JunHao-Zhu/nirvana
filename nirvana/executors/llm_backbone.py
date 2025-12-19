@@ -106,7 +106,9 @@ class LLMClient:
         model_name = kwargs.pop("model", None)
         if model_name is not None:
             api_key, base_url = _get_openai_compatible_provider_info(model_name=model_name)
-            self.client = _create_client(api_key=api_key, base_url=base_url, **kwargs)
+            self.client = _create_client(api_key=api_key, base_url=base_url)
+        else:
+            model_name = self.default_model
         timeout = 0
         success = False
         while not success and timeout < self.config.max_timeouts:

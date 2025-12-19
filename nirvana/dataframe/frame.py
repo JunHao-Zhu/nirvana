@@ -21,21 +21,23 @@ df = mjg.DataFrame({
 ```
 Moreover, in the future, we consider reading data from data lake storages (e.g, S3, Delta Lake, etc.)
 """
-from typing import Union
 import pandas as pd
 
 from nirvana.lineage.mixin import LineageMixin
+from nirvana.dataframe.arrays.utils import infer_and_convert_dtype
 
 
 class DataFrame(LineageMixin):
     def __init__(
-            self,
-            data: pd.DataFrame = None,
-            *args,
-            **kwargs
+        self,
+        data: dict | pd.DataFrame = None,
+        *args,
+        **kwargs
     ):
-        self._data = data
-        self.columns = list(data.columns)
+        self._data = pd.DataFrame(data) if isinstance(data, dict) else data
+        for col in self._data.columns:
+            converted_array, inferred_dtype = infer_and_convert_dtype(self._data[col])
+            self._data[col] = converted_array
         self.initialize()
 
     def __len__(self):
@@ -44,6 +46,9 @@ class DataFrame(LineageMixin):
     
     def __contains__(self, item):
         return self.columns.__contains__(item)
+    
+    def __repr__(self) -> str:
+        return f"{self.__class__.__name__}(nrows={self.nrows}, ncols={len(self.columns)})"
     
     @property
     def columns(self):

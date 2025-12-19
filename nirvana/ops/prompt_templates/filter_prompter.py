@@ -1,11 +1,12 @@
-from typing import Any, List, Dict, Union
+from typing import Any
+import pandas as pd
 
 
 class FilterPrompter:
     def __init__(self):
         self.system_instruction = (
             "You are a helpful assistant helping the user make sense of their data. "
-            "You are performing a filter operation (one input: True or False) to "
+            "You are performing a filter operation (data -> True or False) to "
             "determine whether the given data satisfies the given condition(s)."
         )
         self.output_format = (
@@ -15,10 +16,10 @@ class FilterPrompter:
         )
 
     def generate_prompt(
-            self,
-            data: Any,
-            user_instruction: str,
-            dtype: str = "str"
+        self,
+        data: pd.Series,
+        user_instruction: str,
+        dtypes: list[str]
     ):
         # 1. Prepare system message
         sys_message = [
@@ -28,14 +29,19 @@ class FilterPrompter:
 
         # 2. Prepare data
         user_content = []
-        if dtype == "str":
-            user_content.append({"type": "input_text", "text": data})
-        elif dtype == "image":
-            user_content.append(
-                {"type": "input_image", "image_url": data}
-            )
-        else:
-            raise ValueError(f"Data type {dtype} is not supported.")
+        for dtype, (key, val) in zip(dtypes, data.items()):
+            if dtype == "str":
+                user_content.append({"type": "input_text", "text": f"{key}: {val}"})
+            elif dtype == "image":
+                user_content.append({"type": "input_text", "text": f"{key}:"})
+                user_content.append({"type": "input_image", "image_url": val})
+            elif dtype == "audio":
+                user_content.append({"type": "input_text", "text": f"{key}:"})
+                user_content.append(
+                    {"type": "input_audio", "input_audio": {"data": val, "format": "wav"}}
+                )
+            else:
+                raise ValueError(f"Data type {dtype} is not supported.")
         
         # 3. Prepare the given condition
         conditions = f"condition: {user_instruction}"
@@ -48,10 +54,10 @@ class FilterPrompter:
     
     def generate_fewshot_prompt(
             self,
-            data: Any,
+            data: pd.Series,
             user_instruction: str,
-            dtype: str,
-            demos: List[Dict[str, Any]]
+            dtypes: list[str],
+            demos: list[dict[str, Any]]
     ):
         # 1. Prepare system message
         sys_message = [
@@ -63,37 +69,42 @@ class FilterPrompter:
         demos_message = []
         for demo in demos:
             demo_content = []
-            if dtype == str:
-                demo_content = [
-                    {"type": "input_text", "text": demo["data"]},
-                    {"type": "input_text", "text": user_instruction},
-                    {"type": "input_text", "text": demo["answer"]}
-                ]
-            elif dtype == "image":
-                demo_content = [
-                    {"type": "input_image", "image_url": demo["data"]},
-                    {"type": "input_text", "text": user_instruction},
-                    {"type": "input_text", "text": demo["answer"]}
-                ]
-            else:
-                raise ValueError(f"Data type {dtype} is not supported.")
+            demo_data: pd.Series | dict = demo["data"]
+            demo_answer: str = demo["answer"]
+            for dtype, (key, val) in zip(dtypes, demo_data.items()):
+                if dtype == "str":
+                    demo_content.append({"type": "input_text", "text": f"{key}: {val}"})
+                elif dtype == "image":
+                    demo_content.append({"type": "input_text", "text": f"{key}:"})
+                    demo_content.append({"type": "input_image", "image_url": val})
+                elif dtype == "audio":
+                    demo_content.append({"type": "input_text", "text": f"{key}:"})
+                    demo_content.append(
+                        {"type": "input_audio", "input_audio": {"data": val, "format": "wav"}}
+                    )
+                else:
+                    raise ValueError(f"Data type {dtype} is not supported.")
+            demo_content.append({"type": "input_text", "text": f"condition: {user_instruction}"})
+            demo_content.append({"type": "input_text", "text": f"Answer: {demo_answer}"})
             demos_message.append(
                 {"role": "assistant", "content": demo_content}
             )
 
         # 3. Prepare user message
-        if dtype == "str":
-            user_content = [
-                {"type": "input_text", "text": data},
-                {"type": "input_text", "text": user_instruction}
-            ]
-        elif dtype == "image":
-            user_content = [
-                {"type": "input_image", "image_url": data},
-                {"type": "input_text", "text": user_instruction}
-            ]
-        else:
-            raise ValueError(f"Data type {dtype} is not supported.")
+        user_content = []
+        for dtype, (key, val) in zip(dtypes, data.items()):
+            if dtype == "str":
+                user_content.append({"type": "input_text", "text": f"{key}: {val}"})
+            elif dtype == "image":
+                user_content.append({"type": "input_text", "text": f"{key}:"})
+                user_content.append({"type": "input_image", "image_url": val})
+            elif dtype == "audio":
+                user_content.append({"type": "input_text", "text": f"{key}:"})
+                user_content.append(
+                    {"type": "input_audio", "input_audio": {"data": val, "format": "wav"}}
+                )
+            else:
+                raise ValueError(f"Data type {dtype} is not supported.")
         user_message = [{"role": "user", "content": user_content}]
         
         messages = sys_message + demos_message + user_message
@@ -101,26 +112,36 @@ class FilterPrompter:
     
     def generate_evaluate_prompt(
             self,
-            data: Any,
+            data: pd.Series,
             answer: Any,
             user_instruction: str,
-            dtype: str = "str"
+            dtypes: list[str]
     ):
         evaluator_task = [{"role": "user", "content": "Analyze the filter operation tasked with evaluating the condition on the given data:"}]
+
+        _input = [{"type": "input_text", "text": "Input:"}]
+        for dtype, (key, val) in zip(dtypes, data.items()):
+            if dtype == "str":
+                _input.append({"type": "input_text", "text": f"{key}: {val}"})
+            elif dtype == "image":
+                _input.append({"type": "input_text", "text": f"{key}:"})
+                _input.append({"type": "input_image", "image_url": val})
+            elif dtype == "audio":
+                _input.append({"type": "input_text", "text": f"{key}:"})
+                _input.append(
+                    {"type": "input_audio", "input_audio": {"data": val, "format": "wav"}}
+                )
+            else:
+                raise ValueError(f"Data type {dtype} is not supported.")
+        
+        _output = [{"type": "input_text", "text": f"Output:\n{answer}"}]
+
         instruction = user_instruction.strip() + " " + self.output_format
-        if dtype == "str":
-            evaluator_context = [
-                {"role": "user", "content": f"Input:\n{data}\nOutput:\n{answer}\nInstruction:\n{instruction}"}
-            ]
-        elif dtype == "image":
-            _input = [{"type": "input_text", "text": "Input:"}, {"type": "input_image", "image_url": data}]
-            _output = [{"type": "input_text", "text": f"Output:\n{answer}"}]
-            _instruction = [{"type": "input_text", "text": f"Instruction:\n{instruction}"}]
-            evaluator_context = [
-                {"role": "user", "content": _input + _output + _instruction}
-            ]
-        else:
-            raise ValueError(f"Data type {dtype} is not supported.")
+        _instruction = [{"type": "input_text", "text": f"Instruction:\n{instruction}"}]
+        
+        evaluator_context = [
+            {"role": "user", "content": _input + _output + _instruction}
+        ]
 
         evaluator_criteria = (
             "Evaluate the filter operation based on the following criteria:\n"
@@ -137,14 +158,14 @@ class FilterPrompter:
         return messages
     
     def generate_refine_prompt(
-            self,
-            data: Any,
-            answer: Any,
-            user_instruction: str,
-            feedback: str,
-            dtype: str = "str"
+        self,
+        data: pd.Series,
+        answer: Any,
+        user_instruction: str,
+        feedback: str,
+        dtypes: list[str]
     ):
-        initial_generate_prompt = self.generate_prompt(data, user_instruction, dtype)
+        initial_generate_prompt = self.generate_prompt(data, user_instruction, dtypes)
         refine_context =(
             "There is feedback from your previous output.\n"
             f"Output:\n{answer}\nFeedback:\n{feedback}\n"

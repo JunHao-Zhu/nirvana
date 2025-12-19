@@ -69,7 +69,7 @@ class PhysicalOptimizer:
             improve_margin: float = 0.2
     ):
         if not self.should_optimize(node.op_name, input_data, num_samples):
-            node.operator.model = self.available_models[0] if node.op_name == "join" else self.available_models[-1]
+            node.operator.model = self.available_models[0] if node.op_name in ["join", "rank"] else self.available_models[-1]
             node_output = await node.execute_operation(input_data)
             return node_output
 

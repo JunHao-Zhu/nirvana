@@ -54,7 +54,7 @@ MapOpOutputs(
 
 Operator `filter`: Evaluate a condition on the target data (returning either True or False) (the code refers to ops/filter.py (execution) and prompt_templates/filter_prompter.py (prompts))
 ```python
->>> nv.ops.filter(df, "Whether the movie is released after 2000?", input_column="title", strategy="plain")
+>>> nv.ops.filter(df, "Whether the movie is released after 2000?", input_columns=["title"], strategy="plain")
 FilterOpOutputs(
     output = [False, True]
 )

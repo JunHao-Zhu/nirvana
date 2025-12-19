@@ -4,9 +4,13 @@ import pandas as pd
 
 from nirvana.dataframe.frame import DataFrame
 from nirvana.dataframe.arrays.image import ImageArray, ImageDtype
+from nirvana.dataframe.arrays.audio import AudioArray, AudioDtype
+from nirvana.dataframe.arrays.file import FileArray, FileDtype
 from nirvana.utils import configure_llm_backbone
 
 pd.api.extensions.register_extension_dtype(ImageDtype)
+pd.api.extensions.register_extension_dtype(AudioDtype)
+pd.api.extensions.register_extension_dtype(FileDtype)
 
 
 logging.basicConfig(format="[\033[34m%(asctime)s\033[0m] %(message)s", datefmt="%Y-%m-%d %H:%M:%S", level=logging.INFO)
@@ -31,6 +35,10 @@ __all__ = [
     "DataFrame",
     "ImageDtype", 
     "ImageArray", 
+    "AudioDtype", 
+    "AudioArray", 
+    "FileDtype", 
+    "FileArray",
     "convert_to_base_data", 
     "configure_llm_backbone"
 ]

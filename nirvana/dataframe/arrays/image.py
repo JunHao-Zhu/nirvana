@@ -9,77 +9,56 @@ from PIL import Image
 from pandas.api.extensions import ExtensionDtype, ExtensionArray
 
 
-def fetch_image(image: Union[str, np.ndarray, Image.Image, bytes, None], image_type: str = "Image") -> Union[Image.Image, str, None]:
-    if image is None:
+def load_image(raw_data: str | bytes | Image.Image | None) -> str | None:
+    if raw_data is None:
         return None
 
-    image_obj = None
-    if isinstance(image, Image.Image):
-        image_obj = image
-    elif isinstance(image, np.ndarray):
-        image_obj = Image.fromarray(image.astype("uint8"))
-    elif isinstance(image, bytes):
-        image_obj = Image.open(BytesIO(image))
-    elif image.startswith("http://") or image.startswith("https://"):
-        resp = requests.get(image, stream=True)
-        if resp.status_code == requests.codes.ok:
-            image_obj = Image.open(resp.raw)
-        else:
-            return None
-    elif image.startswith("file://"):
-        image_obj = Image.open(image[7:])
-    elif image.startswith("data:image"):
-        if "base64," in image:
-            _, base64_data = image.split("base64,", 1)
-            data = base64.b64decode(base64_data)
-            image_obj = Image.open(BytesIO(data))
-    elif image.startswith("s3://"):
-        from botocore.exceptions import NoCredentialsError, PartialCredentialsError
-
-        try:
-            import boto3
-
-            s3 = boto3.client("s3")
-            bucket_name, key = image[5:].split("/", 1)  # Split after "s3://"
-            response = s3.get_object(Bucket=bucket_name, Key=key)
-            image_data = response["Body"].read()
-            image_obj = Image.open(BytesIO(image_data))
-        except (NoCredentialsError, PartialCredentialsError) as e:
-            raise ValueError("AWS credentials not found or incomplete.") from e
-        except Exception as e:
-            raise ValueError(f"Failed to fetch image from S3: {e}") from e
-    else:
-        image_obj = Image.open(image)
-    if image_obj is None:
-        raise ValueError(
-            f"Unrecognized image input, support local path, http url, base64, S3, and PIL.Image, got {image}"
-        )
-    image_obj = image_obj.convert("RGB")
-    if image_type == "base64":
+    if isinstance(raw_data, Image.Image):
         buffered = BytesIO()
-        image_obj.save(buffered, format="PNG")
+        raw_data.save(buffered, format="PNG")
         return "data:image/png;base64," + base64.b64encode(buffered.getvalue()).decode("utf-8")
+    elif isinstance(raw_data, bytes):
+        return "data:image/png;base64," + base64.b64encode(raw_data).decode("utf-8")
+    elif isinstance(raw_data, str):
+        if raw_data.startswith("data:image"):
+            return raw_data
+        elif raw_data.startswith("https://"):
+            return raw_data
+        elif raw_data.startswith("s3://"):
+            from botocore.exceptions import NoCredentialsError, PartialCredentialsError
 
-    return image_obj
+            try:
+                import boto3
 
-
-def compare_images(img1, img2) -> bool:
-    if img1 is None or img2 is None:
-        return img1 is img2
-
-    # Only fetch images when actually comparing
-    if isinstance(img1, Image.Image) or isinstance(img2, Image.Image):
-        img1 = fetch_image(img1)
-        img2 = fetch_image(img2)
-        return img1.size == img2.size and img1.mode == img2.mode and img1.tobytes() == img2.tobytes()
+                s3 = boto3.client("s3")
+                bucket_name, key = raw_data[5:].split("/", 1)  # Split after "s3://"
+                response = s3.get_object(Bucket=bucket_name, Key=key)
+                image_data = response["Body"].read()
+                # is image_data bytes?
+                image_obj = Image.open(BytesIO(image_data))
+                buffered = BytesIO()
+                image_obj.save(buffered, format="PNG")
+                return "data:image/png;base64," + base64.b64encode(buffered.getvalue()).decode("utf-8")
+            except (NoCredentialsError, PartialCredentialsError) as e:
+                raise ValueError("AWS credentials not found or incomplete.") from e
+            except Exception as e:
+                raise ValueError(f"Failed to fetch image from S3: {e}") from e
+        else:
+            # it's a local file path
+            with open(raw_data, "rb") as f:
+                image_data = f.read()
+                return "data:image/png;base64," + base64.b64encode(image_data).decode("utf-8")
     else:
-        return img1 == img2
+        raise ValueError(f"Unrecognized image input, support local path, http url, base64, S3, and PIL.Image, got {raw_data}")
 
 
 class ImageDtype(ExtensionDtype):
     name = 'image'
     type = str
     na_value = None
+
+    def __repr__(self):
+        return "dtype('image')"
 
     @classmethod
     def construct_array_type(cls):
@@ -90,8 +69,6 @@ class ImageArray(ExtensionArray):
     def __init__(self, values):
         self._data = np.asarray(values, dtype=object)
         self._dtype = ImageDtype()
-        self.allowed_image_types = ["Image", "base64"]
-        self._cached_images: dict[tuple[int, str], Union[str, Image.Image, None]] = {}  # Cache for loaded images
 
     def __getitem__(self, item: Union[int, slice, Sequence[int]]) -> np.ndarray:
         result = self._data[item]
@@ -114,26 +91,13 @@ class ImageArray(ExtensionArray):
             key = range(*key.indices(len(self)))
         if hasattr(value, "__iter__") and not isinstance(value, (str, bytes)):
             for idx, val in zip(key, value):
-                self._data[idx] = val
-                self._invalidate_cache(idx)
+                self._data[idx] = load_image(val)
         else:
             for idx in key:
-                self._data[idx] = value
-                self._invalidate_cache(idx)
+                self._data[idx] = load_image(value)
 
-    def _invalidate_cache(self, idx: int) -> None:
-        """Remove an item from the cache."""
-        for image_type in self.allowed_image_types:
-            if (idx, image_type) in self._cached_images:
-                del self._cached_images[(idx, image_type)]
-
-    def get_image(self, idx: int, image_type: str = "Image") -> Union[Image.Image, str, None]:
-        """Explicit method to fetch and return the actual image"""
-        if (idx, image_type) not in self._cached_images:
-            image_result = fetch_image(self._data[idx], image_type)
-            assert image_result is None or isinstance(image_result, (Image.Image, str))
-            self._cached_images[(idx, image_type)] = image_result
-        return self._cached_images[(idx, image_type)]
+    def get_image(self, index: int) -> str | None:
+        return self._data[index]
 
     def isna(self) -> np.ndarray:
         return pd.isna(self._data)
@@ -146,7 +110,6 @@ class ImageArray(ExtensionArray):
 
     def copy(self) -> "ImageArray":
         new_array = ImageArray(self._data.copy())
-        new_array._cached_images = self._cached_images.copy()
         return new_array
 
     def _concat_same_type(cls, to_concat: Sequence["ImageArray"]) -> "ImageArray":
@@ -161,8 +124,8 @@ class ImageArray(ExtensionArray):
         """
         # create list of all data
         combined_data = np.concatenate([arr._data for arr in to_concat])
-        return cls._from_sequence(combined_data)
-
+        return cls(combined_data)
+    
     @classmethod
     def _from_sequence(cls, scalars, dtype=None, copy=False):
         if copy:
@@ -173,14 +136,11 @@ class ImageArray(ExtensionArray):
         return len(self._data)
 
     def __eq__(self, other) -> np.ndarray:  # type: ignore
-        if isinstance(other, ImageArray):
-            return np.array([compare_images(img1, img2) for img1, img2 in zip(self._data, other._data)], dtype=bool)
-
         if hasattr(other, "__iter__") and not isinstance(other, str):
             if len(other) != len(self):
                 return np.repeat(False, len(self))
-            return np.array([compare_images(img1, img2) for img1, img2 in zip(self._data, other)], dtype=bool)
-        return np.array([compare_images(img, other) for img in self._data], dtype=bool)
+            return np.array([img1 == img2 for img1, img2 in zip(self._data, other)], dtype=bool)
+        return np.array([img == other for img in self._data], dtype=bool)
 
     @property
     def dtype(self) -> ImageDtype:
@@ -188,26 +148,17 @@ class ImageArray(ExtensionArray):
 
     @property
     def nbytes(self) -> int:
-        return sum(sys.getsizeof(img) for img in self._data if img)
+        return sum(sys.getsizeof(val) for val in self._data if val)
 
     def __repr__(self) -> str:
-        return f"ImageArray([{', '.join([f'<Image: {type(img)}>' if img is not None else 'None' for img in self._data[:5]])}, ...])"
+        return f"ImageArray([{', '.join([f'<Image: {img}>' if img is not None else 'None' for img in self._data[:5]])}, ...])"
 
     def _formatter(self, boxed: bool = False):
-        return lambda x: f"<Image: {type(x)}>" if x is not None else "None"
+        return lambda x: f"<Image: {x}>" if x is not None else "None"
 
     def to_numpy(self, dtype=None, copy=False, na_value=None) -> np.ndarray:
         """Convert the ImageArray to a numpy array."""
-        pil_images = []
-        for i, img_data in enumerate(self._data):
-            if isinstance(img_data, np.ndarray):
-                image = self.get_image(i)
-                pil_images.append(image)
-            else:
-                pil_images.append(img_data)
-        result = np.empty(len(self), dtype=object)
-        result[:] = pil_images
-        return result
+        return self._data
 
     def __array__(self, dtype=None) -> np.ndarray:
         """Numpy array interface."""
