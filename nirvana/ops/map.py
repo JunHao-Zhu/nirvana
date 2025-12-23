@@ -15,18 +15,42 @@ def map_wrapper(
     input_data: pd.DataFrame, 
     user_instruction: str = None,
     input_column: str = None,
-    output_columns: list[str] = None, 
-    func: Callable = None, 
-    strategy: str = None,
+    output_columns: list[str] = None,
+    context: list[dict] | str | None = None,
+    model: str | None = None,
+    func: Callable = None,
+    strategy: Literal["plain", "fewshot", "self-refine"] = "plain",
+    rate_limit: int = 16,
+    assertions: list[Callable] | None = [],
     **kwargs
 ):
+    """
+    A function wrapper for map operation
+
+    Args:
+        input_data (pd.DataFrame): Input dataframe
+        user_instruction (str, optional): User instruction. Defaults to None.
+        input_column (str, optional): Input column. Defaults to None.
+        output_columns (list[str], optional): Output columns. Defaults to None.
+        context (list[dict] | str, optional): Context. Defaults to None.
+        model (str, optional): Model. Defaults to None.
+        func (Callable, optional): User function. Defaults to None.
+        strategy (Literal["plain", "fewshot", "self-refine"], optional): Strategy. Defaults to "plain".
+        rate_limit (int, optional): Rate limit. Defaults to 16.
+        assertions (list[Callable], optional): Assertions. Defaults to [].
+        **kwargs: Additional keyword arguments for OpenAI Clent.
+    """
+    
     map_op = MapOperation(
         user_instruction=user_instruction,
         strategy=strategy,
         input_columns=[input_column],
         output_columns=output_columns,
+        context=context,
+        model=model,
         tool=FunctionCallTool.from_function(func=func) if func else None,
-        **kwargs
+        rate_limit=rate_limit,
+        assertions=assertions
     )
     outputs = asyncio.run(map_op.execute(
         input_data=input_data,
@@ -69,7 +93,6 @@ class MapOperation(BaseOperation):
         strategy: Literal["plain", "fewshot", "self-refine"] = "plain",
         rate_limit: int = 16,
         assertions: list[Callable] | None = [],
-        **kwargs,
     ):
         super().__init__(
             op_name="map",
@@ -169,7 +192,6 @@ class MapOperation(BaseOperation):
     async def execute(
         self, 
         input_data: pd.DataFrame,
-        *args, 
         **kwargs
     ):  
         if self.user_instruction is None and not self.has_udf():

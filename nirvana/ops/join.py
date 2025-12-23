@@ -19,19 +19,51 @@ def join_wrapper(
     left_on: str,
     right_on: str,
     how: str = "inner",
+    context: list[dict] | str | None = None,
+    model: str | None = None,
+    func: Callable = None,
     strategy: Literal["nest", "block"] = "nest",
+    rate_limit: int = 16,
+    assertions: list[Callable] | None = [],
+    batch_size: int = 5,
     **kwargs
 ):
+    """
+    A function wrapper for join operation
+
+    Args:
+        left_data (pd.DataFrame): Left dataframe
+        right_data (pd.DataFrame): Right dataframe
+        user_instruction (str): User instruction
+        left_on (str): Left on
+        right_on (str): Right on
+        how (str, optional): How. Defaults to "inner".
+        context (list[dict] | str, optional): Context. Defaults to None.
+        model (str, optional): Model. Defaults to None.
+        func (Callable, optional): User function. Defaults to None.
+        strategy (Literal["nest", "block"], optional): Strategy. Defaults to "nest".
+        rate_limit (int, optional): Rate limit. Defaults to 16.
+        assertions (list[Callable], optional): Assertions. Defaults to [].
+        batch_size (int, optional): Batch size for block join. Defaults to 5.
+        **kwargs: Additional keyword arguments for OpenAI Clent.
+    """
+    
     join_op = JoinOperation(
         user_instruction=user_instruction,
         left_on=[left_on],
         right_on=[right_on],
         how=how,
+        context=context,
+        model=model,
+        tool=FunctionCallTool(func=func) if func else None,
         strategy=strategy,
+        rate_limit=rate_limit,
+        assertions=assertions,
     )
     outputs = asyncio.run(join_op.execute(
         left_data=left_data,
         right_data=right_data,
+        batch_size=batch_size,
         **kwargs
     ))
     return outputs
@@ -62,7 +94,6 @@ class JoinOperation(BaseOperation):
         strategy: Literal["nest", "block"] = "nest",
         rate_limit: int = 16,
         assertions: list[Callable] | None = [],
-        **kwargs,
     ):
         super().__init__(
             op_name="join", 

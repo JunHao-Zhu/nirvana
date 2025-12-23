@@ -14,14 +14,39 @@ def reduce_wrapper(
     input_data: Iterable[Any],
     user_instruction: str = None,
     input_column: str = None,
+    context: list[dict] | str | None = None,
+    model: str | None = None,
     func: Callable = None,
+    strategy: Literal["plain"] = "plain",
+    rate_limit: int = 16,
+    assertions: list[Callable] | None = [],
     **kwargs
 ):
+    """
+    A function wrapper for reduce operation
+
+    Args:
+        input_data (Iterable[Any]): Input data
+        user_instruction (str, optional): User instruction. Defaults to None.
+        input_column (str, optional): Input column. Defaults to None.
+        context (list[dict] | str, optional): Context. Defaults to None.
+        model (str, optional): Model. Defaults to None.
+        func (Callable, optional): User function. Defaults to None.
+        strategy (Literal["plain"], optional): Strategy. Defaults to "plain".
+        rate_limit (int, optional): Rate limit. Defaults to 16.
+        assertions (list[Callable], optional): Assertions. Defaults to [].
+        **kwargs: Additional keyword arguments for OpenAI Clent.
+    """
+    
     reduce_op = ReduceOperation(
         user_instruction=user_instruction,
         input_columns=[input_column],
+        context=context,
+        model=model,
         tool=FunctionCallTool.from_function(func=func) if func else None,
-        **kwargs
+        strategy=strategy,
+        rate_limit=rate_limit,
+        assertions=assertions,
     )
     outputs = asyncio.run(reduce_op.execute(
         input_data=input_data,
@@ -59,7 +84,6 @@ class ReduceOperation(BaseOperation):
         strategy: Literal["plain"] = "plain",
         rate_limit: int = 16,
         assertions: list[Callable] | None = [],
-        **kwargs,
     ):
         super().__init__(
             op_name="reduce",
@@ -104,7 +128,6 @@ class ReduceOperation(BaseOperation):
     async def execute(
         self,
         input_data: pd.DataFrame,
-        *args,
         **kwargs
     ):
         if self.user_instruction is None and not self.has_udf():

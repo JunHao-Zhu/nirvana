@@ -16,16 +16,41 @@ def rank_wrapper(
     user_instruction: str = None,
     input_column: str = None,
     descend: bool = True,
+    context: list[dict] | str | None = None,
+    model: str | None = None,
     func: Callable = None,
-    strategy: str = None,
+    strategy: Literal["plain"] = "plain",
+    rate_limit: int = 16,
+    assertions: list[Callable] | None = [],
     **kwargs
 ):
+    """
+    A function wrapper for rank operation
+
+    Args:
+        input_data (pd.DataFrame): Input dataframe
+        user_instruction (str, optional): User instruction. Defaults to None.
+        input_column (str, optional): Input column. Defaults to None.
+        descend (bool, optional): Whether to rank in descending order (True) or ascending order (False). Defaults to True.
+        context (list[dict] | str, optional): Context. Defaults to None.
+        model (str, optional): Model. Defaults to None.
+        func (Callable, optional): User function. Defaults to None.
+        strategy (Literal["plain"], optional): Strategy. Defaults to "plain".
+        rate_limit (int, optional): Rate limit. Defaults to 16.
+        assertions (list[Callable], optional): Assertions. Defaults to [].
+        **kwargs: Additional keyword arguments for OpenAI Clent.
+    """
+
     rank_op = RankOperation(
         user_instruction=user_instruction,
         input_columns=[input_column],
         descend=descend,
+        context=context,
+        model=model,
         tool=FunctionCallTool.from_function(func=func) if func else None,
-        strategy="plain",
+        strategy=strategy,
+        rate_limit=rate_limit,
+        assertions=assertions
     )
     outputs = asyncio.run(rank_op.execute(
         input_data=input_data,
@@ -45,11 +70,6 @@ class RankOpOutputs(BaseOpOutputs):
 class RankOperation(BaseOperation):
     """
     RankOperation ranks the rows of a DataFrame column according to a user-specified natural language instruction.
-
-    Args:
-        user_instruction (str): The natural language instruction for ranking the rows of the DataFrame column.
-        input_column (str): The name of the DataFrame column to be ranked.
-        descend (bool): Whether to rank in descending order (True) or ascending order (False).
     """
     
     def __init__(
@@ -63,7 +83,6 @@ class RankOperation(BaseOperation):
         strategy: Literal["plain"] = "plain",
         rate_limit: int = 16,
         assertions: list[Callable] | None = [],
-        **kwargs,
     ):
         super().__init__(
             op_name="rank",
