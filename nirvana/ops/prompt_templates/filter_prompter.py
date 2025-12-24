@@ -53,11 +53,11 @@ class FilterPrompter:
         return messages
     
     def generate_fewshot_prompt(
-            self,
-            data: pd.Series,
-            user_instruction: str,
-            dtypes: list[str],
-            demos: list[dict[str, Any]]
+        self,
+        data: pd.Series,
+        user_instruction: str,
+        dtypes: list[str],
+        demos: list[dict[str, Any]]
     ):
         # 1. Prepare system message
         sys_message = [
@@ -66,7 +66,7 @@ class FilterPrompter:
         ]
 
         # 2. Prepare demonstration message
-        demos_message = []
+        demos_message = [{"type": "input_text", "text": f"Here are some examples:"}]
         for demo in demos:
             demo_content = []
             demo_data: pd.Series | dict = demo["data"]
@@ -105,17 +105,21 @@ class FilterPrompter:
                 )
             else:
                 raise ValueError(f"Data type {dtype} is not supported.")
+        
+        # 4. Prepare the given condition
+        conditions = f"condition: {user_instruction}"
+        user_content.append({"type": "input_text", "text": conditions})
         user_message = [{"role": "user", "content": user_content}]
         
         messages = sys_message + demos_message + user_message
         return messages
     
     def generate_evaluate_prompt(
-            self,
-            data: pd.Series,
-            answer: Any,
-            user_instruction: str,
-            dtypes: list[str]
+        self,
+        data: pd.Series,
+        answer: Any,
+        user_instruction: str,
+        dtypes: list[str]
     ):
         evaluator_task = [{"role": "user", "content": "Analyze the filter operation tasked with evaluating the condition on the given data:"}]
 

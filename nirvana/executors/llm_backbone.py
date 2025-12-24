@@ -98,7 +98,7 @@ class LLMClient:
         return np.array([data.embedding for data in response.data]).squeeze(), cost
 
     async def __call__(self,
-        messages: list[dict[str, str]],
+        messages: str | list[dict[str, str]],
         parse_tags: bool = False,
         parse_code: bool = False,
         **kwargs,

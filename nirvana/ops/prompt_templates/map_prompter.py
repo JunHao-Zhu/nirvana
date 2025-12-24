@@ -1,3 +1,4 @@
+import pandas as pd
 from typing import Any, List, Dict
 
 
@@ -16,11 +17,11 @@ class MapPrompter:
         return output_format
 
     def generate_prompt(
-            self, 
-            data: Any,
-            user_instruction: str,
-            output_columns: list[str],
-            dtype: str = "str"
+        self, 
+        data: pd.Series,
+        user_instruction: str,
+        output_columns: list[str],
+        dtypes: list[str],
     ):
         """
         Generates a prompt message for LLMs based on user instructions 
@@ -48,15 +49,23 @@ class MapPrompter:
             {"role": "system", "content": self.output_format}
         ]
 
-        # 2. Prepare user message
-        if dtype == "str":
-            user_content = [{"type": "input_text", "text": data}]
-        elif dtype == "image":
-            user_content = [
-                {"type": "input_image", "image_url": data}
-            ]
-        else:
-            raise ValueError(f"Data type {type(data)} is not supported.")
+        # 2. Prepare data
+        user_content = []
+        for dtype, (key, val) in zip(dtypes, data.items()):
+            if dtype == "str":
+                user_content.append({"type": "input_text", "text": f"{key}: {val}"})
+            elif dtype == "image":
+                user_content.append({"type": "input_text", "text": f"{key}:"})
+                user_content.append({"type": "input_image", "image_url": val})
+            elif dtype == "audio":
+                user_content.append({"type": "input_text", "text": f"{key}:"})
+                user_content.append(
+                    {"type": "input_audio", "input_audio": {"data": val, "format": "wav"}}
+                )
+            else:
+                raise ValueError(f"Data type {dtype} is not supported.")
+        
+        # 3. Prepare the given transformation instruction
         user_content.append({"type": "input_text", "text": user_instruction})
         user_message = [{"role": "user", "content": user_content}]
 
@@ -64,12 +73,12 @@ class MapPrompter:
         return messages
     
     def generate_fewshot_prompt(
-            self,
-            data: Any,
-            user_instruction: str,
-            output_columns: list[str],
-            dtype: str,
-            demos: List[Dict[str, Any]]
+        self,
+        data: pd.Series,
+        user_instruction: str,
+        output_columns: list[str],
+        dtypes: list[str],
+        demos: list[dict[str, Any]]
     ):
         """
         Generates a prompt with demonstration examples for an LLM.
@@ -97,67 +106,85 @@ class MapPrompter:
         ]
 
         # 2. Prepare demonstration message
-        demos_message = [{"role": "assistant", "content": "Several examples are shown below."}]
+        demos_message = [{"type": "input_text", "text": f"Here are some examples:"}]
         for demo in demos:
             demo_content = []
-            if dtype == "str":
-                demo_content = [
-                    {"type": "input_text", "text": demo["data"]},
-                    {"type": "input_text", "text": user_instruction},
-                    {"type": "input_text", "text": "Answer:\n" + demo["answer"]}
-                ]
-            elif dtype == "image":
-                demo_content = [
-                    {"type": "input_image", "image_url": demo["data"]},
-                    {"type": "input_text", "text": user_instruction},
-                    {"type": "input_text", "text": "Answer:\n" + demo["answer"]}
-                ]
-            else:
-                raise ValueError(f"Data type {dtype} is not supported.")
+            demo_data: pd.Series | dict = demo["data"]
+            demo_answer: str = demo["answer"]
+            for dtype, (key, val) in zip(dtypes, demo_data.items()):
+                if dtype == "str":
+                    demo_content.append({"type": "input_text", "text": f"{key}: {val}"})
+                elif dtype == "image":
+                    demo_content.append({"type": "input_text", "text": f"{key}:"})
+                    demo_content.append({"type": "input_image", "image_url": val})
+                elif dtype == "audio":
+                    demo_content.append({"type": "input_text", "text": f"{key}:"})
+                    demo_content.append(
+                        {"type": "input_audio", "input_audio": {"data": val, "format": "wav"}}
+                    )
+                else:
+                    raise ValueError(f"Data type {dtype} is not supported.")
+            demo_content.append({"type": "input_text", "text": f"condition: {user_instruction}"})
+            demo_content.append({"type": "input_text", "text": f"Answer: {demo_answer}"})
             demos_message.append(
                 {"role": "assistant", "content": demo_content}
             )
 
         # 3. Prepare user message
-        if dtype == "str":
-            user_content = [
-                {"type": "input_text", "text": data},
-                {"type": "input_text", "text": user_instruction}
-            ]
-        elif dtype == "image":
-            user_content = [
-                {"type": "input_image", "image_url": data},
-                {"type": "input_text", "text": user_instruction}
-            ]
-        else:
-            raise ValueError(f"Data type {dtype} is not supported.")
+        user_content = []
+        for dtype, (key, val) in zip(dtypes, data.items()):
+            if dtype == "str":
+                user_content.append({"type": "input_text", "text": f"{key}: {val}"})
+            elif dtype == "image":
+                user_content.append({"type": "input_text", "text": f"{key}:"})
+                user_content.append({"type": "input_image", "image_url": val})
+            elif dtype == "audio":
+                user_content.append({"type": "input_text", "text": f"{key}:"})
+                user_content.append(
+                    {"type": "input_audio", "input_audio": {"data": val, "format": "wav"}}
+                )
+            else:
+                raise ValueError(f"Data type {dtype} is not supported.")
+        
+        # 4. Prepare the given condition
+        user_content.append({"type": "input_text", "text": user_instruction})
         user_message = [{"role": "user", "content": user_content}]
         
         messages = sys_message + demos_message + user_message
         return messages
     
     def generate_evaluate_prompt(
-            self,
-            data: Any,
-            answer: Any,
-            user_instruction: str,
-            dtype: str = "str"
+        self,
+        data: Any,
+        answer: Any,
+        user_instruction: str,
+        dtypes: list[str],
     ):
         evaluator_task = [{"role": "user", "content": "Analyze the map operation tasked with transforming data based on a given instruction:"}]
+        
+        _input = [{"type": "input_text", "text": "Input:"}]
+        for dtype, (key, val) in zip(dtypes, data.items()):
+            if dtype == "str":
+                _input.append({"type": "input_text", "text": f"{key}: {val}"})
+            elif dtype == "image":
+                _input.append({"type": "input_text", "text": f"{key}:"})
+                _input.append({"type": "input_image", "image_url": val})
+            elif dtype == "audio":
+                _input.append({"type": "input_text", "text": f"{key}:"})
+                _input.append(
+                    {"type": "input_audio", "input_audio": {"data": val, "format": "wav"}}
+                )
+            else:
+                raise ValueError(f"Data type {dtype} is not supported.")
+        
+        _output = [{"type": "input_text", "text": f"Output:\n{answer}"}]
+
         instruction = user_instruction.strip() + " " + self.output_format
-        if dtype == "str":
-            evaluator_context = [
-                {"role": "user", "content": f"Input:\n{data}\nOutput:\n{answer}\nInstruction:\n{instruction}"}
-            ]
-        elif dtype == "image":
-            _input = [{"type": "input_text", "text": "Input:"}, {"type": "input_image", "image_url": data}]
-            _output = [{"type": "input_text", "text": f"Output:\n{answer}"}]
-            _instruction = [{"type": "input_text", "text": f"Instruction:\n{instruction}"}]
-            evaluator_context = [
-                {"role": "user", "content": _input + _output + _instruction}
-            ]
-        else:
-            raise ValueError(f"Data type {dtype} is not supported.")
+        _instruction = [{"type": "input_text", "text": f"Instruction:\n{instruction}"}]
+        
+        evaluator_context = [
+            {"role": "user", "content": _input + _output + _instruction}
+        ]
 
         evaluator_criteria = (
             "Evaluate the map operation based on the following criteria:\n"
@@ -173,15 +200,15 @@ class MapPrompter:
         return messages
     
     def generate_refine_prompt(
-            self,
-            data: Any,
-            answer: Any,
-            user_instruction: str,
-            output_columns: list[str],
-            feedback: str,
-            dtype: str = "str"
+        self,
+        data: Any,
+        answer: Any,
+        user_instruction: str,
+        output_columns: list[str],
+        feedback: str,
+        dtypes: list[str],
     ):
-        initial_generate_prompt = self.generate_prompt(data, user_instruction, output_columns, dtype)
+        initial_generate_prompt = self.generate_prompt(data, user_instruction, output_columns, dtypes)
         refine_context =(
             "There is feedback from your previous output.\n"
             f"Output:\n{answer}\nFeedback:\n{feedback}\n"

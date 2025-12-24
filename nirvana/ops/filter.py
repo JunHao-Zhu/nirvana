@@ -143,7 +143,7 @@ class FilterOperation(BaseOperation):
     
     async def _execute_by_func(self, data: pd.Series, user_instruction: str, func: Callable, llm_call: Callable, **kwargs):
         try:
-            output = func(*data.values)
+            output = func(data)
             return output, 0.0
         except Exception as e:
             return await llm_call(data, user_instruction)
