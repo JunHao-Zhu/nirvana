@@ -102,18 +102,18 @@ The supported operators and their required arguments are as follows.
 - user_instruction: a natural language expression
 - input_column: the name of the column on which the operation is performed
 - output_column: the name of the new column that the operation generates
-- func: a lambda function applied to a pd.Series, returns a single value from a single value
+- func: a lambda function applied to a pd.Series, returns a dict with output_column as keys and converted values as values
 2. filter: Evaluate a natural language condition per value in a given column (returning boolean). Required arguments:
 - user_instruction: the natural language condition
 - input_column: the name of column on which the operation is performed
-- func: a lambda function applied to a pd.Series, returns boolean value
+- func: a lambda function applied to a pd.Series, returns a boolean value per value
 3. join: Join a table with another table by keeping all tuple pairs that satisfy a natural language condition. Required arguments:
 - other: the other dataset to join with
 - user_instruction: the join condition in natural language
 - left_on: the name of the column from the left table to join on
 - right_on: the name of the column from the right table to join on
 - how: the type of join to be performed (e.g., inner, left, right)
-- func: a lambda function applied to two pd.Series data, returns boolean value
+- func: a lambda function applied to two pd.Series data, returns a boolean value per tuple pair
 4. reduce: Aggregate multiple values in a given column into a single result. Required arguments:
 - user_instruction: the reducer function in natural language
 - input_column: the name of column on which the operation is performed

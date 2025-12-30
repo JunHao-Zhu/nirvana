@@ -77,7 +77,7 @@ class LogicalOptimizer:
         pass
 
     def optimize(self, plan: LineageNode):
-        plan = NonLLMReplace.transform(plan) if self.non_llm_replace else plan
+        plan = NonLLMReplace.transform(plan, self.agent) if self.non_llm_replace else plan
         plan = MapPullup.transform(plan) if self.map_pullup else plan
         plan = FilterPullup.transform(plan) if self.filter_pullup else plan
         plan = FilterPushdown.transform(plan) if self.filter_pushdown else plan

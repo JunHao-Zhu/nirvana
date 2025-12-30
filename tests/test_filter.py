@@ -51,6 +51,8 @@ def mock_llm_client():
         # - "Convex Optimization"
         if "Probability and Random Processes" in text or "Convex Optimization" in text:
             value = "True"
+        elif "None" in text:
+            value = "False"
         else:
             value = "False"
 
@@ -159,9 +161,9 @@ class TestFilterOperation:
         """Test execute with user-defined function."""
         FilterOperation.set_llm(mock_llm_client)
 
-        def requires_lot_of_math(course: str) -> bool:
+        def requires_lot_of_math(course: pd.Series) -> bool:
             """Simple predicate to identify math-heavy courses."""
-            return course in {
+            return course["Courses"] in {
                 "Probability and Random Processes",
                 "Convex Optimization",
             }
@@ -232,6 +234,46 @@ class TestFilterOperation:
         with pytest.raises(AssertionError, match="Few-shot examples must be provided"):
             await op.execute(input_data=sample_dataframe)
 
+    @pytest.mark.asyncio
+    async def test_filter_operation_with_limit(self, sample_dataframe, mock_llm_client):
+        """Test that filter operation respects the limit on passed records."""
+        FilterOperation.set_llm(mock_llm_client)
+
+        op = FilterOperation(
+            user_instruction="The course requires a lot of math",
+            input_columns=["Courses"],
+            strategy="plain",
+            limit=1,
+        )
+
+        result = await op.execute(input_data=sample_dataframe)
+
+        assert isinstance(result, FilterOpOutputs)
+        # Only one True should be allowed, remaining rows padded with False
+        assert result.output[0] is True
+        assert all(v is False for v in result.output[1:])
+
+    def test_postprocess_filter_output(self, mock_llm_client):
+        """Test that _postprocess_filter_output normalizes various LLM outputs."""
+        FilterOperation.set_llm(mock_llm_client)
+
+        op = FilterOperation(
+            user_instruction="The course requires a lot of math",
+            input_columns=["Courses"],
+            strategy="plain",
+        )
+
+        # Bool inputs are returned as-is
+        assert op._postprocess_filter_output(True) is True
+        assert op._postprocess_filter_output(False) is False
+
+        # None becomes False
+        assert op._postprocess_filter_output(None) is False
+
+        # String inputs with true/false (any case) are handled
+        assert op._postprocess_filter_output("True") is True
+        assert op._postprocess_filter_output(" FALSE ") is False
+
 
 class TestFilterOpOutputs:
     """Test suite for FilterOpOutputs class."""
@@ -281,5 +323,3 @@ class TestFilterWrapper:
         assert isinstance(result, FilterOpOutputs)
         assert result.output == [True, False, False, True]
         assert result.cost > 0
-
-

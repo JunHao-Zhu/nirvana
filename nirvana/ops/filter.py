@@ -1,3 +1,5 @@
+import warnings
+
 import functools
 import asyncio
 from typing import Any, Iterable, Callable, Literal
@@ -18,6 +20,7 @@ def filter_wrapper(
     context: list[dict] | str | None = None,
     model: str | None = None,
     strategy: Literal["plain", "fewshot", "self-refine"] = "plain",
+    limit: int | None = None,
     rate_limit: int = 16,
     assertions: list[Callable] | None = [],
     **kwargs
@@ -33,6 +36,7 @@ def filter_wrapper(
         context (list[dict] | str, optional): Context. Defaults to None.
         model (str, optional): Model. Defaults to None.
         strategy (Literal["plain", "fewshot", "self-refine"], optional): Strategy. Defaults to "plain".
+        limit (int): Maximum number of outputs to produce before stopping.
         rate_limit (int, optional): Rate limit. Defaults to 16.
         assertions (list[Callable], optional): Assertions. Defaults to [].
         **kwargs: Additional keyword arguments for OpenAI Clent.
@@ -45,6 +49,7 @@ def filter_wrapper(
         model=model,
         tool=FunctionCallTool.from_function(func=func) if func else None,
         strategy=strategy,
+        limit=limit,
         rate_limit=rate_limit,
         assertions=assertions,
     )
@@ -80,6 +85,7 @@ class FilterOperation(BaseOperation):
         model: str | None = None,
         tool: BaseTool | None = None,
         strategy: Literal["plain", "fewshot", "self-refine"] = "plain",
+        limit: int | None = None,
         rate_limit: int = 16,
         assertions: list[Callable] | None = [],
     ):
@@ -90,6 +96,7 @@ class FilterOperation(BaseOperation):
             model=model,
             tool=tool,
             strategy=strategy,
+            limit=limit,
             rate_limit=rate_limit,
             assertions=assertions,
         )
@@ -114,14 +121,16 @@ class FilterOperation(BaseOperation):
         async with self.semaphore:
             full_prompt = self.prompter.generate_prompt(data, user_instruction, dtypes)
             output = await self.llm(full_prompt, parse_tags=True, tags=["output"], **kwargs)
-            return output["output"], output["cost"]
+            result = self._postprocess_filter_output(output["output"])
+            return result, output["cost"]
 
     async def _execute_by_fewshot_llm(self, data: pd.Series, user_instruction: str, dtypes: list[str], demos, **kwargs):
         async with self.semaphore:
             full_prompt = self.prompter.generate_fewshot_prompt(data, user_instruction, dtypes, demos)
             output = await self.llm(full_prompt, parse_tags=True, tags=["output"], **kwargs)
-            return output["output"], output["cost"]
-        
+            result = self._postprocess_filter_output(output["output"])
+            return result, output["cost"]
+
     async def _execute_by_self_refine(self, data: pd.Series, user_instruction: str, dtypes: list[str], **kwargs):
         async with self.semaphore:
             self_refine_cost = 0.0
@@ -134,35 +143,33 @@ class FilterOperation(BaseOperation):
             self_refine_cost += evaluate_output["cost"]
             
             if "pass" in evaluate_output["evaluation"].lower():
-                return output["output"], self_refine_cost
+                result = self._postprocess_filter_output(output["output"])
+                return result, self_refine_cost
             else:
                 refine_prompt = self.prompter.generate_refine_prompt(data, output["raw_output"], user_instruction, evaluate_output["feedback"], dtypes)
                 refine_output = await self.llm(refine_prompt, parse_tags=True, tags=["output"], **kwargs)
                 self_refine_cost += refine_output["cost"]
-                return refine_output["output"], self_refine_cost
-    
+                result = self._postprocess_filter_output(refine_output["output"])
+                return result, self_refine_cost
+
     async def _execute_by_func(self, data: pd.Series, user_instruction: str, func: Callable, llm_call: Callable, **kwargs):
         try:
             output = func(data)
             return output, 0.0
         except Exception as e:
             return await llm_call(data, user_instruction)
-    
-    def _postprocess_filter_outputs(self, results: Iterable[tuple[Any, float]]):
-        outputs, costs = [], 0.0
-        for output, cost in results:
-            if output is None:
-                outputs.append(False)
-                continue
-            if isinstance(output, bool):
-                outputs.append(output)
-                continue
-            if "True" in output:
-                outputs.append(True)
-            elif "False" in output:
-                outputs.append(False)
-            costs += cost
-        return outputs, costs
+        
+    def _postprocess_filter_output(self, llm_result: str | bool | None) -> bool:
+        if llm_result is None:
+            return False
+        if isinstance(llm_result, bool):
+            return llm_result
+        if "true" in llm_result.lower():
+            return True
+        elif "false" in llm_result.lower():
+            return False
+        else:
+            return False
 
     async def execute(
         self, 
@@ -197,7 +204,7 @@ class FilterOperation(BaseOperation):
         # Create tasks for all data points
         tasks = []
         for _, data in processed_data.iterrows():
-            if data.hasnans:
+            if data.empty:
                 tasks.append(asyncio.create_task(asyncio.sleep(0, result=(False, 0.0))))
             elif self.has_udf():
                 tasks.append(asyncio.create_task(self._execute_by_func(data, self.user_instruction, self.tool, execution_func)))
@@ -205,10 +212,38 @@ class FilterOperation(BaseOperation):
                 tasks.append(asyncio.create_task(execution_func(data, self.user_instruction)))
 
         # Wait for all tasks to complete
-        results = await asyncio.gather(*tasks)
+        if self.limit is not None and self.limit <= 0:
+            warnings.warn("The limit should be positive. To execute, the limit will be ignored.")
+            self.limit = None
         
-        # Process results
-        filter_outputs, token_cost = self._postprocess_filter_outputs(results)
+        token_cost = 0.0
+        filter_outputs: list[bool] = []
+        if self.limit is not None:
+            num_passed_records: int = 0
+            num_processed_records: int = 0
+            reach_limit: bool = False
+            for i in range(0, len(tasks), self.limit):
+                if reach_limit:
+                    break
+                batch_tasks = tasks[i:i + self.limit]
+                batch_results = await asyncio.gather(*batch_tasks)
+                token_cost += sum([result[1] for result in batch_results])
+                for result, _ in batch_results:
+                    filter_outputs.append(result)
+                    num_processed_records += 1
+                    if result:
+                        num_passed_records += 1
+                    if num_passed_records >= self.limit:
+                        reach_limit = True
+                        break
+            num_remaining_records = len(processed_data) - num_processed_records
+            if num_remaining_records > 0:
+                filter_outputs.extend([False] * num_remaining_records)
+        else:
+            results = await asyncio.gather(*tasks)
+            filter_outputs = [result[0] for result in results]
+            token_cost = sum([result[1] for result in results])
+        
         return FilterOpOutputs(
             output=filter_outputs,
             cost=token_cost

@@ -1,3 +1,5 @@
+import warnings
+
 import functools
 import asyncio
 from typing import Any, Iterable, Callable, Literal
@@ -20,6 +22,7 @@ def map_wrapper(
     model: str | None = None,
     func: Callable = None,
     strategy: Literal["plain", "fewshot", "self-refine"] = "plain",
+    limit: int | None = None,
     rate_limit: int = 16,
     assertions: list[Callable] | None = [],
     **kwargs
@@ -36,6 +39,7 @@ def map_wrapper(
         model (str, optional): Model. Defaults to None.
         func (Callable, optional): User function. Defaults to None.
         strategy (Literal["plain", "fewshot", "self-refine"], optional): Strategy. Defaults to "plain".
+        limit (int): Maximum number of outputs to produce before stopping.
         rate_limit (int, optional): Rate limit. Defaults to 16.
         assertions (list[Callable], optional): Assertions. Defaults to [].
         **kwargs: Additional keyword arguments for OpenAI Clent.
@@ -49,6 +53,7 @@ def map_wrapper(
         context=context,
         model=model,
         tool=FunctionCallTool.from_function(func=func) if func else None,
+        limit=limit,
         rate_limit=rate_limit,
         assertions=assertions
     )
@@ -91,6 +96,7 @@ class MapOperation(BaseOperation):
         model: str | None = None,
         tool: BaseTool | None = None,
         strategy: Literal["plain", "fewshot", "self-refine"] = "plain",
+        limit: int | None = None,
         rate_limit: int = 16,
         assertions: list[Callable] | None = [],
     ):
@@ -101,6 +107,7 @@ class MapOperation(BaseOperation):
             model=model,
             tool=tool,
             strategy=strategy,
+            limit=limit,
             rate_limit=rate_limit,
             assertions=assertions,
         )
@@ -127,13 +134,15 @@ class MapOperation(BaseOperation):
         async with self.semaphore:
             full_prompt = self.prompter.generate_prompt(data, user_instruction, self.output_columns, dtypes)
             output = await self.llm(full_prompt, parse_tags=True, tags=self.output_columns, **kwargs)
-            return output
+            result = self._postprocess_map_output(output, self.output_columns)
+            return result, output["cost"]
 
     async def _execute_by_fewshot_llm(self, data: pd.Series, user_instruction: str, dtypes: list[str], demos, **kwargs):
         async with self.semaphore:
             full_prompt = self.prompter.generate_fewshot_prompt(data, user_instruction, self.output_columns, dtypes, demos)
             output = await self.llm(full_prompt, parse_tags=True, tags=self.output_columns, **kwargs)
-            return output
+            result = self._postprocess_map_output(output, self.output_columns)
+            return result, output["cost"]
         
     async def _execute_by_self_refine(self, data: pd.Series, user_instruction: str, dtypes: list[str], **kwargs):
         async with self.semaphore:
@@ -147,41 +156,33 @@ class MapOperation(BaseOperation):
             self_refine_cost += evaluate_output["cost"]
             
             if "pass" in evaluate_output["evaluation"].lower():
-                output["cost"] = self_refine_cost
-                return output
+                result = self._postprocess_map_output(output, self.output_columns)
+                return result, self_refine_cost
             else:
                 refine_prompt = self.prompter.generate_refine_prompt(data, output["raw_output"], user_instruction, self.output_columns, evaluate_output["feedback"], dtypes)
                 refine_output = await self.llm(refine_prompt, parse_tags=True, tags=self.output_columns, **kwargs)
                 self_refine_cost += refine_output["cost"]
+                result = self._postprocess_map_output(refine_output, self.output_columns)
                 refine_output["cost"] = self_refine_cost
-                return refine_output
+                return result, self_refine_cost
 
     async def _execute_by_func(self, data: pd.Series, user_instruction: str, func: Callable, llm_call: Callable, **kwargs):
         try:
-            if len(self.output_columns) > 1:
-                raise NotImplementedError(
-                    "For now, the function tool is allowed to process one-to-one mapping. ",
-                    "How to accommodate one-to-many map function with any output needs addressed."
-                )
             map_result = func(data)
-            output = {self.output_columns[0]: map_result, "cost": 0.0}
-            return output
+            result = self._postprocess_map_output(map_result, self.output_columns)
+            return result, 0.0
         except Exception as e:
             return await llm_call(data, user_instruction)
-    
-    def _postprocess_map_outputs(self, results: Iterable[dict], output_columns: list[str]):
-        outputs = {column: [] for column in output_columns}
-        total_cost = 0.0
-        for llm_response in results:
-            if llm_response is None:
-                for column in output_columns:
-                    outputs[column].append(None)
-                continue
-
-            for column in output_columns:
-                outputs[column].append(llm_response.get(column, None))
-            total_cost += llm_response.get("cost", 0.0)
-        return outputs, total_cost
+        
+    def _postprocess_map_output(self, llm_result: dict[str, str] | None, output_columns: list[str]) -> dict[str, Any] | None:
+        try:
+            if llm_result is None:
+                return {column: None for column in output_columns}
+            else:
+                map_output = {column: llm_result.get(column, None) for column in output_columns}
+                return map_output
+        except KeyError as e:
+            raise KeyError(f"Expected field {e} not found in the LLM response.")
 
     async def execute(
         self, 
@@ -209,27 +210,57 @@ class MapOperation(BaseOperation):
             demos = self.context
             execution_func = functools.partial(self._execute_by_fewshot_llm, dtypes=dtypes, demos=demos, model=self.model, **kwargs)
         elif self.strategy == "self_refine":
-            execution_func = functools.partial(self._execute_by_self_refine, dtype=dtypes, model=self.model, **kwargs)
+            execution_func = functools.partial(self._execute_by_self_refine, dtypes=dtypes, model=self.model, **kwargs)
         else:
             raise ValueError(f"The optional strategies available for map are {self.strategy_options}. Strategy {self.strategy} is not supported.")
 
         # Create tasks for all data points
         tasks = []
+        empty_map_result = {column: None for column in self.output_columns}
         for _, data in processed_data.iterrows():
-            if data.hasnans:
-                tasks.append(asyncio.create_task(asyncio.sleep(0, result=None)))
+            if data.empty:
+                tasks.append(asyncio.create_task(asyncio.sleep(0, result=(empty_map_result, 0.0))))
             elif self.has_udf():
                 tasks.append(asyncio.create_task(self._execute_by_func(data, self.user_instruction, self.tool, execution_func)))
             else:
                 tasks.append(asyncio.create_task(execution_func(data, self.user_instruction)))
         
         # Wait for all tasks to complete
-        results = await asyncio.gather(*tasks)
+        if self.limit is not None and self.limit <= 0:
+            warnings.warn("The limit should be positive. To execute, the limit will be ignored.")
+            self.limit = None
         
-        # Process results
-        map_results, token_cost = self._postprocess_map_outputs(results, self.output_columns)
+        token_cost: float = 0.0
+        map_outputs: dict[str, list] = {column: [] for column in self.output_columns}
+        if self.limit is not None:
+            num_passed_records: int = 0
+            reach_limit: bool = False
+            for i in range(0, len(tasks), self.limit):
+                if reach_limit:
+                    break
+                batch_tasks = tasks[i:i + self.limit]
+                batch_results = await asyncio.gather(*batch_tasks)
+                token_cost += sum([result[1] for result in batch_results])
+                for result, _ in batch_results:
+                    num_passed_records += 1
+                    for column in self.output_columns:
+                        map_outputs[column].append(result[column])
+                    if num_passed_records >= self.limit:
+                        reach_limit = True
+                        break
+            num_remaining_records = len(processed_data) - num_passed_records
+            if num_remaining_records > 0:
+                for column in self.output_columns:
+                    map_outputs[column].extend([None] * num_remaining_records)
+        else:
+            results = await asyncio.gather(*tasks)
+            token_cost += sum([result[1] for result in results])
+            for result, _ in results:
+                for column in self.output_columns:
+                    map_outputs[column].append(result[column])
+        
         return MapOpOutputs(
             field_name=self.output_columns,
-            output=map_results,
+            output=map_outputs,
             cost=token_cost
         )

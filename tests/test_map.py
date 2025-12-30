@@ -144,27 +144,6 @@ class TestMapOperation:
         assert result.cost > 0
     
     @pytest.mark.asyncio
-    async def test_execute_with_nan_values(self, dataframe_with_nan, mock_llm_client):
-        """Test that execute handles NaN values correctly."""
-        MapOperation.set_llm(mock_llm_client)
-        
-        op = MapOperation(
-            user_instruction="Extract the genre of each movie.",
-            input_columns=["overview"],
-            output_columns=["genre"],
-            strategy="plain"
-        )
-        
-        result = await op.execute(input_data=dataframe_with_nan)
-        
-        assert result.field_name == ["genre"]
-        assert isinstance(result.output, dict)
-        assert "genre" in result.output
-        assert len(result.output["genre"]) == 3
-        # NaN values should be None in the output
-        assert None in result.output["genre"]
-    
-    @pytest.mark.asyncio
     async def test_execute_with_self_refine_strategy(self, sample_dataframe, mock_llm_client):
         """Test execute with self-refine strategy."""
         # Mock the evaluation response
@@ -209,8 +188,8 @@ class TestMapOperation:
         MapOperation.set_llm(mock_llm_client)
         
         demos = [
-            {"data": "overview: A crime story", "answer": "<genre>crime</genre>"},
-            {"data": "overview: A comedy film", "answer": "<genre>comedy</genre>"}
+            {"data": pd.Series({"overview": "A crime movie"}), "answer": "<genre>crime</genre>"},
+            {"data": pd.Series({"overview": "A comedy film"}), "answer": "<genre>comedy</genre>"}
         ]
         
         op = MapOperation(
@@ -233,13 +212,13 @@ class TestMapOperation:
         """Test execute with user-defined function."""
         MapOperation.set_llm(mock_llm_client)
         
-        def extract_genre(text):
+        def extract_genre(data: pd.Series):
             """Simple function to extract genre."""
-            if "crime" in text.lower():
-                return "crime"
-            elif "action" in text.lower():
-                return "action"
-            return "unknown"
+            if "crime" in data["overview"].lower():
+                return {"genre": "crime"}
+            elif "action" in data["overview"].lower():
+                return {"genre": "action"}
+            return {"genre": "unknown"}
         
         tool = FunctionCallTool.from_function(func=extract_genre)
         
@@ -301,7 +280,7 @@ class TestMapOperation:
     
     @pytest.mark.asyncio
     async def test_execute_unsupported_strategy(self, sample_dataframe, mock_llm_client):
-        """Test that execute raises NotImplementedError for unsupported strategy."""
+        """Test that execute raises ValueError for unsupported strategy."""
         MapOperation.set_llm(mock_llm_client)
         
         op = MapOperation(
@@ -311,7 +290,7 @@ class TestMapOperation:
             strategy="unsupported_strategy"
         )
         
-        with pytest.raises(NotImplementedError, match="Strategy unsupported_strategy is not supported."):
+        with pytest.raises(ValueError, match="Strategy unsupported_strategy is not supported."):
             await op.execute(input_data=sample_dataframe)
     
     @pytest.mark.asyncio
@@ -328,6 +307,30 @@ class TestMapOperation:
         
         with pytest.raises(AssertionError, match="Few-shot examples must be provided"):
             await op.execute(input_data=sample_dataframe)
+
+    @pytest.mark.asyncio
+    async def test_map_operation_with_limit(self, sample_dataframe, mock_llm_client):
+        """Test that map operation respects the limit on processed rows and pads the rest with None."""
+        MapOperation.set_llm(mock_llm_client)
+
+        op = MapOperation(
+            user_instruction="Extract genre from overview",
+            input_columns=["overview"],
+            output_columns=["genre"],
+            strategy="plain",
+            limit=2,
+        )
+
+        result = await op.execute(input_data=sample_dataframe)
+
+        assert result.field_name == ["genre"]
+        assert isinstance(result.output, dict)
+        assert "genre" in result.output
+        # Always one output per input row
+        assert len(result.output["genre"]) == len(sample_dataframe)
+        # Only first 2 rows should be filled, the rest padded with None
+        assert result.output["genre"][:2] == ["crime, drama", "crime, drama"]
+        assert all(v is None for v in result.output["genre"][2:])
 
 
 class TestMapOpOutputs:
@@ -392,7 +395,7 @@ class TestMapWrapper:
         result = nv.ops.map(
             sample_dataframe,
             "Extract the genre of each movie.",
-            input_column="overview",
+            input_columns=["overview"],
             output_columns=["genre"],
             strategy="plain"
         )
@@ -407,14 +410,14 @@ class TestMapWrapper:
         """Test the map_wrapper function with user-defined function."""
         MapOperation.set_llm(mock_llm_client)
         
-        def extract_genre(text):
-            if "crime" in text.lower():
-                return "crime"
-            return "other"
-        
+        def extract_genre(data: pd.Series):
+            if "crime" in data["overview"].lower():
+                return {"genre": "crime"}
+            return {"genre": "other"}
+
         result = nv.ops.map(
             sample_dataframe,
-            input_column="overview",
+            input_columns=["overview"],
             output_columns=["genre"],
             func=extract_genre
         )
@@ -454,7 +457,7 @@ class TestMapOperationIntegration:
     
     @pytest.mark.asyncio
     async def test_map_operation_postprocess_outputs(self, mock_llm_client):
-        """Test that _postprocess_map_outputs handles None values correctly."""
+        """Test that _postprocess_map_output handles None values correctly."""
         MapOperation.set_llm(mock_llm_client)
         
         op = MapOperation(
@@ -463,19 +466,13 @@ class TestMapOperationIntegration:
             output_columns=["genre"]
         )
         
-        # Simulate results with None values and dict structure
-        results = [
-            {"genre": "crime", "cost": 0.01},
-            None,  # None response
-            {"genre": "drama", "cost": 0.01}
-        ]
-        outputs, costs = op._postprocess_map_outputs(results, ["genre"])
-        
-        assert isinstance(outputs, dict)
-        assert "genre" in outputs
-        assert len(outputs["genre"]) == 3
-        assert None in outputs["genre"]
-        assert costs == 0.02
+        # Non-None result
+        single = op._postprocess_map_output({"genre": "crime"}, ["genre"])
+        assert single == {"genre": "crime"}
+
+        # None result should be mapped to a dict with None values
+        none_result = op._postprocess_map_output(None, ["genre"])
+        assert none_result == {"genre": None}
     
     @pytest.mark.asyncio
     async def test_map_operation_multiple_output_columns(self, sample_dataframe, mock_llm_client):

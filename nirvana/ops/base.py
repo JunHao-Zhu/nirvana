@@ -24,6 +24,7 @@ class BaseOperation(ABC):
         model: str | None = None,
         tool: BaseTool | None = None,
         strategy: str | None = "plain",
+        limit: int | None = None,
         rate_limit: int = 16,
         assertions: list[Callable] | None = [],
     ):
@@ -33,6 +34,7 @@ class BaseOperation(ABC):
         self.model = model if model else self.llm.default_model
         self.tool = tool
         self.strategy = "plain" if strategy is None else strategy
+        self.limit = limit
         self.semaphore = asyncio.Semaphore(rate_limit)
         self.assertions = assertions
 
@@ -49,7 +51,8 @@ class BaseOperation(ABC):
             "tool": self.tool.__repr__(),
             "strategy": self.strategy,
             "assertions": self.assertions,
-            "rate_limit": self.semaphore._value
+            "limit": self.limit,
+            "rate_limit": self.semaphore._value,
         }
 
     @property
