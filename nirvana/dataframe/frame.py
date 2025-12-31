@@ -21,6 +21,7 @@ df = mjg.DataFrame({
 ```
 Moreover, in the future, we consider reading data from data lake storages (e.g, S3, Delta Lake, etc.)
 """
+from typing import Callable, Literal
 import pandas as pd
 
 from nirvana.lineage.mixin import LineageMixin
@@ -71,26 +72,63 @@ class DataFrame(LineageMixin):
         df = pd.read_table(path, sep=sep, **kwargs)
         return cls(df)
 
-    def semantic_map(self, user_instruction, input_column, output_column, rate_limit: int = 16):
+    def semantic_map(
+        self,
+        user_instruction: str,
+        input_columns: list[str],
+        output_columns: list[str],
+        context: list[dict] | str | None = None,
+        model: str | None = None,
+        func: Callable | None = None,
+        strategy: Literal["plain", "fewshot", "self-refine"] = "plain",
+        limit: int | None = None,
+        rate_limit: int = 16,
+        assertions: list[Callable] | None = [],
+    ):
         op_kwargs = {
             "user_instruction": user_instruction,
-            "input_columns": [input_column],
-            "output_columns": [output_column]
+            "input_columns": input_columns,
+            "output_columns": output_columns,
+            "context": context,
+            "model": model,
+            "func": func,
+            "strategy": strategy,
+            "limit": limit,
+            "rate_limit": rate_limit,
+            "assertions": assertions,
         }
         data_kwargs = {
             "left_input_fields": self.leaf_node.node_fields.output_fields,
             "right_input_fields": [],
-            "output_fields": self.leaf_node.node_fields.left_input_fields + [output_column]
+            "output_fields": self.leaf_node.node_fields.left_input_fields + output_columns,
         }
         self.add_operator(op_name="map",
                           op_kwargs=op_kwargs,
                           data_kwargs=data_kwargs,
                           rate_limit=rate_limit)
         
-    def semantic_filter(self, user_instruction, input_column, rate_limit: int = 16):
+    def semantic_filter(
+        self,
+        user_instruction: str,
+        input_columns: list[str],
+        func: Callable | None = None,
+        context: list[dict] | str | None = None,
+        model: str | None = None,
+        strategy: Literal["plain", "fewshot", "self-refine"] = "plain",
+        limit: int | None = None,
+        rate_limit: int = 16,
+        assertions: list[Callable] | None = [],
+    ):
         op_kwargs = {
             "user_instruction": user_instruction,
-            "input_columns": [input_column],
+            "input_columns": input_columns,
+            "context": context,
+            "model": model,
+            "func": func,
+            "strategy": strategy,
+            "limit": limit,
+            "rate_limit": rate_limit,
+            "assertions": assertions,
         }
         data_kwargs = {
             "left_input_fields": self.leaf_node.node_fields.output_fields,
@@ -102,10 +140,28 @@ class DataFrame(LineageMixin):
                           data_kwargs=data_kwargs,
                           rate_limit=rate_limit)
         
-    def semantic_reduce(self, user_instruction, input_column, rate_limit: int = 16):
+    def semantic_reduce(
+        self,
+        user_instruction: str,
+        input_column: str,
+        context: list[dict] | str | None = None,
+        model: str | None = None,
+        func: Callable | None = None,
+        strategy: Literal["plain"] = "plain",
+        limit: int | None = None,
+        rate_limit: int = 16,
+        assertions: list[Callable] | None = [],
+    ):
         op_kwargs = {
             "user_instruction": user_instruction,
             "input_columns": [input_column],
+            "context": context,
+            "model": model,
+            "func": func,
+            "strategy": strategy,
+            "limit": limit,
+            "rate_limit": rate_limit,
+            "assertions": assertions,
         }
         data_kwargs = {
             "left_input_fields": self.leaf_node.node_fields.output_fields,
@@ -117,7 +173,22 @@ class DataFrame(LineageMixin):
                           data_kwargs=data_kwargs,
                           rate_limit=rate_limit)
         
-    def semantic_join(self, other: "DataFrame", user_instruction, left_on, right_on, how, rate_limit: int = 16):
+    def semantic_join(
+        self,
+        other: "DataFrame",
+        user_instruction: str,
+        left_on: str,
+        right_on: str,
+        how: Literal["inner", "left", "right"] = "inner",
+        context: list[dict] | str | None = None,
+        model: str | None = None,
+        func: Callable | None = None,
+        strategy: Literal["nest", "block"] = "nest",
+        limit: int | None = None,
+        rate_limit: int = 16,
+        assertions: list[Callable] | None = [],
+        batch_size: int = 5,
+    ):
         union_fields = (
             list(set(self.leaf_node.node_fields.output_fields) | set(other.leaf_node.node_fields.output_fields))
         )
@@ -126,6 +197,14 @@ class DataFrame(LineageMixin):
             "left_on": [left_on],
             "right_on": [right_on],
             "how": how,
+            "context": context,
+            "model": model,
+            "func": func,
+            "strategy": strategy,
+            "limit": limit,
+            "rate_limit": rate_limit,
+            "assertions": assertions,
+            "batch_size": batch_size,
         }
         data_kwargs = {
             "input_left_fields": self.leaf_node.node_fields.output_fields,
@@ -138,11 +217,30 @@ class DataFrame(LineageMixin):
                           other=other,
                           rate_limit=rate_limit)
         
-    def semantic_rank(self, user_instruction, input_column, descend=True, rate_limit: int = 16):
+    def semantic_rank(
+        self,
+        user_instruction: str,
+        input_column: str,
+        descend: bool = True,
+        context: list[dict] | str | None = None,
+        model: str | None = None,
+        func: Callable | None = None,
+        strategy: Literal["plain"] = "plain",
+        limit: int | None = None,
+        rate_limit: int = 16,
+        assertions: list[Callable] | None = [],
+    ):
         op_kwargs = {
             "user_instruction": user_instruction,
             "input_columns": [input_column],
             "descend": descend,
+            "context": context,
+            "model": model,
+            "func": func,
+            "strategy": strategy,
+            "limit": limit,
+            "rate_limit": rate_limit,
+            "assertions": assertions,
         }
         data_kwargs = {
             "left_input_fields": self.leaf_node.node_fields.output_fields,

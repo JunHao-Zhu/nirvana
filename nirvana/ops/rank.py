@@ -79,11 +79,14 @@ class RankOperation(BaseOperation):
         descend: bool = True,
         context: list[dict] | str | None = None,
         model: str | None = None,
-        tool: BaseTool | None = None,
+        tool: Callable | BaseTool | None = None,
         strategy: Literal["plain"] = "plain",
         rate_limit: int = 16,
         assertions: list[Callable] | None = [],
     ):
+        if tool and not isinstance(tool, BaseTool):
+            tool = FunctionCallTool.from_function(func=tool)
+        
         super().__init__(
             op_name="rank",
             user_instruction=user_instruction,

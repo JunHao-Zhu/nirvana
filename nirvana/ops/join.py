@@ -23,6 +23,7 @@ def join_wrapper(
     model: str | None = None,
     func: Callable = None,
     strategy: Literal["nest", "block"] = "nest",
+    limit: int | None = None,
     rate_limit: int = 16,
     assertions: list[Callable] | None = [],
     batch_size: int = 5,
@@ -42,6 +43,7 @@ def join_wrapper(
         model (str, optional): Model. Defaults to None.
         func (Callable, optional): User function. Defaults to None.
         strategy (Literal["nest", "block"], optional): Strategy. Defaults to "nest".
+        limit (int): Maximum number of outputs to produce before stopping.
         rate_limit (int, optional): Rate limit. Defaults to 16.
         assertions (list[Callable], optional): Assertions. Defaults to [].
         batch_size (int, optional): Batch size for block join. Defaults to 5.
@@ -57,13 +59,14 @@ def join_wrapper(
         model=model,
         tool=FunctionCallTool(func=func) if func else None,
         strategy=strategy,
+        limit=limit,
         rate_limit=rate_limit,
         assertions=assertions,
+        batch_size=batch_size,
     )
     outputs = asyncio.run(join_op.execute(
         left_data=left_data,
         right_data=right_data,
-        batch_size=batch_size,
         **kwargs
     ))
     return outputs
@@ -90,11 +93,16 @@ class JoinOperation(BaseOperation):
         how: str = "inner",
         context: list[dict] | str | None = None,
         model: str | None = None,
-        tool: BaseTool | None = None,
+        tool: Callable | BaseTool | None = None,
         strategy: Literal["nest", "block"] = "nest",
+        limit: int | None = None,
         rate_limit: int = 16,
         assertions: list[Callable] | None = [],
+        batch_size: int = 5,
     ):
+        if tool and not isinstance(tool, BaseTool):
+            tool = FunctionCallTool.from_function(func=tool)
+        
         super().__init__(
             op_name="join", 
             user_instruction=user_instruction,
@@ -102,6 +110,7 @@ class JoinOperation(BaseOperation):
             model=model,
             tool=tool,
             strategy=strategy,
+            limit=limit,
             rate_limit=rate_limit,
             assertions=assertions,
         )
@@ -109,6 +118,7 @@ class JoinOperation(BaseOperation):
         self.left_on = left_on
         self.right_on = right_on
         self.how = how
+        self.batch_size = batch_size
 
     @property
     def dependencies(self) -> list[str]:
@@ -124,6 +134,8 @@ class JoinOperation(BaseOperation):
         kwargs["left_on"] = self.left_on
         kwargs["right_on"] = self.right_on
         kwargs["how"] = self.how
+        if self.strategy == "block":
+            kwargs["batch_size"] = self.batch_size
         return kwargs
     
     def _prepare_nested_join_pairs(self, left_values, right_values):
@@ -354,7 +366,6 @@ class JoinOperation(BaseOperation):
         elif self.strategy == "block":
             if self.has_udf():
                 warnings.warn("The block semantic join does not support user-defined functions for now.")
-            batch_size = kwargs.pop("batch_size", 5)
-            return await self._block_join(left_data, right_data, self.user_instruction, batch_size, left_dtype, right_dtype, **kwargs)
+            return await self._block_join(left_data, right_data, self.user_instruction, self.batch_size, left_dtype, right_dtype, **kwargs)
         else:
             raise ValueError(f"The optional strategies available for join are {self.strategy_options}. Strategy {self.strategy} is not supported.")

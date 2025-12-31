@@ -194,9 +194,10 @@ class TestJoinOperation:
             right_on=["medical_use"],
             how="inner",
             strategy="block",
+            batch_size=2,
         )
         cache = {(0, 0): "L0-R0", (1, 1): "L0-R0"}
-        result = await op.execute(left_data=left_dataframe, right_data=right_dataframe, batch_size=2, cache=cache)
+        result = await op.execute(left_data=left_dataframe, right_data=right_dataframe, cache=cache)
         
         assert result.output == [(1, 1), (3, 7)]
         assert result.left_join_keys == [1, 3]
