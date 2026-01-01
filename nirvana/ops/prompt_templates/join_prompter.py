@@ -1,4 +1,4 @@
-from typing import Any
+import pandas as pd
 
 
 class JoinPrompter:
@@ -19,11 +19,11 @@ class JoinPrompter:
 
     def generate_nested_join_prompt(
         self, 
-        left_data: Any,
-        right_data: Any,
+        left_data: pd.Series,
+        right_data: pd.Series,
         user_instruction: str | list[str],
-        left_dtype: str = "str",
-        right_dtype: str = "str",
+        left_dtypes: list[str],
+        right_dtypes: list[str],
     ):
         # 1. Prepare system message
         if self.task_instruction is None or self.output_format is None:
@@ -35,21 +35,35 @@ class JoinPrompter:
 
         # 2. Prepare data
         user_content = []
-        if left_dtype == "str":
-            user_content.append({"type": "input_text", "text": f"Left data:\n{left_data}"})
-        elif left_dtype == "image":
-            user_content.append({"type": "input_text", "text": "Left data:"})
-            user_content.append({"type": "input_image", "image_url": left_data})
-        else:
-            raise ValueError(f"Data type of left data {type(left_data)} is not supported.")
-
-        if right_dtype == "str":
-            user_content.append({"type": "input_text", "text": f"Right data:\n{right_data}"})
-        elif right_dtype == "image":
-            user_content.append({"type": "input_text", "text": "Right data:"})
-            user_content.append({"type": "input_image", "image_url": right_data})
-        else:
-            raise ValueError(f"Data type of right data {type(right_data)} is not supported.")
+        user_content.append({"type": "input_text", "text": "Left data:"})
+        for dtype, (key, value) in zip(left_dtypes, left_data.items()):
+            if dtype == "str":
+                user_content.append({"type": "input_text", "text": f"{key}: {value}"})
+            elif dtype == "image":
+                user_content.append({"type": "input_text", "text": f"{key}:"})
+                user_content.append({"type": "input_image", "image_url": value})
+            elif dtype == "audio":
+                user_content.append({"type": "input_text", "text": f"{key}:"})
+                user_content.append(
+                    {"type": "input_audio", "input_audio": {"data": value, "format": "wav"}}
+                )
+            else:
+                raise ValueError(f"Data type of left data {type(value)} is not supported.")
+        
+        user_content.append({"type": "input_text", "text": "Right data:"})
+        for dtype, (key, value) in zip(right_dtypes, right_data.items()):
+            if dtype == "str":
+                user_content.append({"type": "input_text", "text": f"{key}: {value}"})
+            elif dtype == "image":
+                user_content.append({"type": "input_text", "text": f"{key}:"})
+                user_content.append({"type": "input_image", "image_url": value})
+            elif dtype == "audio":
+                user_content.append({"type": "input_text", "text": f"{key}:"})
+                user_content.append(
+                    {"type": "input_audio", "input_audio": {"data": value, "format": "wav"}}
+                )
+            else:
+                raise ValueError(f"Data type of right data {type(value)} is not supported.")
         
         # 3. Prepare the given condition
         if isinstance(user_instruction, str):
@@ -78,11 +92,11 @@ class JoinPrompter:
     
     def generate_batch_join_prompt(
         self,
-        left_batch: list[Any],
-        right_batch: list[Any],
+        left_batch: pd.DataFrame,
+        right_batch: pd.DataFrame,
         user_instruction: str | list[str],
-        left_dtype: str = "str",
-        right_dtype: str = "str",
+        left_dtypes: list[str],
+        right_dtypes: list[str],
     ):
         # 1. Prepare system message
         if self.task_instruction is None or self.output_format is None:
@@ -95,27 +109,40 @@ class JoinPrompter:
         # 2. Prepare data
         user_content = []
         # 2.1 Prepare left batch
-        user_content.append({"type": "input_text", "text": "Left batch:"})
-        if left_dtype == "str":
-            for idx, left_data in enumerate(left_batch):
-                user_content.append({"type": "input_text", "text": f"L{idx}: {left_data}"})
-        elif left_dtype == "image":
-            for idx, left_data in enumerate(left_batch):
-                user_content.append({"type": "input_text", "text": f"L{idx}:"})
-                user_content.append({"type": "input_image", "image_url": left_data})
-        else:
-            raise ValueError(f"Data type of left data {type(left_data)} is not supported.")
+        user_content.append({"type": "input_text", "text": "# Left batch:"})
+        for batch_idx, left_data in left_batch.iterrows():
+            user_content.append({"type": "input_text", "text": f"## L{batch_idx}:"})
+            for dtype, (key, value) in zip(left_dtypes, left_data.items()):
+                if dtype == "str":
+                    user_content.append({"type": "input_text", "text": f"{key}: {value}"})
+                elif dtype == "image":
+                    user_content.append({"type": "input_text", "text": f"{key}:"})
+                    user_content.append({"type": "input_image", "image_url": value})
+                elif dtype == "audio":
+                    user_content.append({"type": "input_text", "text": f"{key}:"})
+                    user_content.append(
+                        {"type": "input_audio", "input_audio": {"data": value, "format": "wav"}}
+                    )
+                else:
+                    raise ValueError(f"Data type of left data {type(value)} is not supported.")
+        
         # 2.2 Prepare right batch
-        user_content.append({"type": "input_text", "text": "Right batch:"})
-        if right_dtype == "str":
-            for idx, right_data in enumerate(right_batch):
-                user_content.append({"type": "input_text", "text": f"R{idx}: {right_data}"})
-        elif right_dtype == "image":
-            for idx, right_data in enumerate(right_batch):
-                user_content.append({"type": "input_text", "text": f"R{idx}:"})
-                user_content.append({"type": "input_image", "image_url": right_data})
-        else:
-            raise ValueError(f"Data type of right data {type(right_data)} is not supported.")
+        user_content.append({"type": "input_text", "text": "# Right batch:"})
+        for batch_idx, right_data in right_batch.iterrows():
+            user_content.append({"type": "input_text", "text": f"## R{batch_idx}:"})
+            for dtype, (key, value) in zip(right_dtypes, right_data.items()):
+                if dtype == "str":
+                    user_content.append({"type": "input_text", "text": f"{key}: {value}"})
+                elif dtype == "image":
+                    user_content.append({"type": "input_text", "text": f"{key}:"})
+                    user_content.append({"type": "input_image", "image_url": value})
+                elif dtype == "audio":
+                    user_content.append({"type": "input_text", "text": f"{key}:"})
+                    user_content.append(
+                        {"type": "input_audio", "input_audio": {"data": value, "format": "wav"}}
+                    )
+                else:
+                    raise ValueError(f"Data type of right data {type(value)} is not supported.")
         
         # 3. Prepare the given condition
         if isinstance(user_instruction, str):

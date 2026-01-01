@@ -223,7 +223,6 @@ class FilterOperation(BaseOperation):
         filter_outputs: list[bool] = []
         if self.limit is not None:
             num_passed_records: int = 0
-            num_processed_records: int = 0
             reach_limit: bool = False
             for i in range(0, len(tasks), self.limit):
                 if reach_limit:
@@ -233,13 +232,12 @@ class FilterOperation(BaseOperation):
                 token_cost += sum([result[1] for result in batch_results])
                 for result, _ in batch_results:
                     filter_outputs.append(result)
-                    num_processed_records += 1
                     if result:
                         num_passed_records += 1
                     if num_passed_records >= self.limit:
                         reach_limit = True
                         break
-            num_remaining_records = len(processed_data) - num_processed_records
+            num_remaining_records = len(processed_data) - len(filter_outputs)
             if num_remaining_records > 0:
                 filter_outputs.extend([False] * num_remaining_records)
         else:

@@ -173,14 +173,14 @@ class TestJoinOperation:
             how="inner",
             strategy="nest"
         )
-        cache = {(1, 1): "True", (3, 7): "True"}
+        cache = {(1, 1): True, (3, 7): True}
         result = await op.execute(left_data=left_dataframe, right_data=right_dataframe, cache=cache)
         
         assert isinstance(result, JoinOpOutputs)
         # The code returns output=joined_pairs, so result.output contains the joined pairs
-        assert result.output == [(1, 1), (3, 7)]
-        assert result.left_join_keys == [1, 3]
-        assert result.right_join_keys == [1, 3]
+        assert result.join_pairs == [(1, 1), (3, 7)]
+        assert result.left_join_keys == [0, 1, 2]
+        assert result.right_join_keys == [0, 4, 2]
         assert result.cost == 0.07
     
     @pytest.mark.asyncio
@@ -196,12 +196,12 @@ class TestJoinOperation:
             strategy="block",
             batch_size=2,
         )
-        cache = {(0, 0): "L0-R0", (1, 1): "L0-R0"}
+        cache = {(0, 0): [(1, 1)], (1, 1): [(3, 7)]}
         result = await op.execute(left_data=left_dataframe, right_data=right_dataframe, cache=cache)
         
-        assert result.output == [(1, 1), (3, 7)]
-        assert result.left_join_keys == [1, 3]
-        assert result.right_join_keys == [1, 3]
+        assert result.join_pairs == [(1, 1), (3, 7)]
+        assert result.left_join_keys == [0, 1, 2]
+        assert result.right_join_keys == [0, 4, 2]
         assert result.cost == 0.02
     
     @pytest.mark.asyncio
@@ -216,23 +216,23 @@ class TestJoinOperation:
             how="inner",
             strategy="nest"
         )
-        cache = {(3, 7): "True"}
+        cache = {(3, 7): True}
         result = await op.execute(left_data=dataframe_with_nan, right_data=right_dataframe, cache=cache)
         
-        assert result.output == [(3, 7)]
-        assert result.left_join_keys == [3]
-        assert result.right_join_keys == [3]
+        assert result.join_pairs == [(3, 7)]
+        assert result.left_join_keys == [0, 1, 2]
+        assert result.right_join_keys == [3, 4, 2]
     
     @pytest.mark.asyncio
     async def test_execute_with_udf(self, left_dataframe, right_dataframe, mock_llm_client):
         """Test execute with user-defined function."""
         JoinOperation.set_llm(mock_llm_client)
         
-        def check_match(symptom, medical_use):
+        def check_match(symptom: pd.Series, medical_use: pd.Series):
             """Simple function to check if symptom matches medical use."""
-            if symptom is None or medical_use is None:
+            if symptom["symptom"] is None or medical_use["medical_use"] is None:
                 return False
-            return symptom.lower() in medical_use.lower()
+            return symptom["symptom"].lower() in medical_use["medical_use"].lower()
         
         tool = FunctionCallTool.from_function(func=check_match)
         op = JoinOperation(
@@ -245,9 +245,9 @@ class TestJoinOperation:
         )
         result = await op.execute(left_data=left_dataframe, right_data=right_dataframe)
         
-        assert result.output == [(1, 1), (3, 7)]
-        assert result.left_join_keys == [1, 3]
-        assert result.right_join_keys == [1, 3]
+        assert result.join_pairs == [(1, 1), (3, 7)]
+        assert result.left_join_keys == [0, 1, 2]
+        assert result.right_join_keys == [0, 4, 2]
         assert result.cost == 0.0
     
     @pytest.mark.asyncio
@@ -269,14 +269,14 @@ class TestJoinOperation:
             tool=tool
         )
         
-        cache = {(1, 1): "True", (3, 7): "True"}
+        cache = {(1, 1): True, (3, 7): True}
         result = await op.execute(left_data=left_dataframe, right_data=right_dataframe, cache=cache)
         
         assert isinstance(result, JoinOpOutputs)
         # The code returns output=joined_pairs, so result.output contains the joined pairs
-        assert result.output == [(1, 1), (3, 7)]
-        assert result.left_join_keys == [1, 3]
-        assert result.right_join_keys == [1, 3]
+        assert result.join_pairs == [(1, 1), (3, 7)]
+        assert result.left_join_keys == [0, 1, 2]
+        assert result.right_join_keys == [0, 4, 2]
         assert result.cost == 0.07
     
     @pytest.mark.asyncio
@@ -292,17 +292,17 @@ class TestJoinOperation:
                 how=join_type,
                 strategy="nest"
             )
-            cache = {(1, 1): "True", (3, 7): "True"}
+            cache = {(1, 1): True, (3, 7): True}
             result = await op.execute(left_data=left_dataframe, right_data=right_dataframe, cache=cache)
             
             if join_type in ["inner", "left"]:
-                assert result.output == [(1, 1), (3, 7)]
-                assert result.left_join_keys == [1, 3]
-                assert result.right_join_keys == [1, 3]
+                assert result.join_pairs == [(1, 1), (3, 7)]
+                assert result.left_join_keys == [0, 1, 2]
+                assert result.right_join_keys == [0, 4, 2]
             else:
-                assert result.output == [(1, 1), (3, 7)]
-                assert result.left_join_keys == [1, 7]
-                assert result.right_join_keys == [1, 7]
+                assert result.join_pairs == [(1, 1), (3, 7)]
+                assert result.left_join_keys == [3, 1, 5]
+                assert result.right_join_keys == [3, 4, 5]
     
     @pytest.mark.asyncio
     async def test_execute_unsupported_strategy(self, left_dataframe, right_dataframe, mock_llm_client):
@@ -348,6 +348,47 @@ class TestJoinOperation:
             assert len(w) > 0
             assert "block semantic join does not support user-defined functions" in str(w[0].message).lower()
 
+    @pytest.mark.asyncio
+    async def test_nested_join_with_limit(self, left_dataframe, right_dataframe, mock_llm_client):
+        """Test execute with nested join strategy."""
+        JoinOperation.set_llm(mock_llm_client)
+        
+        op = JoinOperation(
+            user_instruction="Does the drug cure the symptom?",
+            left_on=["symptom"],
+            right_on=["medical_use"],
+            how="inner",
+            strategy="nest",
+            limit=1,
+        )
+        cache = {(1, 1): True, (3, 7): True}
+        result = await op.execute(left_data=left_dataframe, right_data=right_dataframe, cache=cache)
+        
+        assert result.join_pairs == [(1, 1)]
+        assert result.left_join_keys == [0, 1, 2]
+        assert result.right_join_keys == [0, 4, 5]
+
+    @pytest.mark.asyncio
+    async def test_block_join_with_limit(self, left_dataframe, right_dataframe, mock_block_join_llm_client):
+        """Test execute with block join strategy."""
+        JoinOperation.set_llm(mock_block_join_llm_client)
+        
+        op = JoinOperation(
+            user_instruction="Does the drug cure the symptom?",
+            left_on=["symptom"],
+            right_on=["medical_use"],
+            how="inner",
+            strategy="block",
+            limit=1,
+            batch_size=2,
+        )
+        cache = {(0, 0): [(1, 1)], (1, 1): [(3, 7)]}
+        result = await op.execute(left_data=left_dataframe, right_data=right_dataframe, cache=cache)
+        
+        assert result.join_pairs == [(1, 1)]
+        assert result.left_join_keys == [0, 1, 2]
+        assert result.right_join_keys == [0, 4, 5]
+
 
 class TestJoinOpOutputs:
     """Test suite for JoinOpOutputs class."""
@@ -355,13 +396,13 @@ class TestJoinOpOutputs:
     def test_join_op_outputs_initialization(self):
         """Test that JoinOpOutputs initializes correctly."""
         outputs = JoinOpOutputs(
-            joined_pairs=[(0, 1), (1, 2)],
+            join_pairs=[(0, 1), (1, 2)],
             left_join_keys=[0, 1],
             right_join_keys=[1, 2],
             cost=0.05
         )
         
-        assert outputs.joined_pairs == [(0, 1), (1, 2)]
+        assert outputs.join_pairs == [(0, 1), (1, 2)]
         assert outputs.left_join_keys == [0, 1]
         assert outputs.right_join_keys == [1, 2]
         assert outputs.cost == 0.05
@@ -370,7 +411,7 @@ class TestJoinOpOutputs:
         """Test that JoinOpOutputs has correct default values."""
         outputs = JoinOpOutputs()
         
-        assert outputs.joined_pairs == []
+        assert outputs.join_pairs == []
         assert outputs.left_join_keys == []
         assert outputs.right_join_keys == []
         assert outputs.cost == 0.0
@@ -383,7 +424,7 @@ class TestJoinWrapper:
         """Test the join_wrapper function with basic usage."""
         JoinOperation.set_llm(mock_llm_client)
         
-        cache = {(1, 1): "True", (3, 7): "True"}
+        cache = {(1, 1): True, (3, 7): True}
         result = nv.ops.join(
             left_data=left_dataframe,
             right_data=right_dataframe,
@@ -397,16 +438,16 @@ class TestJoinWrapper:
         
         assert isinstance(result, JoinOpOutputs)
         # The code returns output=joined_pairs, so result.output contains the joined pairsassert result.output == [(1, 1), (3, 7)]
-        assert result.output == [(1, 1), (3, 7)]
-        assert result.left_join_keys == [1, 3]
-        assert result.right_join_keys == [1, 3]
+        assert result.join_pairs == [(1, 1), (3, 7)]
+        assert result.left_join_keys == [0, 1, 2]
+        assert result.right_join_keys == [0, 4, 2]
         assert result.cost == 0.07
     
     def test_join_wrapper_with_different_join_types(self, left_dataframe, right_dataframe, mock_llm_client):
         """Test join_wrapper with different join types."""
         JoinOperation.set_llm(mock_llm_client)
         
-        cache = {(1, 1): "True", (3, 7): "True"}
+        cache = {(1, 1): True, (3, 7): True}
         for join_type in ["inner", "left", "right"]:
             result = nv.ops.join(
                 left_data=left_dataframe,
@@ -420,13 +461,13 @@ class TestJoinWrapper:
             )
 
             if join_type in ["inner", "left"]:
-                assert result.output == [(1, 1), (3, 7)]
-                assert result.left_join_keys == [1, 3]
-                assert result.right_join_keys == [1, 3]
+                assert result.join_pairs == [(1, 1), (3, 7)]
+                assert result.left_join_keys == [0, 1, 2]
+                assert result.right_join_keys == [0, 4, 2]
             else:
-                assert result.output == [(1, 1), (3, 7)]
-                assert result.left_join_keys == [1, 7]
-                assert result.right_join_keys == [1, 7]
+                assert result.join_pairs == [(1, 1), (3, 7)]
+                assert result.left_join_keys == [3, 1, 5]
+                assert result.right_join_keys == [3, 4, 5]
 
 
 class TestJoinOperationIntegration:
@@ -446,20 +487,16 @@ class TestJoinOperationIntegration:
         
         # Simulate results with different output formats
         data_id_pairs = [(0, 0), (0, 2), (1, 0), (1, 2)]
-        results = [
-            {"output": "True", "cost": 0.01},
-            {"output": "False", "cost": 0.01},
-            {"output": True, "cost": 0.01},
-            {"output": "", "cost": 0.01}
-        ]
-        joined_pairs, left_keys, right_keys, cost = op._postprocess_nested_join_outputs(
-            data_id_pairs, results, "inner"
+        join_outputs = [True, False, True, False]
+        left_keys = pd.Series([0, 1], index=[0, 1])
+        right_keys = pd.Series([2, 3], index=[0, 2])
+        joined_pairs, left_keys, right_keys = op._postprocess_nested_join_outputs(
+            data_id_pairs, join_outputs, "inner", left_keys, right_keys
         )
         
         assert joined_pairs == [(0, 0), (1, 0)]
         assert left_keys == [0, 1]
-        assert right_keys == [0, 1]
-        assert cost == 0.04
+        assert right_keys == [1, 3]
     
     def test_block_join_postprocess_outputs(self, mock_block_join_llm_client):
         """Test that _postprocess_block_join_outputs handles batch results."""
@@ -474,23 +511,28 @@ class TestJoinOperationIntegration:
         )
         
         # Simulate batch results
-        results = [
-            {"output": "L0-R0,L1-R1", "cost": 0.01},
-            {"output": "", "cost": 0.01},
-            {"output": "", "cost": 0.01},
-            {"output": "L0-R0", "cost": 0.01}
-        ]
+        responses = ["L0-R0,L1-R1", "", "", "L0-R0"]
         left_keys_in_batches = [[0, 1], [3]]
         right_keys_in_batches = [[0, 1], [2]]
         batch_ids_pairs = [(0, 0), (0, 1), (1, 0), (1, 1)]
-        joined_pairs, left_keys, right_keys, cost = op._postprocess_block_join_outputs(
-            results, "inner", batch_ids_pairs, left_keys_in_batches, right_keys_in_batches
+        join_pairs = []
+        for idx, batch_pair in enumerate(batch_ids_pairs):
+            left_batch_idx, right_batch_idx = batch_pair
+            response = responses[idx]
+            join_pairs_in_batch = op._process_batch_join_response(
+                response, left_keys_in_batches[left_batch_idx], right_keys_in_batches[right_batch_idx]
+            )
+            join_pairs.extend(join_pairs_in_batch)
+
+        left_join_keys = pd.Series(range(3), index=[0, 1, 3])
+        right_join_keys = pd.Series(range(3, 6), index=[0, 1, 2])
+        join_pairs, left_keys, right_keys = op._postprocess_block_join_outputs(
+            join_pairs, "inner", left_join_keys, right_join_keys
         )
         
-        assert joined_pairs == [(0, 0), (1, 1), (3, 2)]
-        assert left_keys == [0, 1, 3]
-        assert right_keys == [0, 1, 3]
-        assert cost == 0.04
+        assert join_pairs == [(0, 0), (1, 1), (3, 2)]
+        assert left_keys == [0, 1, 2]
+        assert right_keys == [0, 1, 2]
     
     def test_prepare_nested_join_pairs(self, mock_llm_client):
         """Test that _prepare_nested_join_pairs creates correct pairs."""
@@ -522,13 +564,20 @@ class TestJoinOperationIntegration:
             how="inner",
             strategy="block"
         )
-        left_values = pd.Series(["a", "b", "c", "d"], index=[0, 1, 2, 3])
-        right_values = pd.Series(["x", "y"], index=[4, 5])
+        left_values = pd.DataFrame({"symptom": ["a", "b", "c", "d"]}, index=[0, 1, 2, 3])
+        right_values = pd.DataFrame({"medical_use": ["x", "y"]}, index=[4, 5])
         left_batches, left_keys, right_batches, right_keys = op._prepare_join_batches(
             left_values, right_values, batch_size=2
         )
-        
-        assert left_batches == [["a", "b"], ["c", "d"]]  # 4 items / 2 batch_size = 2 batches
-        assert right_batches == [["x", "y"]]  # 2 items / 2 batch_size = 1 batch
+
+        target_left_batches = [
+            pd.DataFrame({"symptom": ["a", "b"]}, index=[0, 1]),
+            pd.DataFrame({"symptom": ["c", "d"]}, index=[0, 1])
+        ]
+        target_right_batches = [
+            pd.DataFrame({"medical_use": ["x", "y"]}, index=[0, 1])
+        ]
+        assert all(left.equals(target) for left, target in zip(left_batches, target_left_batches))
+        assert all(right.equals(target) for right, target in zip(right_batches, target_right_batches))
         assert left_keys == [[0, 1], [2, 3]]
         assert right_keys == [[4, 5]]
