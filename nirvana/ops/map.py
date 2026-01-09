@@ -4,7 +4,6 @@ import functools
 import asyncio
 from typing import Any, Iterable, Callable, Literal
 from dataclasses import dataclass, field
-from numpy import amax
 import pandas as pd
 
 from nirvana.dataframe.arrays.image import ImageDtype
@@ -66,17 +65,15 @@ def map_wrapper(
 
 @dataclass
 class MapOpOutputs(BaseOpOutputs):
-    field_name: list[str] | None = field(default=None)
-    output: dict[str, Iterable] = field(default_factory=list)
+    outputs: dict[str, list] = field(default_factory=dict)
 
     def __add__(self, other: "MapOpOutputs"):
-        assert self.field_name == other.field_name, "Cannot merge MapOpOutputs with different field names."
-        map_output = dict()
-        for name in self.field_name:
-            map_output[name] = self.output[name] + other.output[name]
+        assert self.outputs.keys() == other.outputs.keys(), "Cannot merge MapOpOutputs with different field names."
+        new_output = {}
+        for field_name in self.outputs.keys():
+            new_output[field_name] = self.outputs[field_name] + other.outputs[field_name]
         return MapOpOutputs(
-            field_name=self.field_name,
-            output=map_output,
+            outputs=new_output,
             cost=self.cost + other.cost
         )
 
@@ -196,7 +193,7 @@ class MapOperation(BaseOperation):
             raise ValueError("Neither `user_instruction` nor `func` is given.")
         
         if input_data.empty:
-            return MapOpOutputs(field_name=self.output_columns, output=[])
+            return MapOpOutputs(outputs={col: [] for col in self.output_columns}, cost=0.0)
 
         processed_data = input_data[self.input_columns]
         dtypes = []
@@ -263,7 +260,6 @@ class MapOperation(BaseOperation):
                     map_outputs[column].append(result[column])
         
         return MapOpOutputs(
-            field_name=self.output_columns,
-            output=map_outputs,
+            outputs=map_outputs,
             cost=token_cost
         )

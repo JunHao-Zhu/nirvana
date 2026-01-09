@@ -9,7 +9,6 @@ from nirvana.executors.tools import BaseTool
 
 @dataclass
 class BaseOpOutputs:
-    output: Any | None = field(default=None)
     cost: float = field(default=0.0)
 
 
@@ -48,7 +47,7 @@ class BaseOperation(ABC):
             "user_instruction": self.user_instruction,
             "context": self.context,
             "model": self.model,
-            "tool": self.tool.__repr__(),
+            "tool": self.tool,
             "strategy": self.strategy,
             "assertions": self.assertions,
             "limit": self.limit,

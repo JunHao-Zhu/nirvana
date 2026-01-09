@@ -119,8 +119,7 @@ class TestMapOperation:
         empty_df = pd.DataFrame({"overview": []})
         result = await op.execute(input_data=empty_df)
         
-        assert result.field_name == ["genre"]
-        assert result.output == []
+        assert result.outputs == {"genre": []}
         assert result.cost == 0.0
     
     @pytest.mark.asyncio
@@ -137,10 +136,9 @@ class TestMapOperation:
         
         result = await op.execute(input_data=sample_dataframe)
         
-        assert result.field_name == ["genre"]
-        assert isinstance(result.output, dict)
-        assert "genre" in result.output
-        assert len(result.output["genre"]) == 3
+        assert isinstance(result.outputs, dict)
+        assert "genre" in result.outputs
+        assert len(result.outputs["genre"]) == 3
         assert result.cost > 0
     
     @pytest.mark.asyncio
@@ -177,10 +175,9 @@ class TestMapOperation:
         
         result = await op.execute(input_data=sample_dataframe)
         
-        assert result.field_name == ["genre"]
-        assert isinstance(result.output, dict)
-        assert "genre" in result.output
-        assert len(result.output["genre"]) == 3
+        assert isinstance(result.outputs, dict)
+        assert "genre" in result.outputs
+        assert len(result.outputs["genre"]) == 3
     
     @pytest.mark.asyncio
     async def test_execute_with_fewshot_strategy(self, sample_dataframe, mock_llm_client):
@@ -202,10 +199,9 @@ class TestMapOperation:
         
         result = await op.execute(input_data=sample_dataframe)
         
-        assert result.field_name == ["genre"]
-        assert isinstance(result.output, dict)
-        assert "genre" in result.output
-        assert len(result.output["genre"]) == 3
+        assert isinstance(result.outputs, dict)
+        assert "genre" in result.outputs
+        assert len(result.outputs["genre"]) == 3
     
     @pytest.mark.asyncio
     async def test_execute_with_udf(self, sample_dataframe, mock_llm_client):
@@ -231,12 +227,11 @@ class TestMapOperation:
         
         result = await op.execute(input_data=sample_dataframe)
         
-        assert result.field_name == ["genre"]
-        assert isinstance(result.output, dict)
-        assert "genre" in result.output
-        assert len(result.output["genre"]) == 3
+        assert isinstance(result.outputs, dict)
+        assert "genre" in result.outputs
+        assert len(result.outputs["genre"]) == 3
         # UDF should return the function results directly
-        assert "crime" in result.output["genre"]
+        assert "crime" in result.outputs["genre"]
     
     @pytest.mark.asyncio
     async def test_execute_with_udf_exception_fallback(self, sample_dataframe, mock_llm_client):
@@ -259,10 +254,9 @@ class TestMapOperation:
         result = await op.execute(input_data=sample_dataframe)
         
         # Should fall back to LLM, so result should still be valid
-        assert result.field_name == ["genre"]
-        assert isinstance(result.output, dict)
-        assert "genre" in result.output
-        assert len(result.output["genre"]) == 3
+        assert isinstance(result.outputs, dict)
+        assert "genre" in result.outputs
+        assert len(result.outputs["genre"]) == 3
     
     @pytest.mark.asyncio
     async def test_execute_missing_user_instruction_and_func(self, sample_dataframe, mock_llm_client):
@@ -323,14 +317,13 @@ class TestMapOperation:
 
         result = await op.execute(input_data=sample_dataframe)
 
-        assert result.field_name == ["genre"]
-        assert isinstance(result.output, dict)
-        assert "genre" in result.output
+        assert isinstance(result.outputs, dict)
+        assert "genre" in result.outputs
         # Always one output per input row
-        assert len(result.output["genre"]) == len(sample_dataframe)
+        assert len(result.outputs["genre"]) == len(sample_dataframe)
         # Only first 2 rows should be filled, the rest padded with None
-        assert result.output["genre"][:2] == ["crime, drama", "crime, drama"]
-        assert all(v is None for v in result.output["genre"][2:])
+        assert result.outputs["genre"][:2] == ["crime, drama", "crime, drama"]
+        assert all(v is None for v in result.outputs["genre"][2:])
 
 
 class TestMapOpOutputs:
@@ -339,47 +332,41 @@ class TestMapOpOutputs:
     def test_map_op_outputs_initialization(self):
         """Test that MapOpOutputs initializes correctly with list field_name."""
         outputs = MapOpOutputs(
-            field_name=["genre", "rating"],
-            output={"genre": ["crime", "drama"], "rating": [8.5, 9.0]},
+            outputs={"genre": ["crime", "drama"], "rating": [8.5, 9.0]},
             cost=0.05
         )
         
-        assert outputs.field_name == ["genre", "rating"]
-        assert outputs.output == {"genre": ["crime", "drama"], "rating": [8.5, 9.0]}
+        assert outputs.outputs == {"genre": ["crime", "drama"], "rating": [8.5, 9.0]}
         assert outputs.cost == 0.05
     
     def test_map_op_outputs_default_values(self):
         """Test that MapOpOutputs has correct default values."""
         outputs = MapOpOutputs()
         
-        assert outputs.field_name is None
-        assert outputs.output == []
+        assert outputs.outputs == {}
         assert outputs.cost == 0.0
     
     def test_map_op_outputs_addition_field_name(self):
         """Test that MapOpOutputs can be added together with list field_name."""
         outputs1 = MapOpOutputs(
-            field_name=["genre", "rating"],
-            output={"genre": ["crime"], "rating": [8.5]},
+            outputs={"genre": ["crime"], "rating": [8.5]},
             cost=0.02
         )
         
         outputs2 = MapOpOutputs(
-            field_name=["genre", "rating"],
-            output={"genre": ["drama"], "rating": [9.0]},
+            outputs={"genre": ["drama"], "rating": [9.0]},
             cost=0.03
         )
         
         combined = outputs1 + outputs2
         
-        assert combined.field_name == ["genre", "rating"]
-        assert combined.output == {"genre": ["crime", "drama"], "rating": [8.5, 9.0]}
+        assert combined.outputs == {"genre": ["crime", "drama"], "rating": [8.5, 9.0]}
         assert combined.cost == 0.05
     
     def test_map_op_outputs_addition_different_field_names(self):
         """Test that adding MapOpOutputs with different field names raises AssertionError."""
-        outputs1 = MapOpOutputs(field_name=["genre"], output={"genre": ["crime"]}, cost=0.01)
-        outputs2 = MapOpOutputs(field_name=["rating"], output={"rating": ["8.5"]}, cost=0.01)
+        outputs1 = MapOpOutputs(outputs={"genre": ["crime"]}, cost=0.01)
+        outputs2 = MapOpOutputs(outputs={"rating": ["8.5"]}, cost=0.01)
         
         with pytest.raises(AssertionError, match="Cannot merge MapOpOutputs with different field names"):
             _ = outputs1 + outputs2
@@ -401,10 +388,9 @@ class TestMapWrapper:
         )
         
         assert isinstance(result, MapOpOutputs)
-        assert result.field_name == ["genre"]
-        assert isinstance(result.output, dict)
-        assert "genre" in result.output
-        assert len(result.output["genre"]) == 3
+        assert isinstance(result.outputs, dict)
+        assert "genre" in result.outputs
+        assert len(result.outputs["genre"]) == 3
     
     def test_map_wrapper_with_udf(self, sample_dataframe, mock_llm_client):
         """Test the map_wrapper function with user-defined function."""
@@ -423,10 +409,9 @@ class TestMapWrapper:
         )
         
         assert isinstance(result, MapOpOutputs)
-        assert result.field_name == ["genre"]
-        assert isinstance(result.output, dict)
-        assert "genre" in result.output
-        assert len(result.output["genre"]) == 3
+        assert isinstance(result.outputs, dict)
+        assert "genre" in result.outputs
+        assert len(result.outputs["genre"]) == 3
 
 
 class TestMapOperationIntegration:
@@ -450,10 +435,9 @@ class TestMapOperationIntegration:
         
         result = await op.execute(input_data=df)
         
-        assert result.field_name == ["topic"]
-        assert isinstance(result.output, dict)
-        assert "topic" in result.output
-        assert len(result.output["topic"]) == 3
+        assert isinstance(result.outputs, dict)
+        assert "topic" in result.outputs
+        assert len(result.outputs["topic"]) == 3
     
     @pytest.mark.asyncio
     async def test_map_operation_postprocess_outputs(self, mock_llm_client):
@@ -504,9 +488,8 @@ class TestMapOperationIntegration:
         
         result = await op.execute(input_data=sample_dataframe)
         
-        assert result.field_name == ["genre", "rating"]
-        assert isinstance(result.output, dict)
-        assert "genre" in result.output
-        assert "rating" in result.output
-        assert len(result.output["genre"]) == 3
-        assert len(result.output["rating"]) == 3
+        assert isinstance(result.outputs, dict)
+        assert "genre" in result.outputs
+        assert "rating" in result.outputs
+        assert len(result.outputs["genre"]) == 3
+        assert len(result.outputs["rating"]) == 3
