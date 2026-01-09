@@ -119,7 +119,7 @@ class TestMapOperation:
         empty_df = pd.DataFrame({"overview": []})
         result = await op.execute(input_data=empty_df)
         
-        assert result.outputs == {"genre": []}
+        assert result.outputs == {}
         assert result.cost == 0.0
     
     @pytest.mark.asyncio

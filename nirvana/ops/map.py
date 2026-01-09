@@ -193,7 +193,7 @@ class MapOperation(BaseOperation):
             raise ValueError("Neither `user_instruction` nor `func` is given.")
         
         if input_data.empty:
-            return MapOpOutputs(outputs={col: [] for col in self.output_columns}, cost=0.0)
+            return MapOpOutputs(outputs={}, cost=0.0)
 
         processed_data = input_data[self.input_columns]
         dtypes = []
