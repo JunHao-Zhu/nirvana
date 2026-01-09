@@ -22,15 +22,15 @@ class ScanOperation(BaseOperation):
             self,
             source: Literal["dataframe", "llm"] = "dataframe",
             output_columns: list[str] = [],
-            **kwargs,
+            num_samples: int | None = None,
     ):
         super().__init__(
             op_name="scan",
             user_instruction="",
-            **kwargs
         )
         self.source = source
         self.output_columns = output_columns
+        self.num_samples = num_samples
 
     @property
     def dependencies(self) -> list[str]:
@@ -46,16 +46,28 @@ class ScanOperation(BaseOperation):
         kwargs["source"] = self.source
         kwargs["output_columns"] = self.output_columns
         return kwargs
+    
+    def set_sample_size(self, sample_size: int | None):
+        if sample_size is not None:
+            assert sample_size > 0, "Sample size must be positive."
+        self.num_samples = sample_size
+    
+    async def scan_from_llm(self, *args, **kwargs):
+        raise NotImplementedError("LLM scan operator is not implemented yet.")
 
     async def execute(
-            self, 
-            input_data: pd.DataFrame,
-            *args, 
-            **kwargs
+        self, 
+        input_data: pd.DataFrame,
+        **kwargs
     ):
         if self.source == "dataframe":
+            if self.num_samples is not None:
+                num_samples = min(self.num_samples, len(input_data))
+                output_records = input_data.iloc[:num_samples]
+            else:
+                output_records = input_data
             return ScanOpOutputs(
-                output=input_data,
+                output=output_records,
                 cost=0.0
             )
         elif self.source == "llm":

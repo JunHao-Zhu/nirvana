@@ -47,8 +47,7 @@ Operator `map`: Perform a projecton on the target data based on a predicate (the
 ... })
 >>> nv.ops.map(df, "According to the movie overview, extract the genre of each movie.", input_columns=["overview"], output_columns = ["genre"], strategy="plain")
 MapOpOutputs(
-    field_name = ["genre"],
-    output = {"genre": ["crime, drama", "action, thriller, superhero"]}
+    outputs = {"genre": ["crime, drama", "action, thriller, superhero"]}
 )
 ```
 

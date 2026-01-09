@@ -24,12 +24,22 @@ class OperatorFusion:
        and mapping; a trailing filter with a UDF is then added to remove None results.
     """
 
-    instruction_rewrite_prompt = """There are two semantic data analytics operations evaluating some instructions on data.
-You are tasked with merging these instructions across operations into one instruction for a merged operator. There are two criteria:
-1. The generated instruction must include all key requirements in those instructions.
-2. If instructions across a filter and a map are to merge, the new instruction must include a mandatory requirement that if data don't pass the filter condition, return None for each field as the map result; otherwise, perform data transformation as normal.
+    rewrite_prompt_for_map_filter_fusion = """You are given a filter and a map operator, each with an NL instruction. The two operations are gonna be merged into a single map operator.
+To keep semantically equivalent, you are required to give a new instruction for the merged operator merging. The requirement for the new instruction is:
+The new instruction follows the logic that if data don't pass the filter condition, return None for each field as the map result; otherwise, perform data transformation as normal.
 
 The operations and their instructions are follows:
+{instruction}
+
+Output the merged instruction concisely in the following format.
+<instruction> The merged instruction </instruction>
+"""
+
+    rewrite_prompt_for_same_type_fusion = """There are two same-type semantic data analytics operations and each process data based on a given instruction. The operations are gonna be merged into a single one.
+To keep semantically equivalent, you are required to give a new instruction for the merged operator merging. The requirement for the new instruction is:
+The new instruction must preserve all key data processing requirements.
+
+The operations to merge and their instructions are follows:
 {instruction}
 
 Output the merged instruction concisely in the following format.
@@ -50,31 +60,33 @@ Output the merged instruction concisely in the following format.
             )
 
     @classmethod
-    def transform(cls, node: LineageNode, rewriter: LLMClient) -> LineageNode:
+    def transform(cls, node: LineageNode, rewriter: LLMClient, rewrite_cost: float) -> tuple[LineageNode, float]:
         if node.op_name == "scan":
-            return node
+            return node, rewrite_cost
         
         if node.op_name == "join":
-            left_child = cls.transform(node.left_child)
-            right_child = cls.transform(node.right_child)
+            left_child, rewrite_cost = cls.transform(node.left_child, rewriter, rewrite_cost)
+            right_child, rewrite_cost = cls.transform(node.right_child, rewriter, rewrite_cost)
             if left_child:
                 node.set_left_child(left_child)
             if right_child:
                 node.set_right_child(right_child)
-            return node
+            return node, rewrite_cost
         
         if node.op_name in {"rank", "reduce"}:
-            child = cls.transform(node.left_child)
+            child, rewrite_cost = cls.transform(node.left_child, rewriter, rewrite_cost)
             node.set_left_child(child)
-            return node
-        
-        child = cls.transform(node.left_child)
+            return node, rewrite_cost
+
+        child, rewrite_cost = cls.transform(node.left_child, rewriter, rewrite_cost)
         node.set_left_child(child)
         if cls.match_pattern(node, child, FusionType.SAME_TYPE):
-            node, cost = cls._merge_same_type_operators(node, child, rewriter)
+            node, rewrite_cost_for_cur_node = cls._merge_same_type_operators(node, child, rewriter)
+            rewrite_cost += rewrite_cost_for_cur_node
         if cls.match_pattern(node, child, FusionType.MAP_FILTER):
-            node, cost = cls._merge_map_and_filter(node, child, rewriter)
-        return node
+            node, rewrite_cost_for_cur_node = cls._merge_map_and_filter(node, child, rewriter)
+            rewrite_cost += rewrite_cost_for_cur_node
+        return node, rewrite_cost
     
     @classmethod
     def _merge_same_type_operators(
@@ -91,7 +103,7 @@ Output the merged instruction concisely in the following format.
             f"{node.op_name} 1: {node.operator.user_instruction}\n"
             f"{node.op_name} 2: {node_to_merge.operator.user_instruction}"
         )
-        prompt = cls.instruction_rewrite_prompt.format(instruction=combined_instruction)
+        prompt = cls.rewrite_prompt_for_same_type_fusion.format(instruction=combined_instruction)
         llm_output = asyncio.run(rewriter(prompt, parse_tags=True, tags=["instruction"]))
         new_instruction, cost = llm_output["instruction"], llm_output["cost"]
 
@@ -138,7 +150,7 @@ Output the merged instruction concisely in the following format.
             f"{node.op_name} 1: {node.operator.user_instruction}\n"
             f"{node_to_merge.op_name} 1: {node_to_merge.operator.user_instruction}"
         )
-        prompt = cls.instruction_rewrite_prompt.format(instruction=combined_instruction)
+        prompt = cls.rewrite_prompt_for_map_filter_fusion.format(instruction=combined_instruction)
         llm_output = asyncio.run(rewriter(prompt, parse_tags=True, tags=["instruction"]))
         new_instruction, cost = llm_output["instruction"], llm_output["cost"]
 

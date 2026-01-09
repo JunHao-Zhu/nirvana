@@ -32,9 +32,9 @@ def cosine_similarity(x: np.array, y: np.array):
 
 class PhysicalOptimizer:
     def __init__(
-            self,
-            agent: LLMClient = None,
-            available_models: list[str] = ORDERED_MODELS,
+        self,
+        agent: LLMClient = None,
+        available_models: list[str] = ORDERED_MODELS,
     ):
         self.agent = agent
         self.available_models = available_models if available_models else ORDERED_MODELS
@@ -44,7 +44,7 @@ class PhysicalOptimizer:
             # and len(input_data[0]) * len(input_data[1]) < 2 * num_samples:
             # we don't optimize join yet
             return False
-        elif op_name in ["filter", "map"] and len(input_data[0]) < 2 * num_samples:
+        elif op_name in ["filter", "map"] and len(input_data) < 2 * num_samples:
             return False
         elif op_name in ["reduce", "rank"]:
             return False
@@ -60,13 +60,20 @@ class PhysicalOptimizer:
                 return [input_data[0], input_data[1].iloc[:num_samples]], [input_data[0], input_data[1].iloc[num_samples:]]
         else:
             return input_data.iloc[:num_samples], input_data.iloc[num_samples:]
+        
+    def _serialize_map_outputs(self, outputs: dict[str, list]) -> list[str]:
+        serialized_outputs = []
+        for values in zip(*outputs.values()):
+            values_with_key = map(lambda k, v: f"{k}: {v}", outputs.keys(), values)
+            serialized_outputs.append(", ".join(values_with_key))
+        return serialized_outputs
 
     async def optimize_exec_model(
-            self, 
-            node: LineageNode, 
-            input_data: pd.DataFrame | list[pd.DataFrame], 
-            num_samples: int, 
-            improve_margin: float = 0.2
+        self, 
+        node: LineageNode, 
+        input_data: pd.DataFrame | list[pd.DataFrame], 
+        num_samples: int, 
+        improve_margin: float = 0.2
     ):
         if not self.should_optimize(node.op_name, input_data, num_samples):
             node.operator.model = self.available_models[0] if node.op_name in ["join", "rank"] else self.available_models[-1]
@@ -75,7 +82,8 @@ class PhysicalOptimizer:
 
         optimize_start_time = time.time()
         train_set, test_set = self.split_input_data(node.op_name, input_data, num_samples)
-        node.operator.model = self.available_models[0] 
+        exec_model = self.available_models[0]
+        node.operator.model = exec_model 
         node_output = None
 
         if node.op_name == "filter":
@@ -142,7 +150,8 @@ class PhysicalOptimizer:
         elif node.op_name == "map":
             worst_output = await node.execute_operation(train_set)
             node_output = worst_output
-            worst_output_embeds, embed_cost = await self.agent.create_embedding(worst_output.output)
+            serialized_outputs = self._serialize_map_outputs(worst_output.outputs)
+            worst_output_embeds, embed_cost = await self.agent.create_embedding(serialized_outputs)
             node_output.cost += embed_cost
 
             improve_score_list = [0.0]
@@ -154,8 +163,8 @@ class PhysicalOptimizer:
                     node.operator.model = better_model
                     better_output = await node.execute_operation(train_set)
                     node_output.cost += better_output.cost
-                    subworst_output = np.array(better_output.output)
-                    subworst_output_embeds, embed_cost = await self.agent.create_embedding(better_output.output)
+                    serialized_outputs = self._serialize_map_outputs(better_output.outputs)
+                    subworst_output_embeds, embed_cost = await self.agent.create_embedding(serialized_outputs)
                     node_output.cost += embed_cost
                     cos_sim = cosine_similarity(worst_output_embeds, subworst_output_embeds)
                     mismatch_idx_worst2subworst = cos_sim < 0.5
@@ -167,8 +176,9 @@ class PhysicalOptimizer:
                     node.operator.model = better_model
                     better_output = await node.execute_operation(train_set)
                     node_output.cost += better_output.cost
-                    subbest_output = np.array(better_output.output)
-                    subbest_output_embeds, embed_cost = await self.agent.create_embedding(better_output.output)
+                    subbest_output = np.array(better_output.outputs.values())
+                    serialized_outputs = self._serialize_map_outputs(better_output.outputs)
+                    subbest_output_embeds, embed_cost = await self.agent.create_embedding(serialized_outputs)
                     node_output.cost += embed_cost
                     cos_sim = cosine_similarity(subworst_output_embeds, subbest_output_embeds)
                     mismatch_idx_subworst2subbest = cos_sim < 0.5
@@ -188,14 +198,16 @@ class PhysicalOptimizer:
                     if all_matched_idx.any():
                         better_output = await node.execute_operation(train_set.iloc[all_matched_idx])
                         node_output.cost += better_output.cost
-                        best_output = np.array(better_output.output)
-                        best_output_embeds, embed_cost = await self.agent.create_embedding(better_output.output)
+                        best_output = np.array(list(better_output.outputs.values()))
+                        serialized_outputs = self._serialize_map_outputs(better_output.outputs)
+                        best_output_embeds, embed_cost = await self.agent.create_embedding(serialized_outputs)
                         node_output.cost += embed_cost
                         cos_sim = cosine_similarity(subbest_output_embeds[all_matched_idx], best_output_embeds)
                         mismatch_idx_subbest2best = cos_sim < 0.5
                         mismatch_ratio = mismatch_idx_subbest2best.sum() / all_matched_idx.sum()
                         subbest_output[all_matched_idx] = best_output
-                        better_output.output = subbest_output.tolist()
+                        for idx, key in enumerate(better_output.outputs.keys()):
+                            better_output.outputs[key] = subbest_output[idx].tolist()
                     else:
                         mismatch_ratio = 0.0
                     if mismatch_idx_worst2subworst.any():
@@ -209,21 +221,21 @@ class PhysicalOptimizer:
 
                 if improve_score_list[-1] - improve_score_list[-2] > improve_margin:
                     exec_model = better_model
-                    node_output.output = better_output.output
+                    node_output.outputs = better_output.outputs
         
         optimize_end_time = time.time()
         logger.info(f"Physical Plan Optimization Time: {optimize_end_time - optimize_start_time:.4f} sec")
 
-        node.set_exec_model(exec_model)
+        node.operator.model = exec_model
         rest_output = await node.execute_operation(test_set)
         node_output = concate_output(node_output, rest_output)
         return node_output
 
     def optimize(
-            self, 
-            plan: LineageNode,
-            num_samples: int = 10,
-            improve_margin: float = 0.2,
+        self, 
+        plan: LineageNode,
+        num_samples: int = 10,
+        improve_margin: float = 0.2,
     ):
         optimize_output = {
             "total_token_cost": 0.0

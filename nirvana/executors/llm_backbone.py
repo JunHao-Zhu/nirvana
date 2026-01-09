@@ -61,7 +61,7 @@ class LLMArguments(BaseModel):
 
 class LLMClient:
     default_model: str | None = None
-    client = None
+    client: AsyncOpenAI = None
     config: LLMArguments = LLMArguments()
 
     @classmethod
@@ -90,6 +90,7 @@ class LLMClient:
 
     async def create_embedding(self, text: list[str] | str, embed_model: str = "text-embedding-3-large"):
         api_key, base_url = _get_openai_compatible_provider_info(model_name=embed_model)
+        api_key = self.client.api_key if api_key == "" else api_key
         self.client = _create_client(api_key=api_key, base_url=base_url)
         response = await self.client.embeddings.create(
             input=text, model=embed_model
@@ -106,6 +107,7 @@ class LLMClient:
         model_name = kwargs.pop("model", None)
         if model_name is not None:
             api_key, base_url = _get_openai_compatible_provider_info(model_name=model_name)
+            api_key = self.client.api_key if api_key == "" else api_key
             self.client = _create_client(api_key=api_key, base_url=base_url)
         else:
             model_name = self.default_model

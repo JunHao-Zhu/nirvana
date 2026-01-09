@@ -7,9 +7,9 @@ class FilterPushdown:
         return all([field in existing_fields for field in dependencies])
 
     @classmethod
-    def transform(cls, node: LineageNode) -> LineageNode:
+    def transform(cls, node: LineageNode) -> tuple[LineageNode, float]:
         if node.op_name == "filter":
-            last_node = cls.transform(node.left_child)
+            last_node, _ = cls.transform(node.left_child)
             input_columns = node.operator.input_columns
 
             if last_node.op_name == "join":
@@ -23,7 +23,7 @@ class FilterPushdown:
                     new_node.node_fields.output_fields = new_node.node_fields.left_input_fields = last_node.node_fields.left_input_fields
                     # rewire edges between current op and its predecessor and rewrite sub-lineage over pushdowned filter
                     new_node.set_left_child(last_node.left_child)
-                    last_node.set_left_child(cls.transform(new_node))
+                    last_node.set_left_child(cls.transform(new_node)[0])
                     pushdown_flag = True
                 # push filter into the right sub-lineage
                 if cls.check_pattern(input_columns, right_fields):
@@ -32,14 +32,14 @@ class FilterPushdown:
                     new_node.node_fields.output_fields = new_node.node_fields.left_input_fields = last_node.node_fields.right_input_fields
                     # rewire edges between current op and its predecessor and rewrite sub-lineage over pushdowned filter
                     new_node.set_left_child(last_node.right_child)
-                    last_node.set_right_child(cls.transform(new_node))
+                    last_node.set_right_child(cls.transform(new_node)[0])
                     pushdown_flag = True
                 if pushdown_flag:
                     del node
-                    return last_node
+                    return last_node, 0.0
                 else:
                     node.set_left_child(last_node)
-                    return node
+                    return node, 0.0
             
             elif last_node.op_name in ["map", "filter", "rank"]:
                 fields = last_node.node_fields.left_input_fields
@@ -48,24 +48,24 @@ class FilterPushdown:
                     node.node_fields.output_fields = node.node_fields.left_input_fields = last_node.node_fields.left_input_fields
                     # rewire edges around current op and its predecessor, and rewrite sub-lineage over pushdowned filter
                     node.set_left_child(last_node.left_child)
-                    last_node.set_left_child(cls.transform(node))
-                    return last_node
+                    last_node.set_left_child(cls.transform(node)[0])
+                    return last_node, 0.0
                 else:
                     node.set_left_child(last_node)
-                    return node
+                    return node, 0.0
                 
             else:
                 node.set_left_child(last_node)
-                return node
+                return node, 0.0
                 
         elif node.op_name == "join":
-            node.set_left_child(cls.transform(node.left_child))
-            node.set_right_child(cls.transform(node.right_child))
-            return node
+            node.set_left_child(cls.transform(node.left_child)[0])
+            node.set_right_child(cls.transform(node.right_child)[0])
+            return node, 0.0
         
         elif node.op_name in ["map", "rank", "reduce"]:
-            node.set_left_child(cls.transform(node.left_child))
-            return node
+            node.set_left_child(cls.transform(node.left_child)[0])
+            return node, 0.0
         
         else:
-            return node
+            return node, 0.0

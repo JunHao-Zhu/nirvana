@@ -27,6 +27,6 @@ class Evaluator:
                 result=table_serialize(process_result)
             )
         }]
-        rating = asyncio.run(evaluator(messages=evaluate_prompt, parse_tags=True, tags=["score"])["score"])
-        rating = float(rating) / 10.0
+        response = asyncio.run(evaluator(messages=evaluate_prompt, parse_tags=True, tags=["score"]))
+        rating = float(response["score"]) / 10.0
         return rating

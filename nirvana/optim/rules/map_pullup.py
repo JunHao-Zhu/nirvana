@@ -80,6 +80,6 @@ class MapPullup:
             return node, pullup_maps
 
     @classmethod
-    def transform(cls, node: LineageNode):
+    def transform(cls, node: LineageNode) -> tuple[LineageNode, float]:
         node, _ = cls.pull_up(node)
-        return node
+        return node, 0.0

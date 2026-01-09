@@ -71,6 +71,36 @@ class DataFrame(LineageMixin):
     def from_external_file(cls, path: str, sep=',', **kwargs):
         df = pd.read_table(path, sep=sep, **kwargs)
         return cls(df)
+    
+    def _get(self, posidx, materialize: bool = False):
+        if isinstance(posidx, str):
+            # str index => column selection (AbstractColumn)
+            if posidx in self.columns:
+                return self._data[posidx]
+            raise KeyError(f"Column `{posidx}` does not exist.")
+
+        elif isinstance(posidx, int):
+            # int index => single row
+            return self._data.iloc[posidx]
+        
+        index_type = None
+        if isinstance(posidx, slice):
+            index_type = "row"
+        elif (isinstance(posidx, tuple) or isinstance(posidx, list)) and len(posidx):
+            if isinstance(posidx[0], str):
+                index_type = "column"
+            else:
+                index_type = "row"
+        else:
+            raise TypeError("Invalid index type: {}".format(type(posidx)))
+        
+        if index_type == "row":
+            return self._data.iloc[posidx]
+        elif index_type == "column":
+            return self._data[posidx]
+
+    def __getitem__(self, posidx):
+        return self._get(posidx)
 
     def semantic_map(
         self,
@@ -91,7 +121,7 @@ class DataFrame(LineageMixin):
             "output_columns": output_columns,
             "context": context,
             "model": model,
-            "func": func,
+            "tool": func,
             "strategy": strategy,
             "limit": limit,
             "rate_limit": rate_limit,
@@ -124,7 +154,7 @@ class DataFrame(LineageMixin):
             "input_columns": input_columns,
             "context": context,
             "model": model,
-            "func": func,
+            "tool": func,
             "strategy": strategy,
             "limit": limit,
             "rate_limit": rate_limit,
@@ -148,7 +178,6 @@ class DataFrame(LineageMixin):
         model: str | None = None,
         func: Callable | None = None,
         strategy: Literal["plain"] = "plain",
-        limit: int | None = None,
         rate_limit: int = 16,
         assertions: list[Callable] | None = [],
     ):
@@ -157,9 +186,8 @@ class DataFrame(LineageMixin):
             "input_columns": [input_column],
             "context": context,
             "model": model,
-            "func": func,
+            "tool": func,
             "strategy": strategy,
-            "limit": limit,
             "rate_limit": rate_limit,
             "assertions": assertions,
         }
@@ -199,7 +227,7 @@ class DataFrame(LineageMixin):
             "how": how,
             "context": context,
             "model": model,
-            "func": func,
+            "tool": func,
             "strategy": strategy,
             "limit": limit,
             "rate_limit": rate_limit,
@@ -236,7 +264,7 @@ class DataFrame(LineageMixin):
             "descend": descend,
             "context": context,
             "model": model,
-            "func": func,
+            "tool": func,
             "strategy": strategy,
             "limit": limit,
             "rate_limit": rate_limit,
@@ -259,7 +287,6 @@ class DataFrame(LineageMixin):
         if self.optimizer.config.do_physical_optimization:
             output, cost, runtime = self.optimizer.optimize_physical_plan(
                 self.leaf_node,
-                self.nrows,
             )
         else:
             output, cost, runtime = self.execute()

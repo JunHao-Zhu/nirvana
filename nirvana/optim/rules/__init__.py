@@ -3,6 +3,7 @@ from nirvana.optim.rules.filter_pullup import FilterPullup
 from nirvana.optim.rules.map_pullup import MapPullup
 from nirvana.optim.rules.non_llm_pushdown import NonLLMPushdown
 from nirvana.optim.rules.non_llm_replace import NonLLMReplace
+from nirvana.optim.rules.operator_fusion import OperatorFusion
 
 
 __all__ = [
@@ -11,4 +12,5 @@ __all__ = [
     "MapPullup",
     "NonLLMPushdown",
     "NonLLMReplace",
+    "OperatorFusion",
 ]
