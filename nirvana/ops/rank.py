@@ -118,7 +118,7 @@ class RankOperation(BaseOperation):
 
     async def _compare_by_plain_llm(self, data1: Any, data2: Any, user_instruction: str, dtype: str, **kwargs):
         async with self.semaphore:
-            if dtype == "str":
+            if dtype == "text":
                 data1 = self.input_columns[0] + ": " + str(data1)
                 data2 = self.input_columns[0] + ": " + str(data2)
             full_prompt = self.prompter.generate_prompt(data1, data2, user_instruction, dtype)
@@ -199,7 +199,7 @@ class RankOperation(BaseOperation):
         if isinstance(processed_data.dtype, ImageDtype):
             dtype = "image"
         else:
-            dtype = "str"
+            dtype = "text"
 
         if self.has_udf():
             warnings.warn("The udf is not supported in the current Rank operator implementation. Switch to LLM-based ranking.")

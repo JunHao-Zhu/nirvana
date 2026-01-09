@@ -18,14 +18,14 @@ class RankPrompter:
         data1: Any,
         data2: Any,
         user_instruction: str,
-        dtype: str = "str",
+        dtype: str = "text",
     ):
         # 1. Prepare system message
         sys_message = [{"role": "system", "content": self.system_instruction}]
 
         # 2. Prepare user message
         user_content = []
-        if dtype == "str":
+        if dtype == "text":
             user_content.append({"type": "input_text", "text": f"Item 1:\n{str(data1)}"})
             user_content.append({"type": "input_text", "text": f"Item 2:\n{str(data2)}"})
         elif dtype == "image":

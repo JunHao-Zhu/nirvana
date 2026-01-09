@@ -145,7 +145,7 @@ class ReduceOperation(BaseOperation):
         elif is_numeric_dtype(processed_data):
             dtype = "numeric"
         else:
-            dtype = "str"
+            dtype = "text"
 
         reduce_results, token_cost = None, 0
         if self.has_udf() and dtype == "numeric":

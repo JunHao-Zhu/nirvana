@@ -191,7 +191,7 @@ class FilterOperation(BaseOperation):
             if isinstance(input_data[col].dtype, ImageDtype):
                 dtypes.append("image")
             else:
-                dtypes.append("str")
+                dtypes.append("text")
 
         if self.strategy == "plain":
             execution_func = functools.partial(self._execute_by_plain_llm, dtypes=dtypes, field_name=self.input_columns[0], model=self.model, **kwargs)

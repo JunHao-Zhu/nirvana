@@ -453,13 +453,13 @@ class JoinOperation(BaseOperation):
             if isinstance(left_data[col].dtype, ImageDtype):
                 left_dtypes.append("image")
             else:
-                left_dtypes.append("str")
+                left_dtypes.append("text")
         right_dtypes: list = []
         for col in self.right_on:
             if isinstance(right_data[col].dtype, ImageDtype):
                 right_dtypes.append("image")
             else:
-                right_dtypes.append("str")
+                right_dtypes.append("text")
 
         if self.strategy == "nest":
             return await self._nested_join(left_data, right_data, self.user_instruction, left_dtypes, right_dtypes, **kwargs)

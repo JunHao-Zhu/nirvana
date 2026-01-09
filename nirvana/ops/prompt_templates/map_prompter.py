@@ -52,7 +52,7 @@ class MapPrompter:
         # 2. Prepare data
         user_content = []
         for dtype, (key, val) in zip(dtypes, data.items()):
-            if dtype == "str":
+            if dtype == "text":
                 user_content.append({"type": "input_text", "text": f"{key}: {val}"})
             elif dtype == "image":
                 user_content.append({"type": "input_text", "text": f"{key}:"})
@@ -112,7 +112,7 @@ class MapPrompter:
             demo_data: pd.Series | dict = demo["data"]
             demo_answer: str = demo["answer"]
             for dtype, (key, val) in zip(dtypes, demo_data.items()):
-                if dtype == "str":
+                if dtype == "text":
                     demo_content.append({"type": "input_text", "text": f"{key}: {val}"})
                 elif dtype == "image":
                     demo_content.append({"type": "input_text", "text": f"{key}:"})
@@ -133,7 +133,7 @@ class MapPrompter:
         # 3. Prepare user message
         user_content = []
         for dtype, (key, val) in zip(dtypes, data.items()):
-            if dtype == "str":
+            if dtype == "text":
                 user_content.append({"type": "input_text", "text": f"{key}: {val}"})
             elif dtype == "image":
                 user_content.append({"type": "input_text", "text": f"{key}:"})
@@ -164,7 +164,7 @@ class MapPrompter:
         
         _input = [{"type": "input_text", "text": "Input:"}]
         for dtype, (key, val) in zip(dtypes, data.items()):
-            if dtype == "str":
+            if dtype == "text":
                 _input.append({"type": "input_text", "text": f"{key}: {val}"})
             elif dtype == "image":
                 _input.append({"type": "input_text", "text": f"{key}:"})

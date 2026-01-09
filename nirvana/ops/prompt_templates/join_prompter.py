@@ -37,7 +37,7 @@ class JoinPrompter:
         user_content = []
         user_content.append({"type": "input_text", "text": "Left data:"})
         for dtype, (key, value) in zip(left_dtypes, left_data.items()):
-            if dtype == "str":
+            if dtype == "text":
                 user_content.append({"type": "input_text", "text": f"{key}: {value}"})
             elif dtype == "image":
                 user_content.append({"type": "input_text", "text": f"{key}:"})
@@ -52,7 +52,7 @@ class JoinPrompter:
         
         user_content.append({"type": "input_text", "text": "Right data:"})
         for dtype, (key, value) in zip(right_dtypes, right_data.items()):
-            if dtype == "str":
+            if dtype == "text":
                 user_content.append({"type": "input_text", "text": f"{key}: {value}"})
             elif dtype == "image":
                 user_content.append({"type": "input_text", "text": f"{key}:"})
@@ -113,7 +113,7 @@ class JoinPrompter:
         for batch_idx, left_data in left_batch.iterrows():
             user_content.append({"type": "input_text", "text": f"## L{batch_idx}:"})
             for dtype, (key, value) in zip(left_dtypes, left_data.items()):
-                if dtype == "str":
+                if dtype == "text":
                     user_content.append({"type": "input_text", "text": f"{key}: {value}"})
                 elif dtype == "image":
                     user_content.append({"type": "input_text", "text": f"{key}:"})
@@ -131,7 +131,7 @@ class JoinPrompter:
         for batch_idx, right_data in right_batch.iterrows():
             user_content.append({"type": "input_text", "text": f"## R{batch_idx}:"})
             for dtype, (key, value) in zip(right_dtypes, right_data.items()):
-                if dtype == "str":
+                if dtype == "text":
                     user_content.append({"type": "input_text", "text": f"{key}: {value}"})
                 elif dtype == "image":
                     user_content.append({"type": "input_text", "text": f"{key}:"})
