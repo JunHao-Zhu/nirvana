@@ -1,7 +1,6 @@
 import os
 import logging
-import nirvana as nvn
-import pandas as pd
+import nirvana as nv
 
 from nirvana.optim import OptimizeConfig
 
@@ -26,7 +25,7 @@ def create_logger(log_dir, log_name):
     return logger
 
 
-nvn.configure_llm_backbone(
+nv.configure_llm_backbone(
     model_name="gpt-4o-2024-08-06" if LO else "gpt-4.1-2025-04-14", 
     api_key="<YOUR_API_KEY>",
 )
@@ -39,14 +38,19 @@ if __name__ == "__main__":
     if not PO:
         ablation_suffix += "_wopo"
     logger = create_logger(log_dir="log/steam", log_name=f"q4_r{ROUND}{ablation_suffix}")
-    data = pd.read_csv("testdata/steam_games.csv")
-    data["image"] = nvn.ImageArray(data["image"])
-    df = nvn.DataFrame(data)
+    df = nv.DataFrame.from_external_file("testdata/steam_games.csv")
     
     logger.info(f"Q4: summarize the graphic style of the video game.")
-    df.semantic_map(user_instruction="According to the cover image of the video game, summarize its graphic style.", input_column="image", output_column="graphic_style")
+    df.semantic_map(user_instruction="According to the cover image of the video game, summarize its graphic style.", input_columns=["image"], output_columns=["graphic_style"])
 
-    config = OptimizeConfig(do_logical_optimization=LO, do_physical_optimization=PO, sample_size=5, improve_margin=0.2, approx_mode=True)
+    config = OptimizeConfig(
+        do_logical_optimization=LO,
+        do_physical_optimization=PO,
+        max_rounds=5,
+        sample_size=5,
+        improve_margin=0.2,
+        approx_mode=True
+    )
     logger.info(f"Display the optimization config:\n{str(config)}")
     output, cost, runtime = df.optimize_and_execute(optim_config=config)
     if ROUND == 1:

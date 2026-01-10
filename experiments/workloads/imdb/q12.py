@@ -1,7 +1,6 @@
 import os
 import logging
-import nirvana as nvn
-import pandas as pd
+import nirvana as nv
 
 from nirvana.optim import OptimizeConfig
 
@@ -26,7 +25,7 @@ def create_logger(log_dir, log_name):
     return logger
 
 
-nvn.configure_llm_backbone(
+nv.configure_llm_backbone(
     model_name="gpt-4o-2024-08-06" if LO else "gpt-4.1-2025-04-14", 
     api_key="<YOUR_API_KEY>",
 )
@@ -39,16 +38,22 @@ if __name__ == "__main__":
     if not PO:
         ablation_suffix += "_wopo"
     logger = create_logger(log_dir="log/imdb", log_name=f"q12_r{ROUND}{ablation_suffix}")
-    data = pd.read_csv("testdata/imdb_movie_info.csv")
-    df = nvn.DataFrame(data)
+    df = nv.DataFrame.from_external_file("testdata/movie_data.csv")
     
     logger.info(f"Q12: Extract the main character of crime movies with rating higher than 9.")
-    df.semantic_map(user_instruction="According to the movie plot, extract the genre(s) of each movie.", input_column="Plot", output_column="Genre")
-    df.semantic_filter(user_instruction="The rating is higher than 9.", input_column="IMDB_rating")
-    df.semantic_filter(user_instruction="The movie belongs to crime movies.", input_column="Genre")
-    df.semantic_map(user_instruction="Extract the main character from the movie plot.", input_column="Plot", output_column="Character")
+    df.semantic_map(user_instruction="According to the movie plot, extract the genre(s) of each movie.", input_columns=["Plot"], output_columns=["Genre"])
+    df.semantic_filter(user_instruction="The rating is higher than 9.", input_columns=["IMDB_rating"])
+    df.semantic_filter(user_instruction="The movie belongs to crime movies.", input_columns=["Genre"])
+    df.semantic_map(user_instruction="Extract the main character from the movie plot.", input_columns=["Plot"], output_columns=["Character"])
 
-    config = OptimizeConfig(do_logical_optimization=LO, do_physical_optimization=PO, sample_size=5, improve_margin=0.2, approx_mode=True)
+    config = OptimizeConfig(
+        do_logical_optimization=LO, 
+        do_physical_optimization=PO, 
+        max_rounds=5,
+        sample_size=5, 
+        improve_margin=0.2, 
+        approx_mode=True
+    )
     logger.info(f"Display the optimization config:\n{str(config)}")
     output, cost, runtime = df.optimize_and_execute(optim_config=config)
     if ROUND == 1:

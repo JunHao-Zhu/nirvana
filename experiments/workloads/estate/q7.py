@@ -4,7 +4,7 @@ import base64
 import logging
 import pandas as pd
 from PIL import Image
-import nirvana as nvn
+import nirvana as nv
 
 from nirvana.optim import OptimizeConfig
 
@@ -37,7 +37,7 @@ def transform_to_base64(image: bytes):
     return "data:image/png;base64," + base64.b64encode(buffered.getvalue()).decode("utf-8")
 
 
-nvn.configure_llm_backbone(
+nv.configure_llm_backbone(
     model_name="gpt-4o-2024-08-06" if LO else "gpt-4.1-2025-04-14", 
     api_key="<YOUR_API_KEY>",
 )
@@ -52,14 +52,21 @@ if __name__ == "__main__":
     logger = create_logger(log_dir="log/estate", log_name=f"q7_r{ROUND}{ablation_suffix}")
     data = pd.read_parquet("testdata/multimodal_real_estate.parquet")
     data["image"] = data["image"].apply(lambda x: transform_to_base64(x))
-    data["image"] = nvn.ImageArray(data["image"].tolist())
-    df = nvn.DataFrame(data)
+    data["image"] = nv.ImageArray(data["image"].tolist())
+    df = nv.DataFrame(data)
 
     logger.info(f"Q7: Extract features of the estates that have 2 or 3 bedrooms from the estate details.")
-    df.semantic_map(user_instruction="Extract features from the detail about the estate.", input_column="Details", output_column="Features")
-    df.semantic_filter(user_instruction="Whether the estate has 2 or 3 bedrooms", input_column="Title")
+    df.semantic_map(user_instruction="Extract features from the detail about the estate.", input_columns=["Details"], output_columns=["Features"])
+    df.semantic_filter(user_instruction="Whether the estate has 2 or 3 bedrooms", input_columns=["Title"])
 
-    config = OptimizeConfig(do_logical_optimization=LO, do_physical_optimization=PO, sample_size=5, improve_margin=0.2, approx_mode=True)
+    config = OptimizeConfig(
+        do_logical_optimization=LO,
+        do_physical_optimization=PO,
+        max_rounds=5,
+        sample_size=5,
+        improve_margin=0.2,
+        approx_mode=True
+    )
     logger.info(f"Display the optimization config:\n{str(config)}")
     output, cost, runtime = df.optimize_and_execute(optim_config=config)
     if ROUND == 1:
