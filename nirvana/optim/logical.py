@@ -182,7 +182,6 @@ class LogicalOptimizer:
                 continue
 
             selected_rule = np.random.choice(list(applicable_rules))
-            logger.info(f"{selected_rule}")
             optimized_plan, cost_per_rewrite = await selected_rule(cand_plan_cost.plan)
             optimize_cost += cost_per_rewrite
 
