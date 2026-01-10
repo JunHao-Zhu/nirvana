@@ -71,7 +71,7 @@ class PlanOptimizer:
             self.logical_optimizer = None
 
         if config.do_physical_optimization:
-            self.physical_optimizer = PhysicalOptimizer(self.client, config.avaiable_models)
+            self.physical_optimizer = PhysicalOptimizer(self.client, config.avaiable_models, config.sample_size, config.improve_margin)
         else:
             self.physical_optimizer = None
 
@@ -80,9 +80,8 @@ class PlanOptimizer:
             self.logical_optimizer.clear()
 
     def optimize_logical_plan(self, plan: LineageNode):
-        # plan = self.logical_optimizer.optimize(plan, input_dataset_name, columns)
         plan = self.logical_optimizer.optimize(plan, num_samples=self.config.sample_size)
         return plan
     
     def optimize_physical_plan(self, plan: LineageNode):
-        return self.physical_optimizer.optimize(plan, self.config.sample_size, self.config.improve_margin)
+        return self.physical_optimizer.optimize(plan)

@@ -2,10 +2,11 @@
 Record the OP lineage (operator and its user instruction) for optimizing operator orchestration.
 """
 import copy
-import pandas as pd
+import time
+import asyncio
 from collections import deque
 
-from nirvana.lineage.abstractions import LineageNode, execute_along_lineage, collect_op_metadata
+from nirvana.lineage.abstractions import LineageNode, execute_node, collect_op_metadata
 from nirvana.optim.optimizer import PlanOptimizer, OptimizeConfig
 
 class LineageMixin:
@@ -29,8 +30,12 @@ class LineageMixin:
         self.optimizer = PlanOptimizer(config)
 
     def execute(self):
-        return execute_along_lineage(self.leaf_node)
-        
+        execution_start_time = time.time()
+        dataframe_from_node, token_cost = asyncio.run(execute_node(self.leaf_node))
+        execution_end_time = time.time()
+        execution_time = execution_end_time - execution_start_time
+        return dataframe_from_node, token_cost, execution_time
+    
     def print_lineage_graph(self, op_signature_width: int = 512, max_instruction_print_length: int = 256):
         lineage_graph_strings = []
         op_strings_in_same_hop = []

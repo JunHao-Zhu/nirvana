@@ -60,13 +60,18 @@ Output the merged instruction concisely in the following format.
             )
 
     @classmethod
-    def transform(cls, node: LineageNode, rewriter: LLMClient, rewrite_cost: float) -> tuple[LineageNode, float]:
+    async def transform(cls, node: LineageNode, rewriter: LLMClient) -> tuple[LineageNode, float]:
+        return await cls.apply(node, rewriter=rewriter)
+
+    @classmethod
+    async def apply(cls, node: LineageNode, rewriter: LLMClient) -> tuple[LineageNode, float]:
         if node.op_name == "scan":
-            return node, rewrite_cost
+            return node, 0.0
         
         if node.op_name == "join":
-            left_child, rewrite_cost = cls.transform(node.left_child, rewriter, rewrite_cost)
-            right_child, rewrite_cost = cls.transform(node.right_child, rewriter, rewrite_cost)
+            left_child, rewrite_cost_from_left_branch = await cls.apply(node.left_child, rewriter)
+            right_child, rewrite_cost_from_right_branch = await cls.apply(node.right_child, rewriter)
+            rewrite_cost = rewrite_cost_from_left_branch + rewrite_cost_from_right_branch
             if left_child:
                 node.set_left_child(left_child)
             if right_child:
@@ -74,22 +79,22 @@ Output the merged instruction concisely in the following format.
             return node, rewrite_cost
         
         if node.op_name in {"rank", "reduce"}:
-            child, rewrite_cost = cls.transform(node.left_child, rewriter, rewrite_cost)
+            child, rewrite_cost = await cls.apply(node.left_child, rewriter)
             node.set_left_child(child)
             return node, rewrite_cost
 
-        child, rewrite_cost = cls.transform(node.left_child, rewriter, rewrite_cost)
+        child, rewrite_cost = await cls.apply(node.left_child, rewriter)
         node.set_left_child(child)
         if cls.match_pattern(node, child, FusionType.SAME_TYPE):
-            node, rewrite_cost_for_cur_node = cls._merge_same_type_operators(node, child, rewriter)
+            node, rewrite_cost_for_cur_node = await cls._merge_same_type_operators(node, child, rewriter)
             rewrite_cost += rewrite_cost_for_cur_node
         if cls.match_pattern(node, child, FusionType.MAP_FILTER):
-            node, rewrite_cost_for_cur_node = cls._merge_map_and_filter(node, child, rewriter)
+            node, rewrite_cost_for_cur_node = await cls._merge_map_and_filter(node, child, rewriter)
             rewrite_cost += rewrite_cost_for_cur_node
         return node, rewrite_cost
     
     @classmethod
-    def _merge_same_type_operators(
+    async def _merge_same_type_operators(
         cls,
         node: LineageNode,
         node_to_merge: LineageNode,
@@ -104,7 +109,7 @@ Output the merged instruction concisely in the following format.
             f"{node.op_name} 2: {node_to_merge.operator.user_instruction}"
         )
         prompt = cls.rewrite_prompt_for_same_type_fusion.format(instruction=combined_instruction)
-        llm_output = asyncio.run(rewriter(prompt, parse_tags=True, tags=["instruction"]))
+        llm_output = await rewriter(prompt, parse_tags=True, tags=["instruction"])
         new_instruction, cost = llm_output["instruction"], llm_output["cost"]
 
         # Prepare new operator
@@ -133,7 +138,7 @@ Output the merged instruction concisely in the following format.
         return new_op, cost
 
     @classmethod
-    def _merge_map_and_filter(
+    async def _merge_map_and_filter(
         cls,
         node: LineageNode,
         node_to_merge: LineageNode,
@@ -151,7 +156,7 @@ Output the merged instruction concisely in the following format.
             f"{node_to_merge.op_name} 1: {node_to_merge.operator.user_instruction}"
         )
         prompt = cls.rewrite_prompt_for_map_filter_fusion.format(instruction=combined_instruction)
-        llm_output = asyncio.run(rewriter(prompt, parse_tags=True, tags=["instruction"]))
+        llm_output = await rewriter(prompt, parse_tags=True, tags=["instruction"])
         new_instruction, cost = llm_output["instruction"], llm_output["cost"]
 
         # Prepare new map operator

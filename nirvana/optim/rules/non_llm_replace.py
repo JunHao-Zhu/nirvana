@@ -141,7 +141,7 @@ The rewrite is output as executable python code. Note that **every single operat
 """
 
     @classmethod
-    def transform(cls, node: LineageNode, rewriter: LLMClient) -> tuple[LineageNode, float]:
+    async def apply(cls, node: LineageNode, rewriter: LLMClient) -> tuple[LineageNode, float]:
         code, dataset_info = build_code_from_lineage(node)
         if not code:
             return node, 0.0
@@ -150,7 +150,7 @@ The rewrite is output as executable python code. Note that **every single operat
             dataset_info=dataset_info,
             logical_plan=code
         )
-        response = asyncio.run(rewriter(prompt, parse_code=True, lang="python"))
+        response = await rewriter(prompt, parse_code=True, lang="python")
         code, rewrite_cost = response["output"], response["cost"]
 
         udfs = extract_udfs_from_code(code)
@@ -159,3 +159,7 @@ The rewrite is output as executable python code. Note that **every single operat
             return new_plan, rewrite_cost
         else:
             return node, rewrite_cost
+
+    @classmethod
+    async def transform(cls, node: LineageNode, rewriter: LLMClient) -> tuple[LineageNode, float]:
+        return await cls.apply(node, rewriter=rewriter)

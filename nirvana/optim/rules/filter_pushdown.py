@@ -1,3 +1,4 @@
+from dataclasses import asdict
 from nirvana.lineage.abstractions import LineageNode
 
 
@@ -7,9 +8,9 @@ class FilterPushdown:
         return all([field in existing_fields for field in dependencies])
 
     @classmethod
-    def transform(cls, node: LineageNode) -> tuple[LineageNode, float]:
+    async def push_down(cls, node: LineageNode) -> LineageNode:
         if node.op_name == "filter":
-            last_node, _ = cls.transform(node.left_child)
+            last_node = await cls.push_down(node.left_child)
             input_columns = node.operator.input_columns
 
             if last_node.op_name == "join":
@@ -18,28 +19,28 @@ class FilterPushdown:
                 # push filter into the left sub-lineage
                 pushdown_flag = False
                 if cls.check_pattern(input_columns, left_fields):
-                    new_node = LineageNode(op_name="filter", op_kwargs=node.operator.op_kwargs, node_fields=node.node_fields.model_dump())
+                    new_node = LineageNode(op_name="filter", op_kwargs=node.operator.op_kwargs, node_fields=asdict(node.node_fields))
                     # swap info (eg fields) of current op (eg, filter) and its predecessor (ie join)
                     new_node.node_fields.output_fields = new_node.node_fields.left_input_fields = last_node.node_fields.left_input_fields
                     # rewire edges between current op and its predecessor and rewrite sub-lineage over pushdowned filter
                     new_node.set_left_child(last_node.left_child)
-                    last_node.set_left_child(cls.transform(new_node)[0])
+                    last_node.set_left_child(await cls.push_down(new_node))
                     pushdown_flag = True
                 # push filter into the right sub-lineage
                 if cls.check_pattern(input_columns, right_fields):
-                    new_node = LineageNode(op_name="filter", op_kwargs=node.operator.op_kwargs, node_fields=node.node_fields.model_dump())
+                    new_node = LineageNode(op_name="filter", op_kwargs=node.operator.op_kwargs, node_fields=asdict(node.node_fields))
                     # swap info (eg fields) of current op, filter, and its predecessor (ie join)
                     new_node.node_fields.output_fields = new_node.node_fields.left_input_fields = last_node.node_fields.right_input_fields
                     # rewire edges between current op and its predecessor and rewrite sub-lineage over pushdowned filter
                     new_node.set_left_child(last_node.right_child)
-                    last_node.set_right_child(cls.transform(new_node)[0])
+                    last_node.set_right_child(await cls.push_down(new_node))
                     pushdown_flag = True
                 if pushdown_flag:
                     del node
-                    return last_node, 0.0
+                    return last_node
                 else:
                     node.set_left_child(last_node)
-                    return node, 0.0
+                    return node
             
             elif last_node.op_name in ["map", "filter", "rank"]:
                 fields = last_node.node_fields.left_input_fields
@@ -48,24 +49,29 @@ class FilterPushdown:
                     node.node_fields.output_fields = node.node_fields.left_input_fields = last_node.node_fields.left_input_fields
                     # rewire edges around current op and its predecessor, and rewrite sub-lineage over pushdowned filter
                     node.set_left_child(last_node.left_child)
-                    last_node.set_left_child(cls.transform(node)[0])
-                    return last_node, 0.0
+                    last_node.set_left_child(await cls.push_down(node))
+                    return last_node
                 else:
                     node.set_left_child(last_node)
-                    return node, 0.0
+                    return node
                 
             else:
                 node.set_left_child(last_node)
-                return node, 0.0
+                return node
                 
         elif node.op_name == "join":
-            node.set_left_child(cls.transform(node.left_child)[0])
-            node.set_right_child(cls.transform(node.right_child)[0])
-            return node, 0.0
+            node.set_left_child(await cls.push_down(node.left_child))
+            node.set_right_child(await cls.push_down(node.right_child))
+            return node
         
         elif node.op_name in ["map", "rank", "reduce"]:
-            node.set_left_child(cls.transform(node.left_child)[0])
-            return node, 0.0
+            node.set_left_child(await cls.push_down(node.left_child))
+            return node
         
         else:
-            return node, 0.0
+            return node
+
+    @classmethod
+    async def transform(cls, node: LineageNode) -> tuple[LineageNode, float]:
+        node = await cls.push_down(node)
+        return node, 0.0

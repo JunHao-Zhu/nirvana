@@ -1,3 +1,4 @@
+from dataclasses import asdict
 from nirvana.lineage.abstractions import LineageNode
 
 
@@ -5,21 +6,21 @@ class NonLLMPushdown:
     @classmethod
     def check_pattern(cls, node: LineageNode, dependencies: list[str], generated_fields: list[str]) -> bool:
         return node.operator.has_udf() and all([field not in generated_fields for field in dependencies])
-    
+
     @classmethod
-    def transform(cls, node: LineageNode) -> tuple[LineageNode, float]:
+    async def push_down(cls, node: LineageNode) -> LineageNode:
         if node.op_name in ["map", "filter"]:
-            last_node, _ = cls.transform(node.left_child)
+            last_node = await cls.push_down(node.left_child)
 
             if last_node.op_name in ["scan", "join"]:
                 node.set_left_child(last_node)
-                return node, 0.0
+                return node
             
             dependencies = node.operator.dependencies
             generated_fields = last_node.operator.generated_fields
             if cls.check_pattern(node, dependencies, generated_fields):
                 # push non-LLM ops down if they have a UDF and their action scope is not included in the output_fields of their ancestors
-                new_node = LineageNode(op_name=node.op_name, op_kwargs=node.operator.op_kwargs, node_fields=node.node_fields.model_dump())
+                new_node = LineageNode(op_name=node.op_name, op_kwargs=node.operator.op_kwargs, node_fields=asdict(node.node_fields))
                 # swap info (eg fields) of current op and its predecessor
                 new_node.node_fields.left_input_fields = last_node.node_fields.left_input_fields
                 new_node.node_fields.output_fields = list(
@@ -30,21 +31,26 @@ class NonLLMPushdown:
                     set(last_node.node_fields.left_input_fields + last_node.operator.generated_fields)
                 )
                 new_node.set_left_child(last_node.left_child)
-                last_node.set_left_child(cls.transform(new_node)[0])
+                last_node.set_left_child(await cls.push_down(new_node))
                 del node
-                return last_node, 0.0
+                return last_node
             else:
                 node.set_left_child(last_node)
-                return node, 0.0
+                return node
         
         elif node.op_name == "join":
-            node.set_left_child(cls.transform(node.left_child)[0])
-            node.set_right_child(cls.transform(node.right_child)[0])
-            return node, 0.0
+            node.set_left_child(await cls.push_down(node.left_child))
+            node.set_right_child(await cls.push_down(node.right_child))
+            return node
 
         elif node.op_name == "reduce":
-            node.set_left_child(cls.transform(node.left_child)[0])
-            return node, 0.0
+            node.set_left_child(await cls.push_down(node.left_child))
+            return node
         
         else:
-            return node, 0.0
+            return node
+    
+    @classmethod
+    async def transform(cls, node: LineageNode) -> tuple[LineageNode, float]:
+        node = await cls.push_down(node)
+        return node, 0.0

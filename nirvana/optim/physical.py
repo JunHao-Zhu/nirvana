@@ -2,6 +2,7 @@ import time
 import asyncio
 import logging
 import functools
+from typing import Coroutine
 import numpy as np
 import pandas as pd
 
@@ -35,9 +36,13 @@ class PhysicalOptimizer:
         self,
         agent: LLMClient = None,
         available_models: list[str] = ORDERED_MODELS,
+        num_samples: int = 10,
+        improve_margin: float = 0.2,
     ):
         self.agent = agent
         self.available_models = available_models if available_models else ORDERED_MODELS
+        self.num_samples = num_samples
+        self.improve_margin = improve_margin
 
     def should_optimize(self, op_name: str, input_data: pd.DataFrame | list[pd.DataFrame], num_samples: int) -> bool:
         if op_name == "join":
@@ -71,17 +76,15 @@ class PhysicalOptimizer:
     async def optimize_exec_model(
         self, 
         node: LineageNode, 
-        input_data: pd.DataFrame | list[pd.DataFrame], 
-        num_samples: int, 
-        improve_margin: float = 0.2
+        input_data: pd.DataFrame | list[pd.DataFrame],
     ):
-        if not self.should_optimize(node.op_name, input_data, num_samples):
+        if not self.should_optimize(node.op_name, input_data, self.num_samples):
             node.operator.model = self.available_models[0] if node.op_name in ["join", "rank"] else self.available_models[-1]
             node_output = await node.execute_operation(input_data)
             return node_output
 
         optimize_start_time = time.time()
-        train_set, test_set = self.split_input_data(node.op_name, input_data, num_samples)
+        train_set, test_set = self.split_input_data(node.op_name, input_data, self.num_samples)
         exec_model = self.available_models[0]
         node.operator.model = exec_model 
         node_output = None
@@ -143,7 +146,7 @@ class PhysicalOptimizer:
                     improve_score = mismatch_ratio * (1 - improve_score_list[-1]) + improve_score_list[-1] - improve_score_list[-2] + matched_ratio
                     improve_score_list.append(improve_score)
 
-                if improve_score_list[-1] - improve_score_list[-2] > improve_margin:
+                if improve_score_list[-1] - improve_score_list[-2] > self.improve_margin:
                     exec_model = better_model
                     node_output.output = better_output.output
 
@@ -168,7 +171,7 @@ class PhysicalOptimizer:
                     node_output.cost += embed_cost
                     cos_sim = cosine_similarity(worst_output_embeds, subworst_output_embeds)
                     mismatch_idx_worst2subworst = cos_sim < 0.5
-                    mismatch_ratio = sum(mismatch_idx_worst2subworst) / len(worst_output.output)
+                    mismatch_ratio = sum(mismatch_idx_worst2subworst) / len(serialized_outputs)
                     improve_score_list.append(mismatch_ratio)
                 
                 elif model_id == 2:
@@ -176,7 +179,7 @@ class PhysicalOptimizer:
                     node.operator.model = better_model
                     better_output = await node.execute_operation(train_set)
                     node_output.cost += better_output.cost
-                    subbest_output = np.array(better_output.outputs.values())
+                    subbest_output = np.array(list(better_output.outputs.values()))
                     serialized_outputs = self._serialize_map_outputs(better_output.outputs)
                     subbest_output_embeds, embed_cost = await self.agent.create_embedding(serialized_outputs)
                     node_output.cost += embed_cost
@@ -205,7 +208,7 @@ class PhysicalOptimizer:
                         cos_sim = cosine_similarity(subbest_output_embeds[all_matched_idx], best_output_embeds)
                         mismatch_idx_subbest2best = cos_sim < 0.5
                         mismatch_ratio = mismatch_idx_subbest2best.sum() / all_matched_idx.sum()
-                        subbest_output[all_matched_idx] = best_output
+                        subbest_output[:, all_matched_idx] = best_output
                         for idx, key in enumerate(better_output.outputs.keys()):
                             better_output.outputs[key] = subbest_output[idx].tolist()
                     else:
@@ -219,7 +222,7 @@ class PhysicalOptimizer:
                     improve_score = mismatch_ratio * (1 - improve_score_list[-1]) + improve_score_list[-1] - improve_score_list[-2] + matched_ratio
                     improve_score_list.append(improve_score)
 
-                if improve_score_list[-1] - improve_score_list[-2] > improve_margin:
+                if improve_score_list[-1] - improve_score_list[-2] > self.improve_margin:
                     exec_model = better_model
                     node_output.outputs = better_output.outputs
         
@@ -231,43 +234,36 @@ class PhysicalOptimizer:
         node_output = concate_output(node_output, rest_output)
         return node_output
 
+    async def _optimize(self, node: LineageNode) -> tuple[pd.DataFrame, float]:
+        if node.left_child:
+            dataframe_from_left_node, cost_from_left_branch = await self._optimize(node.left_child)
+        if node.right_child:
+            dataframe_from_right_node, cost_from_right_branch = await self._optimize(node.right_child)
+
+        if node.op_name == "scan":
+            output_from_node = await node.run()
+            return output_from_node.output, output_from_node.cost
+        
+        elif node.op_name == "join":
+            token_cost = cost_from_left_branch + cost_from_right_branch
+            output_from_node = await self.optimize_exec_model(node, [dataframe_from_left_node, dataframe_from_right_node])
+            dataframe_from_node = await node.collate_dataframe([dataframe_from_left_node, dataframe_from_right_node], output_from_node)
+            token_cost += output_from_node.cost
+            return dataframe_from_node, token_cost
+        
+        else:
+            token_cost = cost_from_left_branch
+            output_from_node = await self.optimize_exec_model(node, dataframe_from_left_node)
+            dataframe_from_node = await node.collate_dataframe(dataframe_from_left_node, output_from_node)
+            token_cost += output_from_node.cost
+            return dataframe_from_node, token_cost
+
     def optimize(
         self, 
         plan: LineageNode,
-        num_samples: int = 10,
-        improve_margin: float = 0.2,
     ):
-        optimize_output = {
-            "total_token_cost": 0.0
-        }
-        optimize_func = functools.partial(self.optimize_exec_model, num_samples=num_samples, improve_margin=improve_margin)
-        
-        def _optimize_node(node: LineageNode) -> pd.DataFrame:
-            if node.left_child:
-                dataframe_from_left_node = _optimize_node(node.left_child)
-            if node.right_child:
-                dataframe_from_right_node = _optimize_node(node.right_child)
-
-            if node.op_name == "scan":
-                output_from_node = asyncio.run(node.run())
-                dataframe_from_node = output_from_node.output
-                optimize_output["total_token_cost"] += output_from_node.cost
-                return dataframe_from_node
-            
-            elif node.op_name == "join":
-                output_from_node = asyncio.run(optimize_func(node, [dataframe_from_left_node, dataframe_from_right_node]))
-                dataframe_from_node = asyncio.run(node.collate_dataframe([dataframe_from_left_node, dataframe_from_right_node], output_from_node))
-                optimize_output["total_token_cost"] += output_from_node.cost
-                return dataframe_from_node
-            
-            else:
-                output_from_node = asyncio.run(optimize_func(node, dataframe_from_left_node))
-                dataframe_from_node = asyncio.run(node.collate_dataframe(dataframe_from_left_node, output_from_node))
-                optimize_output["total_token_cost"] += output_from_node.cost
-                return dataframe_from_node
-        
         execution_start_time = time.time()
-        dataframe_from_node = _optimize_node(plan)
+        dataframe_from_node, total_token_cost = asyncio.run(self._optimize(plan))
         execution_end_time = time.time()
         execution_time = execution_end_time - execution_start_time
-        return dataframe_from_node, optimize_output["total_token_cost"], execution_time
+        return dataframe_from_node, total_token_cost, execution_time

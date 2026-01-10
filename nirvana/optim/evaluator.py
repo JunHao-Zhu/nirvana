@@ -13,7 +13,7 @@ def table_serialize(df: pd.DataFrame) -> str:
 
 class Evaluator:
     @staticmethod
-    def evaluate(ground_truth: pd.DataFrame, process_result: pd.DataFrame, evaluator: LLMClient):
+    async def evaluate(ground_truth: pd.DataFrame, process_result: pd.DataFrame, evaluator: LLMClient):
         if not ground_truth.columns.equals(process_result.columns):
             return 0.0
         
@@ -27,6 +27,6 @@ class Evaluator:
                 result=table_serialize(process_result)
             )
         }]
-        response = asyncio.run(evaluator(messages=evaluate_prompt, parse_tags=True, tags=["score"]))
+        response = await evaluator(messages=evaluate_prompt, parse_tags=True, tags=["score"])
         rating = float(response["score"]) / 10.0
         return rating

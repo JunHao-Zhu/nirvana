@@ -1,11 +1,12 @@
 import logging
+import asyncio
 from functools import partial
 import time
 import numpy as np
 import pandas as pd
 
 from nirvana.executors.llm_backbone import LLMClient
-from nirvana.lineage.abstractions import LineageNode, execute_along_lineage
+from nirvana.lineage.abstractions import LineageNode, execute_node
 from nirvana.optim.rules import (
     FilterPushdown,
     FilterPullup,
@@ -84,7 +85,7 @@ class LogicalOptimizer:
         if non_llm_replace:
             self.rules.add(partial(NonLLMReplace.transform, rewriter=self.agent))
         if operator_fusion:
-            self.rules.add(partial(OperatorFusion.transform, rewriter=self.agent, rewrite_cost=0.0))
+            self.rules.add(partial(OperatorFusion.transform, rewriter=self.agent))
         self.plan_candidates = []
 
     def clear(self):
@@ -141,18 +142,18 @@ class LogicalOptimizer:
                 return
         reset_datasources(plan)
     
-    def estimate_plan_cost(self, plan: LineageNode, ground_truth: pd.DataFrame = None):
+    async def estimate_plan_cost(self, plan: LineageNode, ground_truth: pd.DataFrame = None):
         try:
-            results, token_cost, exec_time = execute_along_lineage(plan)
+            results, token_cost, exec_time = await execute_node(plan)
         except Exception as e:
             return None, 0.0, 0.0, 0.0
         if ground_truth is None:
             accuracy_score = 1.0
         else:
-            accuracy_score = Evaluator.evaluate(ground_truth, results, self.agent)
+            accuracy_score = await Evaluator.evaluate(ground_truth, results, self.agent)
         return results, accuracy_score, token_cost, exec_time
     
-    def optimize(self, initial_plan: LineageNode, dev_datasets: list | None = None, num_samples: int = 10):
+    async def _optimize(self, initial_plan: LineageNode, dev_datasets: list | None = None, num_samples: int = 10):
         round = 0
         optimize_cost = 0.0
         optimize_start_time = time.time()
@@ -164,12 +165,13 @@ class LogicalOptimizer:
         )
         
         # 1. get the data processing ground truth by executing the initial plan on the validation set
-        groundtruth, accuracy_score, token_cost, exec_time = self.estimate_plan_cost(initial_plan)
+        groundtruth, accuracy_score, token_cost, exec_time = await self.estimate_plan_cost(initial_plan)
         init_plan_cost = PlanCost(initial_plan, set(), accuracy_score, token_cost, exec_time)
         self.plan_candidates.append(init_plan_cost)
 
         # 2. optimize the plan
         while round < self.max_round:
+            logger.info(f"Round {round + 1} of logical optimization is started.")
             # 2.1. sample a plan from the candidate list
             cand_plan_cost = self.sample_from_candidates()
 
@@ -180,11 +182,12 @@ class LogicalOptimizer:
                 continue
 
             selected_rule = np.random.choice(list(applicable_rules))
-            optimized_plan, cost_per_rewrite = selected_rule(cand_plan_cost.plan)
+            logger.info(f"{selected_rule}")
+            optimized_plan, cost_per_rewrite = await selected_rule(cand_plan_cost.plan)
             optimize_cost += cost_per_rewrite
 
             # 2.3. compare the results with the ground truth
-            _, accuracy_score, token_cost, exec_time = self.estimate_plan_cost(optimized_plan, groundtruth)
+            _, accuracy_score, token_cost, exec_time = await self.estimate_plan_cost(optimized_plan, groundtruth)
             applied_rules = cand_plan_cost.rules.union({selected_rule})
             plan_cost = PlanCost(optimized_plan, applied_rules, accuracy_score, token_cost, exec_time)
             self.plan_candidates.append(plan_cost)
@@ -203,3 +206,11 @@ class LogicalOptimizer:
         logger.info(f"initial plan runtime: {init_plan_cost.runtime} -> optimized plan runtime: {best_plan.runtime}")
         logger.info(f"initial plan accuracy: {init_plan_cost.accuracy} -> optimized plan accuracy: {best_plan.accuracy}")        
         return best_plan.plan
+
+    def optimize(
+        self,
+        plan: LineageNode,
+        dev_datasets: list | None = None,
+        num_samples: int = 10,
+    ):
+        return asyncio.run(self._optimize(plan, dev_datasets, num_samples))

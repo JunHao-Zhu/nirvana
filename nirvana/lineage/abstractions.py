@@ -205,30 +205,21 @@ def collect_op_metadata(op_node: LineageNode, max_instruction_print_length: int 
     return ""
 
 
-def execute_along_lineage(leaf_node: LineageNode):
-    def _execute_node(node: LineageNode, token_cost: float) -> tuple[pd.DataFrame, float]:
-        if node.left_child:
-            left_node_output, cost_from_left_subtree = _execute_node(node.left_child, token_cost)
-        if node.right_child:
-            right_node_output, cost_from_right_subtree = _execute_node(node.right_child, token_cost)
-        
-        if node.op_name == "scan":
-            node_output = asyncio.run(node.run())
-            accumulated_cost = node_output.cost
-            return node_output.output, accumulated_cost
-        
-        elif node.op_name == "join":
-            node_output = asyncio.run(node.run([left_node_output, right_node_output]))
-            accumulated_cost = cost_from_left_subtree + cost_from_right_subtree + node_output.cost
-            return node_output.output, accumulated_cost
-        
-        else:
-            node_output = asyncio.run(node.run(left_node_output))
-            accumulated_cost = cost_from_left_subtree + node_output.cost
-            return node_output.output, accumulated_cost
+async def execute_node(node: LineageNode) -> tuple[pd.DataFrame, float]:
+    if node.left_child:
+        left_node_output, cost_from_left_subtree = await execute_node(node.left_child)
+    if node.right_child:
+        right_node_output, cost_from_right_subtree = await execute_node(node.right_child)
     
-    execution_start_time = time.time()
-    output_from_lineage, total_token_cost = _execute_node(leaf_node, 0.0)
-    execution_end_time = time.time()
-    execution_time = execution_end_time - execution_start_time
-    return output_from_lineage, total_token_cost, execution_time
+    if node.op_name == "scan":
+        node_output = await node.run()
+        accumulated_cost = node_output.cost
+        return node_output.output, accumulated_cost
+    elif node.op_name == "join":
+        node_output = await node.run([left_node_output, right_node_output])
+        accumulated_cost = cost_from_left_subtree + cost_from_right_subtree + node_output.cost  
+        return node_output.output, accumulated_cost
+    else:
+        node_output = await node.run(left_node_output)
+        accumulated_cost = cost_from_left_subtree + node_output.cost
+        return node_output.output, accumulated_cost

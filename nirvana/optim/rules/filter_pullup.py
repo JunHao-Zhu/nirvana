@@ -52,6 +52,6 @@ class FilterPullup:
             return node, pullup_filters
     
     @classmethod
-    def transform(cls, node: LineageNode) -> tuple[LineageNode, float]:
+    async def transform(cls, node: LineageNode) -> tuple[LineageNode, float]:
         node, _ = cls.pull_up(node)
         return node, 0.0
