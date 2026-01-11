@@ -2,7 +2,7 @@
 
 The Rank operation ranks records in a column of input data based on a natural language condition.
 
-## Operation Class
+## Core Implementation
 
 ::: nirvana.ops.rank.RankOperation
     options:
@@ -10,6 +10,7 @@ The Rank operation ranks records in a column of input data based on a natural la
       show_source: true
       show_signature_annotations: true
       members_order: source
+      docstring_style: google
 
 ## Output Class
 
@@ -18,6 +19,7 @@ The Rank operation ranks records in a column of input data based on a natural la
       show_root_heading: true
       show_source: true
       show_signature_annotations: true
+      docstring_style: google
 
 ## Function Wrapper
 
@@ -27,3 +29,4 @@ The Rank operation ranks records in a column of input data based on a natural la
       show_source: true
       show_signature_annotations: true
       separate_signature: true
+      docstring_style: google

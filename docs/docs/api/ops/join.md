@@ -2,7 +2,7 @@
 
 The Join operation joins two tables by keeping tuple pairs that satisfy a natural language condition.
 
-## Operation Class
+## Core Implementation
 
 ::: nirvana.ops.join.JoinOperation
     options:
@@ -10,6 +10,7 @@ The Join operation joins two tables by keeping tuple pairs that satisfy a natura
       show_source: true
       show_signature_annotations: true
       members_order: source
+      docstring_style: google
 
 ## Output Class
 
@@ -18,6 +19,7 @@ The Join operation joins two tables by keeping tuple pairs that satisfy a natura
       show_root_heading: true
       show_source: true
       show_signature_annotations: true
+      docstring_style: google
 
 ## Function Wrapper
 
@@ -27,3 +29,4 @@ The Join operation joins two tables by keeping tuple pairs that satisfy a natura
       show_source: true
       show_signature_annotations: true
       separate_signature: true
+      docstring_style: google

@@ -21,6 +21,7 @@ The Filter operator evaluates an NL condition on each item in a column.
       show_root_heading: true
       show_source: true
       show_signature_annotations: true
+      docstring_style: google
 
 ## Function Wrapper
 
@@ -30,3 +31,4 @@ The Filter operator evaluates an NL condition on each item in a column.
       show_source: true
       show_signature_annotations: true
       separate_signature: true
+      docstring_style: google

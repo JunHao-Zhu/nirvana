@@ -2,7 +2,7 @@
 
 The Reduce operation aggregates multiple values in a given column into a single result according to the user's instruction.
 
-## Operation Class
+## Core Implementation
 
 ::: nirvana.ops.reduce.ReduceOperation
     options:
@@ -10,6 +10,7 @@ The Reduce operation aggregates multiple values in a given column into a single 
       show_source: true
       show_signature_annotations: true
       members_order: source
+      docstring_style: google
 
 ## Output Class
 
@@ -18,6 +19,7 @@ The Reduce operation aggregates multiple values in a given column into a single 
       show_root_heading: true
       show_source: true
       show_signature_annotations: true
+      docstring_style: google
 
 ## Function Wrapper
 
@@ -27,3 +29,4 @@ The Reduce operation aggregates multiple values in a given column into a single 
       show_source: true
       show_signature_annotations: true
       separate_signature: true
+      docstring_style: google
