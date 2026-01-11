@@ -1,5 +1,27 @@
 # Tools
 
+## BaseTool
+
+::: nirvana.executors.tools.BaseTool
+    options:
+      show_root_heading: true
+      show_source: true
+      show_signature_annotations: true
+
 ## FunctionCallTool
 
-This is a tool that evaluates python code. It can be used to perform computations and relational operations.
+::: nirvana.executors.tools.FunctionCallTool
+    options:
+      show_root_heading: true
+      show_source: true
+      show_signature_annotations: true
+      members_order: source
+
+## PythonInterpreterTool
+
+::: nirvana.executors.tools.PythonInterpreterTool
+    options:
+      show_root_heading: true
+      show_source: true
+      show_signature_annotations: true
+      members_order: source

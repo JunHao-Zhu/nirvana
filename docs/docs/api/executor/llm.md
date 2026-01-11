@@ -4,9 +4,17 @@ Nirvana provides a unified interface for LLMs.
 
 ## LLMArguments
 
-The LLMArguments class defines the arguments for LLMs.
+::: nirvana.executors.llm_backbone.LLMArguments
+    options:
+      show_root_heading: true
+      show_source: true
+      show_signature_annotations: true
 
 ## LLMClient
 
-The LLMClient is a unified interface for LLMs, which can be used to access different LLMs. Futhermore, it provides functionalities of LLM response parsing and token cost computation.
-
+::: nirvana.executors.llm_backbone.LLMClient
+    options:
+      show_root_heading: true
+      show_source: true
+      show_signature_annotations: true
+      members_order: source

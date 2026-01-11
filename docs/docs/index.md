@@ -60,14 +60,13 @@ Suppose that you have only a simple semantic processing task on hand, for which 
             "When the menace known as the Joker wreaks havoc and chaos on the people of Gotham, Batman must accept one of the greatest psychological and physical tests of his ability to fight injustice."
         ]
     })
-    nv.ops.map(df, "According to the movie overview, extract the genre of each movie.", input_column="overview", output_columns = ["genre"], strategy="plain")
+    nv.ops.map(df, "According to the movie overview, extract the genre of each movie.", input_columns=["overview"], output_columns = ["genre"], strategy="plain")
     ```
 
     **Possible Output:**
     ```text
     MapOpOutputs(
-        field_name = ["genre"],
-        output = {"genre": ["crime, drama", "action, thriller, superhero"]}
+        outputs = {"genre": ["crime, drama", "action, thriller, superhero"]}
     )
     ```
 
@@ -80,13 +79,13 @@ If you have a complex semantic query over large datasets on hand, you probabily 
 !!! info ""
     ```python linenums="1"
     movie = nv.DataFrame.from_external_file("/testdata/movie_data.csv")
-    movie.semantic_map(user_instruction="According to the movie overview, extract the genre of each movie.", input_column="Overview", output_column="Genre")
-    movie.semantic_filter(user_instruction="The rating is higher than 7.", input_column="IMDB_Rating")
-    movie.semantic_filter(user_instruction="The rating is lower than 8.", input_column="IMDB_Rating")
-    movie.semantic_filter(user_instruction="The movie is a crime movie.", input_column="Genre")
+    movie.semantic_map(user_instruction="According to the movie overview, extract the genre of each movie.", input_columns=["Overview"], output_columns=["Genre"])
+    movie.semantic_filter(user_instruction="The rating is higher than 7.", input_columns=["IMDB_Rating"])
+    movie.semantic_filter(user_instruction="The rating is lower than 8.", input_columns=["IMDB_Rating"])
+    movie.semantic_filter(user_instruction="The movie is a crime movie.", input_columns=["Genre"])
     movie.semantic_reduce(user_instruction="Summerize the common plot structure of these high-rated crime movies.", input_column="Overview")
 
-    config = nv.optim.OptimizeConfig(do_logical_optimization=True, do_physical_optimization=True)
+    config = nv.optim.OptimizeConfig(do_logical_optimization=True, do_physical_optimization=True, max_rounds=5, num_samples=5, improve_margin=0.2)
     result, cost, runtime = df.optimize_and_execute(optim_config=config)
     ```
 For details and usages of query optimization refers to [optimization](https://github.com/JunHao-Zhu/nirvana/api/optimizer/)
