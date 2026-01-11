@@ -861,6 +861,34 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#basetool" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        BaseTool
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="BaseTool">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#nirvana.executors.tools.BaseTool" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        BaseTool
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#functioncalltool" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -868,6 +896,51 @@
       
     </span>
   </a>
+  
+    <nav class="md-nav" aria-label="FunctionCallTool">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#nirvana.executors.tools.FunctionCallTool" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        FunctionCallTool
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#pythoninterpretertool" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        PythonInterpreterTool
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="PythonInterpreterTool">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#nirvana.executors.tools.PythonInterpreterTool" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        PythonInterpreterTool
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -1171,6 +1244,34 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#basetool" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        BaseTool
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="BaseTool">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#nirvana.executors.tools.BaseTool" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        BaseTool
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#functioncalltool" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1178,6 +1279,51 @@
       
     </span>
   </a>
+  
+    <nav class="md-nav" aria-label="FunctionCallTool">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#nirvana.executors.tools.FunctionCallTool" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        FunctionCallTool
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#pythoninterpretertool" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        PythonInterpreterTool
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="PythonInterpreterTool">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#nirvana.executors.tools.PythonInterpreterTool" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        PythonInterpreterTool
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -1202,8 +1348,778 @@
 
 
 <h1 id="tools">Tools<a class="headerlink" href="#tools" title="Permanent link">&para;</a></h1>
-<h2 id="functioncalltool">FunctionCallTool<a class="headerlink" href="#functioncalltool" title="Permanent link">&para;</a></h2>
-<p>This is a tool that evaluates python code. It can be used to perform computations and relational operations.</p>
+<h2 id="basetool">BaseTool<a class="headerlink" href="#basetool" title="Permanent link">&para;</a></h2>
+
+
+<div class="doc doc-object doc-class">
+
+
+
+<h3 id="nirvana.executors.tools.BaseTool" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-class"></code>              <code class="highlight language-python"><span class="n">nirvana</span><span class="o">.</span><span class="n">executors</span><span class="o">.</span><span class="n">tools</span><span class="o">.</span><span class="n">BaseTool</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></code>
+
+<a href="#nirvana.executors.tools.BaseTool" class="headerlink" title="Permanent link">&para;</a></h3>
+
+
+    <div class="doc doc-contents first">
+            <p class="doc doc-class-bases">
+              Bases: <code><span title="abc.ABC">ABC</span></code></p>
+
+
+
+
+
+
+
+
+
+
+                  <details class="mkdocstrings-source">
+                    <summary>Source code in <code>nirvana/executors/tools.py</code></summary>
+                    <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-61">61</a></span>
+<span class="normal"><a href="#__codelineno-0-62">62</a></span>
+<span class="normal"><a href="#__codelineno-0-63">63</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-61" name="__codelineno-0-61"></a><span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<a id="__codelineno-0-62" name="__codelineno-0-62"></a>    <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+<a id="__codelineno-0-63" name="__codelineno-0-63"></a>        <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+</code></pre></div></td></tr></table></div>
+                  </details>
+
+
+
+<div class="doc doc-children">
+
+
+
+
+
+<h4 id="nirvana.executors.tools.BaseTool-attributes">Attributes<a href="#nirvana.executors.tools.BaseTool-attributes" class="headerlink" title="Permanent link">&para;</a></h4>
+
+<div class="doc doc-object doc-attribute">
+
+
+
+<h5 id="nirvana.executors.tools.BaseTool.name" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-attribute"></code>            <code class="highlight language-python"><span class="n">name</span><span class="p">:</span> <span class="nb">str</span></code>
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-instance-attribute"><code>instance-attribute</code></small>
+  </span>
+
+<a href="#nirvana.executors.tools.BaseTool.name" class="headerlink" title="Permanent link">&para;</a></h5>
+
+
+    <div class="doc doc-contents ">
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-attribute">
+
+
+
+<h5 id="nirvana.executors.tools.BaseTool.description" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-attribute"></code>            <code class="highlight language-python"><span class="n">description</span><span class="p">:</span> <span class="nb">str</span></code>
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-instance-attribute"><code>instance-attribute</code></small>
+  </span>
+
+<a href="#nirvana.executors.tools.BaseTool.description" class="headerlink" title="Permanent link">&para;</a></h5>
+
+
+    <div class="doc doc-contents ">
+
+    </div>
+
+</div>
+
+
+<h4 id="nirvana.executors.tools.BaseTool-functions">Functions<a href="#nirvana.executors.tools.BaseTool-functions" class="headerlink" title="Permanent link">&para;</a></h4>
+
+<div class="doc doc-object doc-function">
+
+
+<h5 id="nirvana.executors.tools.BaseTool.__call__" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-method"></code>            <code class="highlight language-python"><span class="fm">__call__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwds</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span></code>
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-abstractmethod"><code>abstractmethod</code></small>
+  </span>
+
+<a href="#nirvana.executors.tools.BaseTool.__call__" class="headerlink" title="Permanent link">&para;</a></h5>
+
+
+    <div class="doc doc-contents ">
+
+
+            <details class="mkdocstrings-source">
+              <summary>Source code in <code>nirvana/executors/tools.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-65">65</a></span>
+<span class="normal"><a href="#__codelineno-0-66">66</a></span>
+<span class="normal"><a href="#__codelineno-0-67">67</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-65" name="__codelineno-0-65"></a><span class="nd">@abstractmethod</span>
+<a id="__codelineno-0-66" name="__codelineno-0-66"></a><span class="k">def</span><span class="w"> </span><span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwds</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
+<a id="__codelineno-0-67" name="__codelineno-0-67"></a>    <span class="k">pass</span>
+</code></pre></div></td></tr></table></div>
+            </details>
+    </div>
+
+</div>
+
+
+
+  </div>
+
+    </div>
+
+</div><h2 id="functioncalltool">FunctionCallTool<a class="headerlink" href="#functioncalltool" title="Permanent link">&para;</a></h2>
+
+
+<div class="doc doc-object doc-class">
+
+
+
+<h3 id="nirvana.executors.tools.FunctionCallTool" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-class"></code>              <code class="highlight language-python"><span class="n">nirvana</span><span class="o">.</span><span class="n">executors</span><span class="o">.</span><span class="n">tools</span><span class="o">.</span><span class="n">FunctionCallTool</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">func</span><span class="p">:</span> <span class="n">Callable</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">coroutine</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">Awaitable</span><span class="p">[</span><span class="n">Any</span><span class="p">]]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></code>
+
+<a href="#nirvana.executors.tools.FunctionCallTool" class="headerlink" title="Permanent link">&para;</a></h3>
+
+
+    <div class="doc doc-contents first">
+            <p class="doc doc-class-bases">
+              Bases: <code><a class="autorefs autorefs-internal" title="              nirvana.executors.tools.BaseTool(**kwargs) (nirvana.executors.tools.BaseTool)" href="#nirvana.executors.tools.BaseTool">BaseTool</a></code></p>
+
+
+
+
+
+
+
+
+
+
+                  <details class="mkdocstrings-source">
+                    <summary>Source code in <code>nirvana/executors/tools.py</code></summary>
+                    <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-172">172</a></span>
+<span class="normal"><a href="#__codelineno-0-173">173</a></span>
+<span class="normal"><a href="#__codelineno-0-174">174</a></span>
+<span class="normal"><a href="#__codelineno-0-175">175</a></span>
+<span class="normal"><a href="#__codelineno-0-176">176</a></span>
+<span class="normal"><a href="#__codelineno-0-177">177</a></span>
+<span class="normal"><a href="#__codelineno-0-178">178</a></span>
+<span class="normal"><a href="#__codelineno-0-179">179</a></span>
+<span class="normal"><a href="#__codelineno-0-180">180</a></span>
+<span class="normal"><a href="#__codelineno-0-181">181</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-172" name="__codelineno-0-172"></a><span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+<a id="__codelineno-0-173" name="__codelineno-0-173"></a>    <span class="bp">self</span><span class="p">,</span>
+<a id="__codelineno-0-174" name="__codelineno-0-174"></a>    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<a id="__codelineno-0-175" name="__codelineno-0-175"></a>    <span class="n">func</span><span class="p">:</span> <span class="n">Callable</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<a id="__codelineno-0-176" name="__codelineno-0-176"></a>    <span class="n">coroutine</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">Awaitable</span><span class="p">[</span><span class="n">Any</span><span class="p">]]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<a id="__codelineno-0-177" name="__codelineno-0-177"></a>    <span class="o">**</span><span class="n">kwargs</span>
+<a id="__codelineno-0-178" name="__codelineno-0-178"></a><span class="p">):</span>
+<a id="__codelineno-0-179" name="__codelineno-0-179"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
+<a id="__codelineno-0-180" name="__codelineno-0-180"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">func</span> <span class="o">=</span> <span class="n">func</span>
+<a id="__codelineno-0-181" name="__codelineno-0-181"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">coroutine</span> <span class="o">=</span> <span class="n">coroutine</span>
+</code></pre></div></td></tr></table></div>
+                  </details>
+
+
+
+<div class="doc doc-children">
+
+
+
+
+
+<h4 id="nirvana.executors.tools.FunctionCallTool-attributes">Attributes<a href="#nirvana.executors.tools.FunctionCallTool-attributes" class="headerlink" title="Permanent link">&para;</a></h4>
+
+<div class="doc doc-object doc-attribute">
+
+
+
+<h5 id="nirvana.executors.tools.FunctionCallTool.description" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-attribute"></code>            <code class="highlight language-python"><span class="n">description</span> <span class="o">=</span> <span class="s1">&#39;This is a tool that evaluates python code. It can be used to perform calculations.&#39;</span></code>
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-class-attribute"><code>class-attribute</code></small>
+      <small class="doc doc-label doc-label-instance-attribute"><code>instance-attribute</code></small>
+  </span>
+
+<a href="#nirvana.executors.tools.FunctionCallTool.description" class="headerlink" title="Permanent link">&para;</a></h5>
+
+
+    <div class="doc doc-contents ">
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-attribute">
+
+
+
+<h5 id="nirvana.executors.tools.FunctionCallTool.name" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-attribute"></code>            <code class="highlight language-python"><span class="n">name</span> <span class="o">=</span> <span class="n">name</span></code>
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-instance-attribute"><code>instance-attribute</code></small>
+  </span>
+
+<a href="#nirvana.executors.tools.FunctionCallTool.name" class="headerlink" title="Permanent link">&para;</a></h5>
+
+
+    <div class="doc doc-contents ">
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-attribute">
+
+
+
+<h5 id="nirvana.executors.tools.FunctionCallTool.func" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-attribute"></code>            <code class="highlight language-python"><span class="n">func</span> <span class="o">=</span> <span class="n">func</span></code>
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-instance-attribute"><code>instance-attribute</code></small>
+  </span>
+
+<a href="#nirvana.executors.tools.FunctionCallTool.func" class="headerlink" title="Permanent link">&para;</a></h5>
+
+
+    <div class="doc doc-contents ">
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-attribute">
+
+
+
+<h5 id="nirvana.executors.tools.FunctionCallTool.coroutine" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-attribute"></code>            <code class="highlight language-python"><span class="n">coroutine</span> <span class="o">=</span> <span class="n">coroutine</span></code>
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-instance-attribute"><code>instance-attribute</code></small>
+  </span>
+
+<a href="#nirvana.executors.tools.FunctionCallTool.coroutine" class="headerlink" title="Permanent link">&para;</a></h5>
+
+
+    <div class="doc doc-contents ">
+
+    </div>
+
+</div>
+
+
+<h4 id="nirvana.executors.tools.FunctionCallTool-functions">Functions<a href="#nirvana.executors.tools.FunctionCallTool-functions" class="headerlink" title="Permanent link">&para;</a></h4>
+
+<div class="doc doc-object doc-function">
+
+
+<h5 id="nirvana.executors.tools.FunctionCallTool.__repr__" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-method"></code>            <code class="highlight language-python"><span class="fm">__repr__</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">str</span></code>
+
+<a href="#nirvana.executors.tools.FunctionCallTool.__repr__" class="headerlink" title="Permanent link">&para;</a></h5>
+
+
+    <div class="doc doc-contents ">
+
+
+            <details class="mkdocstrings-source">
+              <summary>Source code in <code>nirvana/executors/tools.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-183">183</a></span>
+<span class="normal"><a href="#__codelineno-0-184">184</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-183" name="__codelineno-0-183"></a><span class="k">def</span><span class="w"> </span><span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<a id="__codelineno-0-184" name="__codelineno-0-184"></a>    <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;FunctionCall(name=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">)&quot;</span>
+</code></pre></div></td></tr></table></div>
+            </details>
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h5 id="nirvana.executors.tools.FunctionCallTool.__str__" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-method"></code>            <code class="highlight language-python"><span class="fm">__str__</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">str</span></code>
+
+<a href="#nirvana.executors.tools.FunctionCallTool.__str__" class="headerlink" title="Permanent link">&para;</a></h5>
+
+
+    <div class="doc doc-contents ">
+
+
+            <details class="mkdocstrings-source">
+              <summary>Source code in <code>nirvana/executors/tools.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-186">186</a></span>
+<span class="normal"><a href="#__codelineno-0-187">187</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-186" name="__codelineno-0-186"></a><span class="k">def</span><span class="w"> </span><span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<a id="__codelineno-0-187" name="__codelineno-0-187"></a>    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="fm">__repr__</span><span class="p">()</span>
+</code></pre></div></td></tr></table></div>
+            </details>
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h5 id="nirvana.executors.tools.FunctionCallTool.from_function" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-method"></code>            <code class="highlight language-python"><span class="n">from_function</span><span class="p">(</span><span class="n">func</span><span class="p">:</span> <span class="n">Callable</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">coroutine</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">Awaitable</span><span class="p">[</span><span class="n">Any</span><span class="p">]]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span></code>
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-classmethod"><code>classmethod</code></small>
+  </span>
+
+<a href="#nirvana.executors.tools.FunctionCallTool.from_function" class="headerlink" title="Permanent link">&para;</a></h5>
+
+
+    <div class="doc doc-contents ">
+
+
+            <details class="mkdocstrings-source">
+              <summary>Source code in <code>nirvana/executors/tools.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-189">189</a></span>
+<span class="normal"><a href="#__codelineno-0-190">190</a></span>
+<span class="normal"><a href="#__codelineno-0-191">191</a></span>
+<span class="normal"><a href="#__codelineno-0-192">192</a></span>
+<span class="normal"><a href="#__codelineno-0-193">193</a></span>
+<span class="normal"><a href="#__codelineno-0-194">194</a></span>
+<span class="normal"><a href="#__codelineno-0-195">195</a></span>
+<span class="normal"><a href="#__codelineno-0-196">196</a></span>
+<span class="normal"><a href="#__codelineno-0-197">197</a></span>
+<span class="normal"><a href="#__codelineno-0-198">198</a></span>
+<span class="normal"><a href="#__codelineno-0-199">199</a></span>
+<span class="normal"><a href="#__codelineno-0-200">200</a></span>
+<span class="normal"><a href="#__codelineno-0-201">201</a></span>
+<span class="normal"><a href="#__codelineno-0-202">202</a></span>
+<span class="normal"><a href="#__codelineno-0-203">203</a></span>
+<span class="normal"><a href="#__codelineno-0-204">204</a></span>
+<span class="normal"><a href="#__codelineno-0-205">205</a></span>
+<span class="normal"><a href="#__codelineno-0-206">206</a></span>
+<span class="normal"><a href="#__codelineno-0-207">207</a></span>
+<span class="normal"><a href="#__codelineno-0-208">208</a></span>
+<span class="normal"><a href="#__codelineno-0-209">209</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-189" name="__codelineno-0-189"></a><span class="nd">@classmethod</span>
+<a id="__codelineno-0-190" name="__codelineno-0-190"></a><span class="k">def</span><span class="w"> </span><span class="nf">from_function</span><span class="p">(</span>
+<a id="__codelineno-0-191" name="__codelineno-0-191"></a>    <span class="bp">cls</span><span class="p">,</span>
+<a id="__codelineno-0-192" name="__codelineno-0-192"></a>    <span class="n">func</span><span class="p">:</span> <span class="n">Callable</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<a id="__codelineno-0-193" name="__codelineno-0-193"></a>    <span class="n">coroutine</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">Awaitable</span><span class="p">[</span><span class="n">Any</span><span class="p">]]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<a id="__codelineno-0-194" name="__codelineno-0-194"></a>    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<a id="__codelineno-0-195" name="__codelineno-0-195"></a><span class="p">):</span>
+<a id="__codelineno-0-196" name="__codelineno-0-196"></a>    <span class="k">if</span> <span class="n">func</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+<a id="__codelineno-0-197" name="__codelineno-0-197"></a>        <span class="n">func</span> <span class="o">=</span> <span class="n">func</span>
+<a id="__codelineno-0-198" name="__codelineno-0-198"></a>    <span class="k">elif</span> <span class="n">coroutine</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+<a id="__codelineno-0-199" name="__codelineno-0-199"></a>        <span class="n">func</span> <span class="o">=</span> <span class="n">coroutine</span>
+<a id="__codelineno-0-200" name="__codelineno-0-200"></a>    <span class="k">else</span><span class="p">:</span>
+<a id="__codelineno-0-201" name="__codelineno-0-201"></a>        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Either `func` or `coroutine` must be provided.&quot;</span><span class="p">)</span>
+<a id="__codelineno-0-202" name="__codelineno-0-202"></a>
+<a id="__codelineno-0-203" name="__codelineno-0-203"></a>    <span class="n">name</span> <span class="o">=</span> <span class="n">name</span> <span class="ow">or</span> <span class="n">func</span><span class="o">.</span><span class="vm">__name__</span>
+<a id="__codelineno-0-204" name="__codelineno-0-204"></a>
+<a id="__codelineno-0-205" name="__codelineno-0-205"></a>    <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span>
+<a id="__codelineno-0-206" name="__codelineno-0-206"></a>        <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span>
+<a id="__codelineno-0-207" name="__codelineno-0-207"></a>        <span class="n">func</span><span class="o">=</span><span class="n">func</span><span class="p">,</span>
+<a id="__codelineno-0-208" name="__codelineno-0-208"></a>        <span class="n">coroutine</span><span class="o">=</span><span class="n">coroutine</span>
+<a id="__codelineno-0-209" name="__codelineno-0-209"></a>    <span class="p">)</span>
+</code></pre></div></td></tr></table></div>
+            </details>
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h5 id="nirvana.executors.tools.FunctionCallTool.__call__" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-method"></code>            <code class="highlight language-python"><span class="fm">__call__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></code>
+
+<a href="#nirvana.executors.tools.FunctionCallTool.__call__" class="headerlink" title="Permanent link">&para;</a></h5>
+
+
+    <div class="doc doc-contents ">
+
+
+            <details class="mkdocstrings-source">
+              <summary>Source code in <code>nirvana/executors/tools.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-217">217</a></span>
+<span class="normal"><a href="#__codelineno-0-218">218</a></span>
+<span class="normal"><a href="#__codelineno-0-219">219</a></span>
+<span class="normal"><a href="#__codelineno-0-220">220</a></span>
+<span class="normal"><a href="#__codelineno-0-221">221</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-217" name="__codelineno-0-217"></a><span class="k">def</span><span class="w"> </span><span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<a id="__codelineno-0-218" name="__codelineno-0-218"></a>    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">func</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+<a id="__codelineno-0-219" name="__codelineno-0-219"></a>        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_run</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+<a id="__codelineno-0-220" name="__codelineno-0-220"></a>    <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">coroutine</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+<a id="__codelineno-0-221" name="__codelineno-0-221"></a>        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_arun</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+</code></pre></div></td></tr></table></div>
+            </details>
+    </div>
+
+</div>
+
+
+
+  </div>
+
+    </div>
+
+</div><h2 id="pythoninterpretertool">PythonInterpreterTool<a class="headerlink" href="#pythoninterpretertool" title="Permanent link">&para;</a></h2>
+
+
+<div class="doc doc-object doc-class">
+
+
+
+<h3 id="nirvana.executors.tools.PythonInterpreterTool" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-class"></code>              <code class="highlight language-python"><span class="n">nirvana</span><span class="o">.</span><span class="n">executors</span><span class="o">.</span><span class="n">tools</span><span class="o">.</span><span class="n">PythonInterpreterTool</span><span class="p">(</span><span class="n">authorized_imports</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">max_print_outputs_length</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">50000</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></code>
+
+<a href="#nirvana.executors.tools.PythonInterpreterTool" class="headerlink" title="Permanent link">&para;</a></h3>
+
+
+    <div class="doc doc-contents first">
+            <p class="doc doc-class-bases">
+              Bases: <code><a class="autorefs autorefs-internal" title="              nirvana.executors.tools.BaseTool(**kwargs) (nirvana.executors.tools.BaseTool)" href="#nirvana.executors.tools.BaseTool">BaseTool</a></code></p>
+
+
+
+
+
+
+
+
+
+
+                  <details class="mkdocstrings-source">
+                    <summary>Source code in <code>nirvana/executors/tools.py</code></summary>
+                    <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-74">74</a></span>
+<span class="normal"><a href="#__codelineno-0-75">75</a></span>
+<span class="normal"><a href="#__codelineno-0-76">76</a></span>
+<span class="normal"><a href="#__codelineno-0-77">77</a></span>
+<span class="normal"><a href="#__codelineno-0-78">78</a></span>
+<span class="normal"><a href="#__codelineno-0-79">79</a></span>
+<span class="normal"><a href="#__codelineno-0-80">80</a></span>
+<span class="normal"><a href="#__codelineno-0-81">81</a></span>
+<span class="normal"><a href="#__codelineno-0-82">82</a></span>
+<span class="normal"><a href="#__codelineno-0-83">83</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-74" name="__codelineno-0-74"></a><span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+<a id="__codelineno-0-75" name="__codelineno-0-75"></a>    <span class="bp">self</span><span class="p">,</span>
+<a id="__codelineno-0-76" name="__codelineno-0-76"></a>    <span class="n">authorized_imports</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<a id="__codelineno-0-77" name="__codelineno-0-77"></a>    <span class="n">max_print_outputs_length</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">50_000</span><span class="p">,</span>
+<a id="__codelineno-0-78" name="__codelineno-0-78"></a>    <span class="o">**</span><span class="n">kwargs</span>
+<a id="__codelineno-0-79" name="__codelineno-0-79"></a><span class="p">):</span>
+<a id="__codelineno-0-80" name="__codelineno-0-80"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">authorized_imports</span> <span class="o">=</span> <span class="n">authorized_imports</span> <span class="ow">or</span> <span class="p">[]</span>
+<a id="__codelineno-0-81" name="__codelineno-0-81"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">max_print_outputs_length</span> <span class="o">=</span> <span class="n">max_print_outputs_length</span>
+<a id="__codelineno-0-82" name="__codelineno-0-82"></a>    <span class="c1"># Prepare a minimal, safe builtins dict</span>
+<a id="__codelineno-0-83" name="__codelineno-0-83"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">_safe_builtins</span> <span class="o">=</span> <span class="n">DEFAULT_BUILTINS</span>
+</code></pre></div></td></tr></table></div>
+                  </details>
+
+
+
+<div class="doc doc-children">
+
+
+
+
+
+<h4 id="nirvana.executors.tools.PythonInterpreterTool-attributes">Attributes<a href="#nirvana.executors.tools.PythonInterpreterTool-attributes" class="headerlink" title="Permanent link">&para;</a></h4>
+
+<div class="doc doc-object doc-attribute">
+
+
+
+<h5 id="nirvana.executors.tools.PythonInterpreterTool.name" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-attribute"></code>            <code class="highlight language-python"><span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;python_interpreter&#39;</span></code>
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-class-attribute"><code>class-attribute</code></small>
+      <small class="doc doc-label doc-label-instance-attribute"><code>instance-attribute</code></small>
+  </span>
+
+<a href="#nirvana.executors.tools.PythonInterpreterTool.name" class="headerlink" title="Permanent link">&para;</a></h5>
+
+
+    <div class="doc doc-contents ">
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-attribute">
+
+
+
+<h5 id="nirvana.executors.tools.PythonInterpreterTool.description" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-attribute"></code>            <code class="highlight language-python"><span class="n">description</span> <span class="o">=</span> <span class="s1">&#39;Python Interpreter that runs code in a sandboxed environment&#39;</span></code>
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-class-attribute"><code>class-attribute</code></small>
+      <small class="doc doc-label doc-label-instance-attribute"><code>instance-attribute</code></small>
+  </span>
+
+<a href="#nirvana.executors.tools.PythonInterpreterTool.description" class="headerlink" title="Permanent link">&para;</a></h5>
+
+
+    <div class="doc doc-contents ">
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-attribute">
+
+
+
+<h5 id="nirvana.executors.tools.PythonInterpreterTool.authorized_imports" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-attribute"></code>            <code class="highlight language-python"><span class="n">authorized_imports</span> <span class="o">=</span> <span class="n">authorized_imports</span> <span class="ow">or</span> <span class="p">[]</span></code>
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-instance-attribute"><code>instance-attribute</code></small>
+  </span>
+
+<a href="#nirvana.executors.tools.PythonInterpreterTool.authorized_imports" class="headerlink" title="Permanent link">&para;</a></h5>
+
+
+    <div class="doc doc-contents ">
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-attribute">
+
+
+
+<h5 id="nirvana.executors.tools.PythonInterpreterTool.max_print_outputs_length" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-attribute"></code>            <code class="highlight language-python"><span class="n">max_print_outputs_length</span> <span class="o">=</span> <span class="n">max_print_outputs_length</span></code>
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-instance-attribute"><code>instance-attribute</code></small>
+  </span>
+
+<a href="#nirvana.executors.tools.PythonInterpreterTool.max_print_outputs_length" class="headerlink" title="Permanent link">&para;</a></h5>
+
+
+    <div class="doc doc-contents ">
+
+    </div>
+
+</div>
+
+
+<h4 id="nirvana.executors.tools.PythonInterpreterTool-functions">Functions<a href="#nirvana.executors.tools.PythonInterpreterTool-functions" class="headerlink" title="Permanent link">&para;</a></h4>
+
+<div class="doc doc-object doc-function">
+
+
+<h5 id="nirvana.executors.tools.PythonInterpreterTool.execute" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-method"></code>            <code class="highlight language-python"><span class="n">execute</span><span class="p">(</span><span class="n">code</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">variables</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span></code>
+
+<a href="#nirvana.executors.tools.PythonInterpreterTool.execute" class="headerlink" title="Permanent link">&para;</a></h5>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Execute Python code in a sandboxed environment.</p>
+<ul>
+<li>Captures anything printed via <code>print</code>.</li>
+<li>If the final statement is an expression and evaluates to a non-None
+  value, that value is printed (like a REPL).</li>
+<li>Returns the full captured stdout as a string (possibly truncated).</li>
+</ul>
+
+
+            <details class="mkdocstrings-source">
+              <summary>Source code in <code>nirvana/executors/tools.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-103">103</a></span>
+<span class="normal"><a href="#__codelineno-0-104">104</a></span>
+<span class="normal"><a href="#__codelineno-0-105">105</a></span>
+<span class="normal"><a href="#__codelineno-0-106">106</a></span>
+<span class="normal"><a href="#__codelineno-0-107">107</a></span>
+<span class="normal"><a href="#__codelineno-0-108">108</a></span>
+<span class="normal"><a href="#__codelineno-0-109">109</a></span>
+<span class="normal"><a href="#__codelineno-0-110">110</a></span>
+<span class="normal"><a href="#__codelineno-0-111">111</a></span>
+<span class="normal"><a href="#__codelineno-0-112">112</a></span>
+<span class="normal"><a href="#__codelineno-0-113">113</a></span>
+<span class="normal"><a href="#__codelineno-0-114">114</a></span>
+<span class="normal"><a href="#__codelineno-0-115">115</a></span>
+<span class="normal"><a href="#__codelineno-0-116">116</a></span>
+<span class="normal"><a href="#__codelineno-0-117">117</a></span>
+<span class="normal"><a href="#__codelineno-0-118">118</a></span>
+<span class="normal"><a href="#__codelineno-0-119">119</a></span>
+<span class="normal"><a href="#__codelineno-0-120">120</a></span>
+<span class="normal"><a href="#__codelineno-0-121">121</a></span>
+<span class="normal"><a href="#__codelineno-0-122">122</a></span>
+<span class="normal"><a href="#__codelineno-0-123">123</a></span>
+<span class="normal"><a href="#__codelineno-0-124">124</a></span>
+<span class="normal"><a href="#__codelineno-0-125">125</a></span>
+<span class="normal"><a href="#__codelineno-0-126">126</a></span>
+<span class="normal"><a href="#__codelineno-0-127">127</a></span>
+<span class="normal"><a href="#__codelineno-0-128">128</a></span>
+<span class="normal"><a href="#__codelineno-0-129">129</a></span>
+<span class="normal"><a href="#__codelineno-0-130">130</a></span>
+<span class="normal"><a href="#__codelineno-0-131">131</a></span>
+<span class="normal"><a href="#__codelineno-0-132">132</a></span>
+<span class="normal"><a href="#__codelineno-0-133">133</a></span>
+<span class="normal"><a href="#__codelineno-0-134">134</a></span>
+<span class="normal"><a href="#__codelineno-0-135">135</a></span>
+<span class="normal"><a href="#__codelineno-0-136">136</a></span>
+<span class="normal"><a href="#__codelineno-0-137">137</a></span>
+<span class="normal"><a href="#__codelineno-0-138">138</a></span>
+<span class="normal"><a href="#__codelineno-0-139">139</a></span>
+<span class="normal"><a href="#__codelineno-0-140">140</a></span>
+<span class="normal"><a href="#__codelineno-0-141">141</a></span>
+<span class="normal"><a href="#__codelineno-0-142">142</a></span>
+<span class="normal"><a href="#__codelineno-0-143">143</a></span>
+<span class="normal"><a href="#__codelineno-0-144">144</a></span>
+<span class="normal"><a href="#__codelineno-0-145">145</a></span>
+<span class="normal"><a href="#__codelineno-0-146">146</a></span>
+<span class="normal"><a href="#__codelineno-0-147">147</a></span>
+<span class="normal"><a href="#__codelineno-0-148">148</a></span>
+<span class="normal"><a href="#__codelineno-0-149">149</a></span>
+<span class="normal"><a href="#__codelineno-0-150">150</a></span>
+<span class="normal"><a href="#__codelineno-0-151">151</a></span>
+<span class="normal"><a href="#__codelineno-0-152">152</a></span>
+<span class="normal"><a href="#__codelineno-0-153">153</a></span>
+<span class="normal"><a href="#__codelineno-0-154">154</a></span>
+<span class="normal"><a href="#__codelineno-0-155">155</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-103" name="__codelineno-0-103"></a><span class="k">def</span><span class="w"> </span><span class="nf">execute</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">code</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">variables</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<a id="__codelineno-0-104" name="__codelineno-0-104"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<a id="__codelineno-0-105" name="__codelineno-0-105"></a><span class="sd">    Execute Python code in a sandboxed environment.</span>
+<a id="__codelineno-0-106" name="__codelineno-0-106"></a>
+<a id="__codelineno-0-107" name="__codelineno-0-107"></a><span class="sd">    - Captures anything printed via `print`.</span>
+<a id="__codelineno-0-108" name="__codelineno-0-108"></a><span class="sd">    - If the final statement is an expression and evaluates to a non-None</span>
+<a id="__codelineno-0-109" name="__codelineno-0-109"></a><span class="sd">      value, that value is printed (like a REPL).</span>
+<a id="__codelineno-0-110" name="__codelineno-0-110"></a><span class="sd">    - Returns the full captured stdout as a string (possibly truncated).</span>
+<a id="__codelineno-0-111" name="__codelineno-0-111"></a><span class="sd">    &quot;&quot;&quot;</span>
+<a id="__codelineno-0-112" name="__codelineno-0-112"></a>    <span class="n">variables</span> <span class="o">=</span> <span class="n">variables</span> <span class="ow">or</span> <span class="p">{}</span>
+<a id="__codelineno-0-113" name="__codelineno-0-113"></a>
+<a id="__codelineno-0-114" name="__codelineno-0-114"></a>    <span class="c1"># Parse and validate the code first</span>
+<a id="__codelineno-0-115" name="__codelineno-0-115"></a>    <span class="k">try</span><span class="p">:</span>
+<a id="__codelineno-0-116" name="__codelineno-0-116"></a>        <span class="n">tree</span> <span class="o">=</span> <span class="n">ast</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="n">code</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;exec&quot;</span><span class="p">)</span>
+<a id="__codelineno-0-117" name="__codelineno-0-117"></a>    <span class="k">except</span> <span class="ne">SyntaxError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+<a id="__codelineno-0-118" name="__codelineno-0-118"></a>        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;SyntaxError: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span>
+<a id="__codelineno-0-119" name="__codelineno-0-119"></a>
+<a id="__codelineno-0-120" name="__codelineno-0-120"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">_validate_imports</span><span class="p">(</span><span class="n">tree</span><span class="p">)</span>
+<a id="__codelineno-0-121" name="__codelineno-0-121"></a>
+<a id="__codelineno-0-122" name="__codelineno-0-122"></a>    <span class="n">body</span> <span class="o">=</span> <span class="n">tree</span><span class="o">.</span><span class="n">body</span>
+<a id="__codelineno-0-123" name="__codelineno-0-123"></a>    <span class="n">pre_body</span> <span class="o">=</span> <span class="n">body</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="k">if</span> <span class="n">body</span> <span class="k">else</span> <span class="p">[]</span>
+<a id="__codelineno-0-124" name="__codelineno-0-124"></a>    <span class="n">last_stmt</span> <span class="o">=</span> <span class="n">body</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="k">if</span> <span class="n">body</span> <span class="k">else</span> <span class="kc">None</span>
+<a id="__codelineno-0-125" name="__codelineno-0-125"></a>
+<a id="__codelineno-0-126" name="__codelineno-0-126"></a>    <span class="n">stdout_buffer</span> <span class="o">=</span> <span class="n">io</span><span class="o">.</span><span class="n">StringIO</span><span class="p">()</span>
+<a id="__codelineno-0-127" name="__codelineno-0-127"></a>    <span class="n">globals_env</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;__builtins__&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_safe_builtins</span><span class="p">}</span>
+<a id="__codelineno-0-128" name="__codelineno-0-128"></a>    <span class="n">locals_env</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">variables</span><span class="p">)</span>
+<a id="__codelineno-0-129" name="__codelineno-0-129"></a>
+<a id="__codelineno-0-130" name="__codelineno-0-130"></a>    <span class="k">with</span> <span class="n">redirect_stdout</span><span class="p">(</span><span class="n">stdout_buffer</span><span class="p">):</span>
+<a id="__codelineno-0-131" name="__codelineno-0-131"></a>        <span class="c1"># Execute all but the last statement</span>
+<a id="__codelineno-0-132" name="__codelineno-0-132"></a>        <span class="k">if</span> <span class="n">pre_body</span><span class="p">:</span>
+<a id="__codelineno-0-133" name="__codelineno-0-133"></a>            <span class="n">pre_module</span> <span class="o">=</span> <span class="n">ast</span><span class="o">.</span><span class="n">Module</span><span class="p">(</span><span class="n">body</span><span class="o">=</span><span class="n">pre_body</span><span class="p">,</span> <span class="n">type_ignores</span><span class="o">=</span><span class="p">[])</span>
+<a id="__codelineno-0-134" name="__codelineno-0-134"></a>            <span class="n">exec</span><span class="p">(</span><span class="nb">compile</span><span class="p">(</span><span class="n">pre_module</span><span class="p">,</span> <span class="s2">&quot;&lt;sandbox&gt;&quot;</span><span class="p">,</span> <span class="s2">&quot;exec&quot;</span><span class="p">),</span> <span class="n">globals_env</span><span class="p">,</span> <span class="n">locals_env</span><span class="p">)</span>
+<a id="__codelineno-0-135" name="__codelineno-0-135"></a>
+<a id="__codelineno-0-136" name="__codelineno-0-136"></a>        <span class="c1"># Handle the last statement specially to mimic REPL behaviour</span>
+<a id="__codelineno-0-137" name="__codelineno-0-137"></a>        <span class="k">if</span> <span class="n">last_stmt</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+<a id="__codelineno-0-138" name="__codelineno-0-138"></a>            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">last_stmt</span><span class="p">,</span> <span class="n">ast</span><span class="o">.</span><span class="n">Expr</span><span class="p">):</span>
+<a id="__codelineno-0-139" name="__codelineno-0-139"></a>                <span class="n">expr</span> <span class="o">=</span> <span class="n">ast</span><span class="o">.</span><span class="n">Expression</span><span class="p">(</span><span class="n">last_stmt</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+<a id="__codelineno-0-140" name="__codelineno-0-140"></a>                <span class="n">result</span> <span class="o">=</span> <span class="nb">eval</span><span class="p">(</span><span class="nb">compile</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="s2">&quot;&lt;sandbox&gt;&quot;</span><span class="p">,</span> <span class="s2">&quot;eval&quot;</span><span class="p">),</span> <span class="n">globals_env</span><span class="p">,</span> <span class="n">locals_env</span><span class="p">)</span>
+<a id="__codelineno-0-141" name="__codelineno-0-141"></a>                <span class="k">if</span> <span class="n">result</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+<a id="__codelineno-0-142" name="__codelineno-0-142"></a>                    <span class="c1"># Print the result so it appears in the captured output</span>
+<a id="__codelineno-0-143" name="__codelineno-0-143"></a>                    <span class="nb">print</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+<a id="__codelineno-0-144" name="__codelineno-0-144"></a>            <span class="k">else</span><span class="p">:</span>
+<a id="__codelineno-0-145" name="__codelineno-0-145"></a>                <span class="n">last_module</span> <span class="o">=</span> <span class="n">ast</span><span class="o">.</span><span class="n">Module</span><span class="p">(</span><span class="n">body</span><span class="o">=</span><span class="p">[</span><span class="n">last_stmt</span><span class="p">],</span> <span class="n">type_ignores</span><span class="o">=</span><span class="p">[])</span>
+<a id="__codelineno-0-146" name="__codelineno-0-146"></a>                <span class="n">exec</span><span class="p">(</span>
+<a id="__codelineno-0-147" name="__codelineno-0-147"></a>                    <span class="nb">compile</span><span class="p">(</span><span class="n">last_module</span><span class="p">,</span> <span class="s2">&quot;&lt;sandbox&gt;&quot;</span><span class="p">,</span> <span class="s2">&quot;exec&quot;</span><span class="p">),</span>
+<a id="__codelineno-0-148" name="__codelineno-0-148"></a>                    <span class="n">globals_env</span><span class="p">,</span>
+<a id="__codelineno-0-149" name="__codelineno-0-149"></a>                    <span class="n">locals_env</span><span class="p">,</span>
+<a id="__codelineno-0-150" name="__codelineno-0-150"></a>                <span class="p">)</span>
+<a id="__codelineno-0-151" name="__codelineno-0-151"></a>
+<a id="__codelineno-0-152" name="__codelineno-0-152"></a>    <span class="n">output</span> <span class="o">=</span> <span class="n">stdout_buffer</span><span class="o">.</span><span class="n">getvalue</span><span class="p">()</span>
+<a id="__codelineno-0-153" name="__codelineno-0-153"></a>    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">output</span><span class="p">)</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_print_outputs_length</span><span class="p">:</span>
+<a id="__codelineno-0-154" name="__codelineno-0-154"></a>        <span class="n">output</span> <span class="o">=</span> <span class="n">output</span><span class="p">[:</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_print_outputs_length</span><span class="p">]</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">... [truncated]&quot;</span>
+<a id="__codelineno-0-155" name="__codelineno-0-155"></a>    <span class="k">return</span> <span class="n">output</span>
+</code></pre></div></td></tr></table></div>
+            </details>
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h5 id="nirvana.executors.tools.PythonInterpreterTool.__enter__" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-method"></code>            <code class="highlight language-python"><span class="fm">__enter__</span><span class="p">()</span></code>
+
+<a href="#nirvana.executors.tools.PythonInterpreterTool.__enter__" class="headerlink" title="Permanent link">&para;</a></h5>
+
+
+    <div class="doc doc-contents ">
+
+
+            <details class="mkdocstrings-source">
+              <summary>Source code in <code>nirvana/executors/tools.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-157">157</a></span>
+<span class="normal"><a href="#__codelineno-0-158">158</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-157" name="__codelineno-0-157"></a><span class="k">def</span><span class="w"> </span><span class="fm">__enter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<a id="__codelineno-0-158" name="__codelineno-0-158"></a>    <span class="k">return</span> <span class="bp">self</span>
+</code></pre></div></td></tr></table></div>
+            </details>
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h5 id="nirvana.executors.tools.PythonInterpreterTool.__call__" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-method"></code>            <code class="highlight language-python"><span class="fm">__call__</span><span class="p">(</span><span class="n">code</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">variables</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span></code>
+
+<a href="#nirvana.executors.tools.PythonInterpreterTool.__call__" class="headerlink" title="Permanent link">&para;</a></h5>
+
+
+    <div class="doc doc-contents ">
+
+
+            <details class="mkdocstrings-source">
+              <summary>Source code in <code>nirvana/executors/tools.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-160">160</a></span>
+<span class="normal"><a href="#__codelineno-0-161">161</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-160" name="__codelineno-0-160"></a><span class="k">def</span><span class="w"> </span><span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">code</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">variables</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<a id="__codelineno-0-161" name="__codelineno-0-161"></a>    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">code</span><span class="p">,</span> <span class="n">variables</span><span class="p">)</span>
+</code></pre></div></td></tr></table></div>
+            </details>
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h5 id="nirvana.executors.tools.PythonInterpreterTool.__exit__" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-method"></code>            <code class="highlight language-python"><span class="fm">__exit__</span><span class="p">(</span><span class="n">exc_type</span><span class="p">,</span> <span class="n">exc_value</span><span class="p">,</span> <span class="n">traceback</span><span class="p">)</span></code>
+
+<a href="#nirvana.executors.tools.PythonInterpreterTool.__exit__" class="headerlink" title="Permanent link">&para;</a></h5>
+
+
+    <div class="doc doc-contents ">
+
+
+            <details class="mkdocstrings-source">
+              <summary>Source code in <code>nirvana/executors/tools.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-163">163</a></span>
+<span class="normal"><a href="#__codelineno-0-164">164</a></span>
+<span class="normal"><a href="#__codelineno-0-165">165</a></span>
+<span class="normal"><a href="#__codelineno-0-166">166</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-163" name="__codelineno-0-163"></a><span class="k">def</span><span class="w"> </span><span class="fm">__exit__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">exc_type</span><span class="p">,</span> <span class="n">exc_value</span><span class="p">,</span> <span class="n">traceback</span><span class="p">):</span>
+<a id="__codelineno-0-164" name="__codelineno-0-164"></a>    <span class="c1"># No external resources to clean up for now, but we keep this</span>
+<a id="__codelineno-0-165" name="__codelineno-0-165"></a>    <span class="c1"># method to support context manager usage.</span>
+<a id="__codelineno-0-166" name="__codelineno-0-166"></a>    <span class="k">return</span> <span class="kc">False</span>
+</code></pre></div></td></tr></table></div>
+            </details>
+    </div>
+
+</div>
+
+
+
+  </div>
+
+    </div>
+
+</div>
 
 
 

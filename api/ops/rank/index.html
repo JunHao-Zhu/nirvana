@@ -650,18 +650,47 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#nirvanaopsrank" class="md-nav__link">
+  <a href="#core-implementation" class="md-nav__link">
     <span class="md-ellipsis">
       
-        nirvana.ops.rank
+        Core Implementation
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Core Implementation">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#nirvana.ops.rank.RankOperation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        RankOperation
       
     </span>
   </a>
   
 </li>
+        
+      </ul>
+    </nav>
+  
+</li>
       
         <li class="md-nav__item">
-  <a href="#rankopoutputs" class="md-nav__link">
+  <a href="#output-class" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Output Class
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Output Class">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#nirvana.ops.rank.RankOpOutputs" class="md-nav__link">
     <span class="md-ellipsis">
       
         RankOpOutputs
@@ -670,35 +699,29 @@
   </a>
   
 </li>
+        
+      </ul>
+    </nav>
+  
+</li>
       
         <li class="md-nav__item">
-  <a href="#rankoperation" class="md-nav__link">
+  <a href="#function-wrapper" class="md-nav__link">
     <span class="md-ellipsis">
       
-        RankOperation
+        Function Wrapper
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="RankOperation">
+    <nav class="md-nav" aria-label="Function Wrapper">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#properties" class="md-nav__link">
+  <a href="#nirvana.ops.rank.rank_wrapper" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Properties:
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#methods" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Methods
+        rank_wrapper
       
     </span>
   </a>
@@ -1221,18 +1244,47 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#nirvanaopsrank" class="md-nav__link">
+  <a href="#core-implementation" class="md-nav__link">
     <span class="md-ellipsis">
       
-        nirvana.ops.rank
+        Core Implementation
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Core Implementation">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#nirvana.ops.rank.RankOperation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        RankOperation
       
     </span>
   </a>
   
 </li>
+        
+      </ul>
+    </nav>
+  
+</li>
       
         <li class="md-nav__item">
-  <a href="#rankopoutputs" class="md-nav__link">
+  <a href="#output-class" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Output Class
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Output Class">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#nirvana.ops.rank.RankOpOutputs" class="md-nav__link">
     <span class="md-ellipsis">
       
         RankOpOutputs
@@ -1241,35 +1293,29 @@
   </a>
   
 </li>
+        
+      </ul>
+    </nav>
+  
+</li>
       
         <li class="md-nav__item">
-  <a href="#rankoperation" class="md-nav__link">
+  <a href="#function-wrapper" class="md-nav__link">
     <span class="md-ellipsis">
       
-        RankOperation
+        Function Wrapper
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="RankOperation">
+    <nav class="md-nav" aria-label="Function Wrapper">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#properties" class="md-nav__link">
+  <a href="#nirvana.ops.rank.rank_wrapper" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Properties:
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#methods" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Methods
+        rank_wrapper
       
     </span>
   </a>
@@ -1303,92 +1349,879 @@
 
 <h1 id="rank-operation">Rank Operation<a class="headerlink" href="#rank-operation" title="Permanent link">&para;</a></h1>
 <p>The Rank operation ranks records in a column of input data based on a natural language condition.</p>
-<h2 id="nirvanaopsrank">nirvana.ops.rank<a class="headerlink" href="#nirvanaopsrank" title="Permanent link">&para;</a></h2>
-<p><code>(input_data: pandas.DataFrame, user_instruction: str, input_column: str, descend: bool = True, func: Callable = None, **kwargs) -&gt; RankOpOutputs</code></p>
-<p>A function wrapper that invokes <code>RankOperation.execute(input_data)</code></p>
-<h2 id="rankopoutputs">RankOpOutputs<a class="headerlink" href="#rankopoutputs" title="Permanent link">&para;</a></h2>
-<p>The type of return value of <code>RankOperation</code> (base: <code>BaseOpOutputs</code>).</p>
-<p><strong>Parameters:</strong>
-- <code>ranked_indices</code> (<code>list[int]</code>): List of indices of sorted records
-- <code>ranking</code> (<code>list[int]</code>): Ranking of sorted records
-- <code>cost</code> (<code>float</code>): Token cost for executing map operation  </p>
-<h2 id="rankoperation">RankOperation<a class="headerlink" href="#rankoperation" title="Permanent link">&para;</a></h2>
-<p>Core class to implement rank operation (base: <code>BaseOperation</code>).</p>
-<p><strong>Parameters:</strong></p>
-<table>
-<thead>
-<tr>
-<th><strong>Name</strong></th>
-<th><strong>Type</strong></th>
-<th><strong>Description</strong></th>
-<th><strong>Default</strong></th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>user_instruction</code></td>
-<td><code>str</code></td>
-<td>User instruction</td>
-<td>required</td>
-</tr>
-<tr>
-<td><code>input_columns</code></td>
-<td><code>list[str]</code></td>
-<td>Input columns that the rank operation evaluates on</td>
-<td>required</td>
-</tr>
-<tr>
-<td><code>descend</code></td>
-<td><code>bool</code></td>
-<td>Whether to sort in descending order (i.e., from best satisfied to least satisfied)</td>
-<td><code>True</code></td>
-</tr>
-<tr>
-<td><code>context</code></td>
-<td><code>dict</code></td>
-<td>Additional context information (e.g., demonstrations) for LLM reasoning</td>
-<td><code>{}</code></td>
-</tr>
-<tr>
-<td><code>model</code></td>
-<td><code>str</code></td>
-<td>LLM backend for operation execution</td>
-<td><code>None</code></td>
-</tr>
-<tr>
-<td><code>tool</code></td>
-<td><code>BaseTool</code></td>
-<td>Function tools for operation execution</td>
-<td><code>None</code></td>
-</tr>
-<tr>
-<td><code>semaphore</code></td>
-<td><code>int</code></td>
-<td>Concurrent LLM calls</td>
-<td><code>16</code></td>
-</tr>
-<tr>
-<td><code>assertions</code></td>
-<td><code>list[Callable]</code></td>
-<td>Assertions/guardrails to constrain behavior of map operation</td>
-<td><code>[]</code></td>
-</tr>
-<tr>
-<td><code>strategy</code></td>
-<td><code>Literal["plain"]</code></td>
-<td>The rank algorithm</td>
-<td><code>"plain"</code></td>
-</tr>
-</tbody>
-</table>
-<h3 id="properties">Properties:<a class="headerlink" href="#properties" title="Permanent link">&para;</a></h3>
-<ul>
-<li><code>dependencies</code> (<code>list(str)</code>): Dependent columns of the rank operation</li>
-<li><code>generated_fields</code> (<code>list(str)</code>): Names of generated fields of the operation</li>
-<li><code>op_kwargs</code> (<code>dict</code>): arguments in the rank operation</li>
-</ul>
-<h3 id="methods">Methods<a class="headerlink" href="#methods" title="Permanent link">&para;</a></h3>
-<h4 id="executeinput_data-args-kwargs-rankopoutputs"><code>execute(input_data, *args, **kwargs) -&gt; RankOpOutputs</code><a class="headerlink" href="#executeinput_data-args-kwargs-rankopoutputs" title="Permanent link">&para;</a></h4>
+<h2 id="core-implementation">Core Implementation<a class="headerlink" href="#core-implementation" title="Permanent link">&para;</a></h2>
+
+
+<div class="doc doc-object doc-class">
+
+
+
+<h3 id="nirvana.ops.rank.RankOperation" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-class"></code>              <code class="highlight language-python"><span class="n">nirvana</span><span class="o">.</span><span class="n">ops</span><span class="o">.</span><span class="n">rank</span><span class="o">.</span><span class="n">RankOperation</span><span class="p">(</span><span class="n">user_instruction</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">input_columns</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[],</span> <span class="n">descend</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">context</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">]</span> <span class="o">|</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">model</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">tool</span><span class="p">:</span> <span class="n">Callable</span> <span class="o">|</span> <span class="n">BaseTool</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">strategy</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s1">&#39;plain&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;plain&#39;</span><span class="p">,</span> <span class="n">rate_limit</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">16</span><span class="p">,</span> <span class="n">assertions</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Callable</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="p">[])</span></code>
+
+<a href="#nirvana.ops.rank.RankOperation" class="headerlink" title="Permanent link">&para;</a></h3>
+
+
+    <div class="doc doc-contents first">
+            <p class="doc doc-class-bases">
+              Bases: <code><span title="nirvana.ops.base.BaseOperation">BaseOperation</span></code></p>
+
+
+
+        <p>RankOperation ranks the rows of a DataFrame column according to a user-specified natural language instruction.</p>
+
+
+
+
+
+
+
+
+                  <details class="mkdocstrings-source">
+                    <summary>Source code in <code>nirvana/ops/rank.py</code></summary>
+                    <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-75"> 75</a></span>
+<span class="normal"><a href="#__codelineno-0-76"> 76</a></span>
+<span class="normal"><a href="#__codelineno-0-77"> 77</a></span>
+<span class="normal"><a href="#__codelineno-0-78"> 78</a></span>
+<span class="normal"><a href="#__codelineno-0-79"> 79</a></span>
+<span class="normal"><a href="#__codelineno-0-80"> 80</a></span>
+<span class="normal"><a href="#__codelineno-0-81"> 81</a></span>
+<span class="normal"><a href="#__codelineno-0-82"> 82</a></span>
+<span class="normal"><a href="#__codelineno-0-83"> 83</a></span>
+<span class="normal"><a href="#__codelineno-0-84"> 84</a></span>
+<span class="normal"><a href="#__codelineno-0-85"> 85</a></span>
+<span class="normal"><a href="#__codelineno-0-86"> 86</a></span>
+<span class="normal"><a href="#__codelineno-0-87"> 87</a></span>
+<span class="normal"><a href="#__codelineno-0-88"> 88</a></span>
+<span class="normal"><a href="#__codelineno-0-89"> 89</a></span>
+<span class="normal"><a href="#__codelineno-0-90"> 90</a></span>
+<span class="normal"><a href="#__codelineno-0-91"> 91</a></span>
+<span class="normal"><a href="#__codelineno-0-92"> 92</a></span>
+<span class="normal"><a href="#__codelineno-0-93"> 93</a></span>
+<span class="normal"><a href="#__codelineno-0-94"> 94</a></span>
+<span class="normal"><a href="#__codelineno-0-95"> 95</a></span>
+<span class="normal"><a href="#__codelineno-0-96"> 96</a></span>
+<span class="normal"><a href="#__codelineno-0-97"> 97</a></span>
+<span class="normal"><a href="#__codelineno-0-98"> 98</a></span>
+<span class="normal"><a href="#__codelineno-0-99"> 99</a></span>
+<span class="normal"><a href="#__codelineno-0-100">100</a></span>
+<span class="normal"><a href="#__codelineno-0-101">101</a></span>
+<span class="normal"><a href="#__codelineno-0-102">102</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-75" name="__codelineno-0-75"></a><span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+<a id="__codelineno-0-76" name="__codelineno-0-76"></a>    <span class="bp">self</span><span class="p">,</span>
+<a id="__codelineno-0-77" name="__codelineno-0-77"></a>    <span class="n">user_instruction</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
+<a id="__codelineno-0-78" name="__codelineno-0-78"></a>    <span class="n">input_columns</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[],</span>
+<a id="__codelineno-0-79" name="__codelineno-0-79"></a>    <span class="n">descend</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+<a id="__codelineno-0-80" name="__codelineno-0-80"></a>    <span class="n">context</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">]</span> <span class="o">|</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<a id="__codelineno-0-81" name="__codelineno-0-81"></a>    <span class="n">model</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<a id="__codelineno-0-82" name="__codelineno-0-82"></a>    <span class="n">tool</span><span class="p">:</span> <span class="n">Callable</span> <span class="o">|</span> <span class="n">BaseTool</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<a id="__codelineno-0-83" name="__codelineno-0-83"></a>    <span class="n">strategy</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;plain&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;plain&quot;</span><span class="p">,</span>
+<a id="__codelineno-0-84" name="__codelineno-0-84"></a>    <span class="n">rate_limit</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">16</span><span class="p">,</span>
+<a id="__codelineno-0-85" name="__codelineno-0-85"></a>    <span class="n">assertions</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Callable</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="p">[],</span>
+<a id="__codelineno-0-86" name="__codelineno-0-86"></a><span class="p">):</span>
+<a id="__codelineno-0-87" name="__codelineno-0-87"></a>    <span class="k">if</span> <span class="n">tool</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">tool</span><span class="p">,</span> <span class="n">BaseTool</span><span class="p">):</span>
+<a id="__codelineno-0-88" name="__codelineno-0-88"></a>        <span class="n">tool</span> <span class="o">=</span> <span class="n">FunctionCallTool</span><span class="o">.</span><span class="n">from_function</span><span class="p">(</span><span class="n">func</span><span class="o">=</span><span class="n">tool</span><span class="p">)</span>
+<a id="__codelineno-0-89" name="__codelineno-0-89"></a>
+<a id="__codelineno-0-90" name="__codelineno-0-90"></a>    <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
+<a id="__codelineno-0-91" name="__codelineno-0-91"></a>        <span class="n">op_name</span><span class="o">=</span><span class="s2">&quot;rank&quot;</span><span class="p">,</span>
+<a id="__codelineno-0-92" name="__codelineno-0-92"></a>        <span class="n">user_instruction</span><span class="o">=</span><span class="n">user_instruction</span><span class="p">,</span>
+<a id="__codelineno-0-93" name="__codelineno-0-93"></a>        <span class="n">context</span><span class="o">=</span><span class="n">context</span><span class="p">,</span>
+<a id="__codelineno-0-94" name="__codelineno-0-94"></a>        <span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">,</span>
+<a id="__codelineno-0-95" name="__codelineno-0-95"></a>        <span class="n">tool</span><span class="o">=</span><span class="n">tool</span><span class="p">,</span>
+<a id="__codelineno-0-96" name="__codelineno-0-96"></a>        <span class="n">strategy</span><span class="o">=</span><span class="n">strategy</span><span class="p">,</span>  
+<a id="__codelineno-0-97" name="__codelineno-0-97"></a>        <span class="n">rate_limit</span><span class="o">=</span><span class="n">rate_limit</span><span class="p">,</span>
+<a id="__codelineno-0-98" name="__codelineno-0-98"></a>        <span class="n">assertions</span><span class="o">=</span><span class="n">assertions</span><span class="p">,</span>
+<a id="__codelineno-0-99" name="__codelineno-0-99"></a>    <span class="p">)</span>
+<a id="__codelineno-0-100" name="__codelineno-0-100"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">prompter</span> <span class="o">=</span> <span class="n">RankPrompter</span><span class="p">()</span>
+<a id="__codelineno-0-101" name="__codelineno-0-101"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">input_columns</span> <span class="o">=</span> <span class="n">input_columns</span>
+<a id="__codelineno-0-102" name="__codelineno-0-102"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">descend</span> <span class="o">=</span> <span class="n">descend</span>
+</code></pre></div></td></tr></table></div>
+                  </details>
+
+
+
+<div class="doc doc-children">
+
+
+
+
+
+<h4 id="nirvana.ops.rank.RankOperation-attributes">Attributes<a href="#nirvana.ops.rank.RankOperation-attributes" class="headerlink" title="Permanent link">&para;</a></h4>
+
+<div class="doc doc-object doc-attribute">
+
+
+
+<h5 id="nirvana.ops.rank.RankOperation.prompter" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-attribute"></code>            <code class="highlight language-python"><span class="n">prompter</span> <span class="o">=</span> <span class="n">RankPrompter</span><span class="p">()</span></code>
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-instance-attribute"><code>instance-attribute</code></small>
+  </span>
+
+<a href="#nirvana.ops.rank.RankOperation.prompter" class="headerlink" title="Permanent link">&para;</a></h5>
+
+
+    <div class="doc doc-contents ">
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-attribute">
+
+
+
+<h5 id="nirvana.ops.rank.RankOperation.input_columns" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-attribute"></code>            <code class="highlight language-python"><span class="n">input_columns</span> <span class="o">=</span> <span class="n">input_columns</span></code>
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-instance-attribute"><code>instance-attribute</code></small>
+  </span>
+
+<a href="#nirvana.ops.rank.RankOperation.input_columns" class="headerlink" title="Permanent link">&para;</a></h5>
+
+
+    <div class="doc doc-contents ">
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-attribute">
+
+
+
+<h5 id="nirvana.ops.rank.RankOperation.descend" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-attribute"></code>            <code class="highlight language-python"><span class="n">descend</span> <span class="o">=</span> <span class="n">descend</span></code>
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-instance-attribute"><code>instance-attribute</code></small>
+  </span>
+
+<a href="#nirvana.ops.rank.RankOperation.descend" class="headerlink" title="Permanent link">&para;</a></h5>
+
+
+    <div class="doc doc-contents ">
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-attribute">
+
+
+
+<h5 id="nirvana.ops.rank.RankOperation.dependencies" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-attribute"></code>            <code class="highlight language-python"><span class="n">dependencies</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span></code>
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-property"><code>property</code></small>
+  </span>
+
+<a href="#nirvana.ops.rank.RankOperation.dependencies" class="headerlink" title="Permanent link">&para;</a></h5>
+
+
+    <div class="doc doc-contents ">
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-attribute">
+
+
+
+<h5 id="nirvana.ops.rank.RankOperation.generated_fields" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-attribute"></code>            <code class="highlight language-python"><span class="n">generated_fields</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span></code>
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-property"><code>property</code></small>
+  </span>
+
+<a href="#nirvana.ops.rank.RankOperation.generated_fields" class="headerlink" title="Permanent link">&para;</a></h5>
+
+
+    <div class="doc doc-contents ">
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-attribute">
+
+
+
+<h5 id="nirvana.ops.rank.RankOperation.op_kwargs" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-attribute"></code>            <code class="highlight language-python"><span class="n">op_kwargs</span><span class="p">:</span> <span class="nb">dict</span></code>
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-property"><code>property</code></small>
+  </span>
+
+<a href="#nirvana.ops.rank.RankOperation.op_kwargs" class="headerlink" title="Permanent link">&para;</a></h5>
+
+
+    <div class="doc doc-contents ">
+
+    </div>
+
+</div>
+
+
+<h4 id="nirvana.ops.rank.RankOperation-functions">Functions<a href="#nirvana.ops.rank.RankOperation-functions" class="headerlink" title="Permanent link">&para;</a></h4>
+
+<div class="doc doc-object doc-function">
+
+
+<h5 id="nirvana.ops.rank.RankOperation.partition" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-method"></code>            <code class="highlight language-python"><span class="n">partition</span><span class="p">(</span><span class="n">data</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">,</span> <span class="n">ranking</span><span class="p">:</span> <span class="nb">list</span><span class="p">,</span> <span class="n">low</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">high</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">user_instruction</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">dtype</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></code>
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-async"><code>async</code></small>
+  </span>
+
+<a href="#nirvana.ops.rank.RankOperation.partition" class="headerlink" title="Permanent link">&para;</a></h5>
+
+
+    <div class="doc doc-contents ">
+
+
+            <details class="mkdocstrings-source">
+              <summary>Source code in <code>nirvana/ops/rank.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-128">128</a></span>
+<span class="normal"><a href="#__codelineno-0-129">129</a></span>
+<span class="normal"><a href="#__codelineno-0-130">130</a></span>
+<span class="normal"><a href="#__codelineno-0-131">131</a></span>
+<span class="normal"><a href="#__codelineno-0-132">132</a></span>
+<span class="normal"><a href="#__codelineno-0-133">133</a></span>
+<span class="normal"><a href="#__codelineno-0-134">134</a></span>
+<span class="normal"><a href="#__codelineno-0-135">135</a></span>
+<span class="normal"><a href="#__codelineno-0-136">136</a></span>
+<span class="normal"><a href="#__codelineno-0-137">137</a></span>
+<span class="normal"><a href="#__codelineno-0-138">138</a></span>
+<span class="normal"><a href="#__codelineno-0-139">139</a></span>
+<span class="normal"><a href="#__codelineno-0-140">140</a></span>
+<span class="normal"><a href="#__codelineno-0-141">141</a></span>
+<span class="normal"><a href="#__codelineno-0-142">142</a></span>
+<span class="normal"><a href="#__codelineno-0-143">143</a></span>
+<span class="normal"><a href="#__codelineno-0-144">144</a></span>
+<span class="normal"><a href="#__codelineno-0-145">145</a></span>
+<span class="normal"><a href="#__codelineno-0-146">146</a></span>
+<span class="normal"><a href="#__codelineno-0-147">147</a></span>
+<span class="normal"><a href="#__codelineno-0-148">148</a></span>
+<span class="normal"><a href="#__codelineno-0-149">149</a></span>
+<span class="normal"><a href="#__codelineno-0-150">150</a></span>
+<span class="normal"><a href="#__codelineno-0-151">151</a></span>
+<span class="normal"><a href="#__codelineno-0-152">152</a></span>
+<span class="normal"><a href="#__codelineno-0-153">153</a></span>
+<span class="normal"><a href="#__codelineno-0-154">154</a></span>
+<span class="normal"><a href="#__codelineno-0-155">155</a></span>
+<span class="normal"><a href="#__codelineno-0-156">156</a></span>
+<span class="normal"><a href="#__codelineno-0-157">157</a></span>
+<span class="normal"><a href="#__codelineno-0-158">158</a></span>
+<span class="normal"><a href="#__codelineno-0-159">159</a></span>
+<span class="normal"><a href="#__codelineno-0-160">160</a></span>
+<span class="normal"><a href="#__codelineno-0-161">161</a></span>
+<span class="normal"><a href="#__codelineno-0-162">162</a></span>
+<span class="normal"><a href="#__codelineno-0-163">163</a></span>
+<span class="normal"><a href="#__codelineno-0-164">164</a></span>
+<span class="normal"><a href="#__codelineno-0-165">165</a></span>
+<span class="normal"><a href="#__codelineno-0-166">166</a></span>
+<span class="normal"><a href="#__codelineno-0-167">167</a></span>
+<span class="normal"><a href="#__codelineno-0-168">168</a></span>
+<span class="normal"><a href="#__codelineno-0-169">169</a></span>
+<span class="normal"><a href="#__codelineno-0-170">170</a></span>
+<span class="normal"><a href="#__codelineno-0-171">171</a></span>
+<span class="normal"><a href="#__codelineno-0-172">172</a></span>
+<span class="normal"><a href="#__codelineno-0-173">173</a></span>
+<span class="normal"><a href="#__codelineno-0-174">174</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-128" name="__codelineno-0-128"></a><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">partition</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">,</span> <span class="n">ranking</span><span class="p">:</span> <span class="nb">list</span><span class="p">,</span> <span class="n">low</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">high</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">user_instruction</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">dtype</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<a id="__codelineno-0-129" name="__codelineno-0-129"></a>    <span class="n">cache</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;cache&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+<a id="__codelineno-0-130" name="__codelineno-0-130"></a>    <span class="c1"># Choose a pivot element</span>
+<a id="__codelineno-0-131" name="__codelineno-0-131"></a>    <span class="n">pivot_index</span> <span class="o">=</span> <span class="n">ranking</span><span class="p">[(</span><span class="n">low</span> <span class="o">+</span> <span class="n">high</span><span class="p">)</span> <span class="o">//</span> <span class="mi">2</span><span class="p">]</span>
+<a id="__codelineno-0-132" name="__codelineno-0-132"></a>    <span class="n">pivot_value</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">pivot_index</span><span class="p">]</span>
+<a id="__codelineno-0-133" name="__codelineno-0-133"></a>    <span class="n">i</span> <span class="o">=</span> <span class="n">low</span> <span class="o">-</span> <span class="mi">1</span>
+<a id="__codelineno-0-134" name="__codelineno-0-134"></a>    <span class="n">j</span> <span class="o">=</span> <span class="n">high</span> <span class="o">+</span> <span class="mi">1</span>
+<a id="__codelineno-0-135" name="__codelineno-0-135"></a>
+<a id="__codelineno-0-136" name="__codelineno-0-136"></a>    <span class="n">cost_for_partiton</span> <span class="o">=</span> <span class="mf">0.0</span>
+<a id="__codelineno-0-137" name="__codelineno-0-137"></a>    <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+<a id="__codelineno-0-138" name="__codelineno-0-138"></a>        <span class="c1"># Find an element on the left that is smaller than the pivot (less satisfy the instruction)</span>
+<a id="__codelineno-0-139" name="__codelineno-0-139"></a>        <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+<a id="__codelineno-0-140" name="__codelineno-0-140"></a>            <span class="n">i</span> <span class="o">+=</span> <span class="mi">1</span>
+<a id="__codelineno-0-141" name="__codelineno-0-141"></a>            <span class="n">index_in_data</span> <span class="o">=</span> <span class="n">ranking</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+<a id="__codelineno-0-142" name="__codelineno-0-142"></a>            <span class="k">if</span> <span class="n">index_in_data</span> <span class="o">==</span> <span class="n">pivot_index</span><span class="p">:</span>
+<a id="__codelineno-0-143" name="__codelineno-0-143"></a>                <span class="k">break</span>
+<a id="__codelineno-0-144" name="__codelineno-0-144"></a>            <span class="k">if</span> <span class="n">cache</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="p">(</span><span class="n">index_in_data</span><span class="p">,</span> <span class="n">pivot_index</span><span class="p">)</span> <span class="ow">in</span> <span class="n">cache</span><span class="p">:</span>
+<a id="__codelineno-0-145" name="__codelineno-0-145"></a>                <span class="n">comparison_result</span> <span class="o">=</span> <span class="n">cache</span><span class="p">[(</span><span class="n">index_in_data</span><span class="p">,</span> <span class="n">pivot_index</span><span class="p">)]</span>
+<a id="__codelineno-0-146" name="__codelineno-0-146"></a>                <span class="n">cost_per_comparison</span> <span class="o">=</span> <span class="mf">0.0</span>
+<a id="__codelineno-0-147" name="__codelineno-0-147"></a>            <span class="k">else</span><span class="p">:</span>
+<a id="__codelineno-0-148" name="__codelineno-0-148"></a>                <span class="n">comparison_result</span><span class="p">,</span> <span class="n">cost_per_comparison</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_compare_by_plain_llm</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">index_in_data</span><span class="p">],</span> <span class="n">pivot_value</span><span class="p">,</span> <span class="n">user_instruction</span><span class="p">,</span> <span class="n">dtype</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+<a id="__codelineno-0-149" name="__codelineno-0-149"></a>            <span class="n">cost_for_partiton</span> <span class="o">+=</span> <span class="n">cost_per_comparison</span>
+<a id="__codelineno-0-150" name="__codelineno-0-150"></a>            <span class="k">if</span> <span class="nb">int</span><span class="p">(</span><span class="n">comparison_result</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>  <span class="c1"># if data[i] is smaller than pivot_value, break</span>
+<a id="__codelineno-0-151" name="__codelineno-0-151"></a>                <span class="k">break</span>
+<a id="__codelineno-0-152" name="__codelineno-0-152"></a>
+<a id="__codelineno-0-153" name="__codelineno-0-153"></a>        <span class="c1"># Find an element on the right that is larger than the pivot (more satisfy the instruction)</span>
+<a id="__codelineno-0-154" name="__codelineno-0-154"></a>        <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+<a id="__codelineno-0-155" name="__codelineno-0-155"></a>            <span class="n">j</span> <span class="o">-=</span> <span class="mi">1</span>
+<a id="__codelineno-0-156" name="__codelineno-0-156"></a>            <span class="n">index_in_data</span> <span class="o">=</span> <span class="n">ranking</span><span class="p">[</span><span class="n">j</span><span class="p">]</span>
+<a id="__codelineno-0-157" name="__codelineno-0-157"></a>            <span class="k">if</span> <span class="n">index_in_data</span> <span class="o">==</span> <span class="n">pivot_index</span><span class="p">:</span>
+<a id="__codelineno-0-158" name="__codelineno-0-158"></a>                <span class="k">break</span>
+<a id="__codelineno-0-159" name="__codelineno-0-159"></a>            <span class="k">if</span> <span class="n">cache</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="p">(</span><span class="n">index_in_data</span><span class="p">,</span> <span class="n">pivot_index</span><span class="p">)</span> <span class="ow">in</span> <span class="n">cache</span><span class="p">:</span>
+<a id="__codelineno-0-160" name="__codelineno-0-160"></a>                <span class="n">comparison_result</span> <span class="o">=</span> <span class="n">cache</span><span class="p">[(</span><span class="n">index_in_data</span><span class="p">,</span> <span class="n">pivot_index</span><span class="p">)]</span>
+<a id="__codelineno-0-161" name="__codelineno-0-161"></a>                <span class="n">cost_per_comparison</span> <span class="o">=</span> <span class="mf">0.0</span>
+<a id="__codelineno-0-162" name="__codelineno-0-162"></a>            <span class="k">else</span><span class="p">:</span>
+<a id="__codelineno-0-163" name="__codelineno-0-163"></a>                <span class="n">comparison_result</span><span class="p">,</span> <span class="n">cost_per_comparison</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_compare_by_plain_llm</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">index_in_data</span><span class="p">],</span> <span class="n">pivot_value</span><span class="p">,</span> <span class="n">user_instruction</span><span class="p">,</span> <span class="n">dtype</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+<a id="__codelineno-0-164" name="__codelineno-0-164"></a>            <span class="n">cost_for_partiton</span> <span class="o">+=</span> <span class="n">cost_per_comparison</span>
+<a id="__codelineno-0-165" name="__codelineno-0-165"></a>            <span class="k">if</span> <span class="nb">int</span><span class="p">(</span><span class="n">comparison_result</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>  <span class="c1"># if data[j] is larger than pivot_value, break</span>
+<a id="__codelineno-0-166" name="__codelineno-0-166"></a>                <span class="k">break</span>
+<a id="__codelineno-0-167" name="__codelineno-0-167"></a>
+<a id="__codelineno-0-168" name="__codelineno-0-168"></a>        <span class="c1"># If i and j have crossed, break</span>
+<a id="__codelineno-0-169" name="__codelineno-0-169"></a>        <span class="k">if</span> <span class="n">i</span> <span class="o">&gt;=</span> <span class="n">j</span><span class="p">:</span>
+<a id="__codelineno-0-170" name="__codelineno-0-170"></a>            <span class="k">break</span>
+<a id="__codelineno-0-171" name="__codelineno-0-171"></a>        <span class="c1"># Swap data[i] and data[j]</span>
+<a id="__codelineno-0-172" name="__codelineno-0-172"></a>        <span class="n">ranking</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">ranking</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="n">ranking</span><span class="p">[</span><span class="n">j</span><span class="p">],</span> <span class="n">ranking</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+<a id="__codelineno-0-173" name="__codelineno-0-173"></a>
+<a id="__codelineno-0-174" name="__codelineno-0-174"></a>    <span class="k">return</span> <span class="n">j</span><span class="p">,</span> <span class="n">cost_for_partiton</span>
+</code></pre></div></td></tr></table></div>
+            </details>
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h5 id="nirvana.ops.rank.RankOperation.quick_sort" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-method"></code>            <code class="highlight language-python"><span class="n">quick_sort</span><span class="p">(</span><span class="n">data</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">,</span> <span class="n">ranking</span><span class="p">:</span> <span class="nb">list</span><span class="p">,</span> <span class="n">low</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">high</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">user_instruction</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">dtype</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></code>
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-async"><code>async</code></small>
+  </span>
+
+<a href="#nirvana.ops.rank.RankOperation.quick_sort" class="headerlink" title="Permanent link">&para;</a></h5>
+
+
+    <div class="doc doc-contents ">
+
+
+            <details class="mkdocstrings-source">
+              <summary>Source code in <code>nirvana/ops/rank.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-176">176</a></span>
+<span class="normal"><a href="#__codelineno-0-177">177</a></span>
+<span class="normal"><a href="#__codelineno-0-178">178</a></span>
+<span class="normal"><a href="#__codelineno-0-179">179</a></span>
+<span class="normal"><a href="#__codelineno-0-180">180</a></span>
+<span class="normal"><a href="#__codelineno-0-181">181</a></span>
+<span class="normal"><a href="#__codelineno-0-182">182</a></span>
+<span class="normal"><a href="#__codelineno-0-183">183</a></span>
+<span class="normal"><a href="#__codelineno-0-184">184</a></span>
+<span class="normal"><a href="#__codelineno-0-185">185</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-176" name="__codelineno-0-176"></a><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">quick_sort</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">,</span> <span class="n">ranking</span><span class="p">:</span> <span class="nb">list</span><span class="p">,</span> <span class="n">low</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">high</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">user_instruction</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">dtype</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<a id="__codelineno-0-177" name="__codelineno-0-177"></a>    <span class="n">total_cost</span> <span class="o">=</span> <span class="mf">0.0</span>
+<a id="__codelineno-0-178" name="__codelineno-0-178"></a>    <span class="k">if</span> <span class="n">low</span> <span class="o">&lt;</span> <span class="n">high</span><span class="p">:</span>
+<a id="__codelineno-0-179" name="__codelineno-0-179"></a>        <span class="n">partition_position</span><span class="p">,</span> <span class="n">cost_for_partition</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">partition</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">ranking</span><span class="p">,</span> <span class="n">low</span><span class="p">,</span> <span class="n">high</span><span class="p">,</span> <span class="n">user_instruction</span><span class="p">,</span> <span class="n">dtype</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+<a id="__codelineno-0-180" name="__codelineno-0-180"></a>        <span class="n">total_cost</span> <span class="o">+=</span> <span class="n">cost_for_partition</span>
+<a id="__codelineno-0-181" name="__codelineno-0-181"></a>        <span class="n">ranking</span><span class="p">,</span> <span class="n">cost_from_next_sort</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">quick_sort</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">ranking</span><span class="p">,</span> <span class="n">low</span><span class="p">,</span> <span class="n">partition_position</span><span class="p">,</span> <span class="n">user_instruction</span><span class="p">,</span> <span class="n">dtype</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+<a id="__codelineno-0-182" name="__codelineno-0-182"></a>        <span class="n">total_cost</span> <span class="o">+=</span> <span class="n">cost_from_next_sort</span>
+<a id="__codelineno-0-183" name="__codelineno-0-183"></a>        <span class="n">ranking</span><span class="p">,</span> <span class="n">cost_from_next_sort</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">quick_sort</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">ranking</span><span class="p">,</span> <span class="n">partition_position</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">high</span><span class="p">,</span> <span class="n">user_instruction</span><span class="p">,</span> <span class="n">dtype</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+<a id="__codelineno-0-184" name="__codelineno-0-184"></a>        <span class="n">total_cost</span> <span class="o">+=</span> <span class="n">cost_from_next_sort</span>
+<a id="__codelineno-0-185" name="__codelineno-0-185"></a>    <span class="k">return</span> <span class="n">ranking</span><span class="p">,</span> <span class="n">total_cost</span>
+</code></pre></div></td></tr></table></div>
+            </details>
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h5 id="nirvana.ops.rank.RankOperation.execute" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-method"></code>            <code class="highlight language-python"><span class="n">execute</span><span class="p">(</span><span class="n">input_data</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></code>
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-async"><code>async</code></small>
+  </span>
+
+<a href="#nirvana.ops.rank.RankOperation.execute" class="headerlink" title="Permanent link">&para;</a></h5>
+
+
+    <div class="doc doc-contents ">
+
+
+            <details class="mkdocstrings-source">
+              <summary>Source code in <code>nirvana/ops/rank.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-187">187</a></span>
+<span class="normal"><a href="#__codelineno-0-188">188</a></span>
+<span class="normal"><a href="#__codelineno-0-189">189</a></span>
+<span class="normal"><a href="#__codelineno-0-190">190</a></span>
+<span class="normal"><a href="#__codelineno-0-191">191</a></span>
+<span class="normal"><a href="#__codelineno-0-192">192</a></span>
+<span class="normal"><a href="#__codelineno-0-193">193</a></span>
+<span class="normal"><a href="#__codelineno-0-194">194</a></span>
+<span class="normal"><a href="#__codelineno-0-195">195</a></span>
+<span class="normal"><a href="#__codelineno-0-196">196</a></span>
+<span class="normal"><a href="#__codelineno-0-197">197</a></span>
+<span class="normal"><a href="#__codelineno-0-198">198</a></span>
+<span class="normal"><a href="#__codelineno-0-199">199</a></span>
+<span class="normal"><a href="#__codelineno-0-200">200</a></span>
+<span class="normal"><a href="#__codelineno-0-201">201</a></span>
+<span class="normal"><a href="#__codelineno-0-202">202</a></span>
+<span class="normal"><a href="#__codelineno-0-203">203</a></span>
+<span class="normal"><a href="#__codelineno-0-204">204</a></span>
+<span class="normal"><a href="#__codelineno-0-205">205</a></span>
+<span class="normal"><a href="#__codelineno-0-206">206</a></span>
+<span class="normal"><a href="#__codelineno-0-207">207</a></span>
+<span class="normal"><a href="#__codelineno-0-208">208</a></span>
+<span class="normal"><a href="#__codelineno-0-209">209</a></span>
+<span class="normal"><a href="#__codelineno-0-210">210</a></span>
+<span class="normal"><a href="#__codelineno-0-211">211</a></span>
+<span class="normal"><a href="#__codelineno-0-212">212</a></span>
+<span class="normal"><a href="#__codelineno-0-213">213</a></span>
+<span class="normal"><a href="#__codelineno-0-214">214</a></span>
+<span class="normal"><a href="#__codelineno-0-215">215</a></span>
+<span class="normal"><a href="#__codelineno-0-216">216</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-187" name="__codelineno-0-187"></a><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">execute</span><span class="p">(</span>
+<a id="__codelineno-0-188" name="__codelineno-0-188"></a>    <span class="bp">self</span><span class="p">,</span>
+<a id="__codelineno-0-189" name="__codelineno-0-189"></a>    <span class="n">input_data</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span>
+<a id="__codelineno-0-190" name="__codelineno-0-190"></a>    <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+<a id="__codelineno-0-191" name="__codelineno-0-191"></a><span class="p">):</span>
+<a id="__codelineno-0-192" name="__codelineno-0-192"></a>    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">user_instruction</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">has_udf</span><span class="p">():</span>
+<a id="__codelineno-0-193" name="__codelineno-0-193"></a>        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Neither `user_instruction` nor `func` is given.&quot;</span><span class="p">)</span>
+<a id="__codelineno-0-194" name="__codelineno-0-194"></a>
+<a id="__codelineno-0-195" name="__codelineno-0-195"></a>    <span class="k">if</span> <span class="n">input_data</span><span class="o">.</span><span class="n">empty</span><span class="p">:</span>
+<a id="__codelineno-0-196" name="__codelineno-0-196"></a>        <span class="k">return</span> <span class="n">RankOpOutputs</span><span class="p">(</span><span class="n">ranked_indices</span><span class="o">=</span><span class="p">[],</span> <span class="n">cost</span><span class="o">=</span><span class="mf">0.0</span><span class="p">)</span>
+<a id="__codelineno-0-197" name="__codelineno-0-197"></a>
+<a id="__codelineno-0-198" name="__codelineno-0-198"></a>    <span class="n">processed_data</span> <span class="o">=</span> <span class="n">input_data</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">input_columns</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span>
+<a id="__codelineno-0-199" name="__codelineno-0-199"></a>    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">processed_data</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="n">ImageDtype</span><span class="p">):</span>
+<a id="__codelineno-0-200" name="__codelineno-0-200"></a>        <span class="n">dtype</span> <span class="o">=</span> <span class="s2">&quot;image&quot;</span>
+<a id="__codelineno-0-201" name="__codelineno-0-201"></a>    <span class="k">else</span><span class="p">:</span>
+<a id="__codelineno-0-202" name="__codelineno-0-202"></a>        <span class="n">dtype</span> <span class="o">=</span> <span class="s2">&quot;text&quot;</span>
+<a id="__codelineno-0-203" name="__codelineno-0-203"></a>
+<a id="__codelineno-0-204" name="__codelineno-0-204"></a>    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">has_udf</span><span class="p">():</span>
+<a id="__codelineno-0-205" name="__codelineno-0-205"></a>        <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;The udf is not supported in the current Rank operator implementation. Switch to LLM-based ranking.&quot;</span><span class="p">)</span>
+<a id="__codelineno-0-206" name="__codelineno-0-206"></a>
+<a id="__codelineno-0-207" name="__codelineno-0-207"></a>    <span class="n">low</span><span class="p">,</span> <span class="n">high</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">processed_data</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span>
+<a id="__codelineno-0-208" name="__codelineno-0-208"></a>    <span class="n">ranking</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">processed_data</span><span class="p">)))</span>
+<a id="__codelineno-0-209" name="__codelineno-0-209"></a>    <span class="n">ranking</span><span class="p">,</span> <span class="n">token_cost</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">quick_sort</span><span class="p">(</span><span class="n">processed_data</span><span class="p">,</span> <span class="n">ranking</span><span class="p">,</span> <span class="n">low</span><span class="p">,</span> <span class="n">high</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">user_instruction</span><span class="p">,</span> <span class="n">dtype</span><span class="p">,</span> <span class="n">model</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+<a id="__codelineno-0-210" name="__codelineno-0-210"></a>    <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">descend</span><span class="p">:</span>
+<a id="__codelineno-0-211" name="__codelineno-0-211"></a>        <span class="n">ranking</span><span class="o">.</span><span class="n">reverse</span><span class="p">()</span>
+<a id="__codelineno-0-212" name="__codelineno-0-212"></a>
+<a id="__codelineno-0-213" name="__codelineno-0-213"></a>    <span class="k">return</span> <span class="n">RankOpOutputs</span><span class="p">(</span>
+<a id="__codelineno-0-214" name="__codelineno-0-214"></a>        <span class="n">ranked_indices</span><span class="o">=</span><span class="n">ranking</span><span class="p">,</span>
+<a id="__codelineno-0-215" name="__codelineno-0-215"></a>        <span class="n">cost</span><span class="o">=</span><span class="n">token_cost</span>
+<a id="__codelineno-0-216" name="__codelineno-0-216"></a>    <span class="p">)</span>
+</code></pre></div></td></tr></table></div>
+            </details>
+    </div>
+
+</div>
+
+
+
+  </div>
+
+    </div>
+
+</div><h2 id="output-class">Output Class<a class="headerlink" href="#output-class" title="Permanent link">&para;</a></h2>
+
+
+<div class="doc doc-object doc-class">
+
+
+
+<h3 id="nirvana.ops.rank.RankOpOutputs" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-class"></code>              <code class="highlight language-python"><span class="n">nirvana</span><span class="o">.</span><span class="n">ops</span><span class="o">.</span><span class="n">rank</span><span class="o">.</span><span class="n">RankOpOutputs</span><span class="p">(</span><span class="n">cost</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span> <span class="n">ranking</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(),</span> <span class="n">ranked_indices</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="nb">list</span><span class="p">())</span></code>
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-dataclass"><code>dataclass</code></small>
+  </span>
+
+<a href="#nirvana.ops.rank.RankOpOutputs" class="headerlink" title="Permanent link">&para;</a></h3>
+
+
+    <div class="doc doc-contents first">
+            <p class="doc doc-class-bases">
+              Bases: <code><span title="nirvana.ops.base.BaseOpOutputs">BaseOpOutputs</span></code></p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="doc doc-children">
+
+
+
+
+
+<h4 id="nirvana.ops.rank.RankOpOutputs-attributes">Attributes<a href="#nirvana.ops.rank.RankOpOutputs-attributes" class="headerlink" title="Permanent link">&para;</a></h4>
+
+<div class="doc doc-object doc-attribute">
+
+
+
+<h5 id="nirvana.ops.rank.RankOpOutputs.ranking" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-attribute"></code>            <code class="highlight language-python"><span class="n">ranking</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">list</span><span class="p">)</span></code>
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-class-attribute"><code>class-attribute</code></small>
+      <small class="doc doc-label doc-label-instance-attribute"><code>instance-attribute</code></small>
+  </span>
+
+<a href="#nirvana.ops.rank.RankOpOutputs.ranking" class="headerlink" title="Permanent link">&para;</a></h5>
+
+
+    <div class="doc doc-contents ">
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-attribute">
+
+
+
+<h5 id="nirvana.ops.rank.RankOpOutputs.ranked_indices" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-attribute"></code>            <code class="highlight language-python"><span class="n">ranked_indices</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">list</span><span class="p">)</span></code>
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-class-attribute"><code>class-attribute</code></small>
+      <small class="doc doc-label doc-label-instance-attribute"><code>instance-attribute</code></small>
+  </span>
+
+<a href="#nirvana.ops.rank.RankOpOutputs.ranked_indices" class="headerlink" title="Permanent link">&para;</a></h5>
+
+
+    <div class="doc doc-contents ">
+
+    </div>
+
+</div>
+
+
+<h4 id="nirvana.ops.rank.RankOpOutputs-functions">Functions<a href="#nirvana.ops.rank.RankOpOutputs-functions" class="headerlink" title="Permanent link">&para;</a></h4>
+
+
+
+  </div>
+
+    </div>
+
+</div><h2 id="function-wrapper">Function Wrapper<a class="headerlink" href="#function-wrapper" title="Permanent link">&para;</a></h2>
+
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="nirvana.ops.rank.rank_wrapper" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-function"></code>            <span class="doc doc-object-name doc-function-name">nirvana.ops.rank.rank_wrapper</span>
+
+
+<a href="#nirvana.ops.rank.rank_wrapper" class="headerlink" title="Permanent link">&para;</a></h3>
+<div class="doc-signature highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">rank_wrapper</span><span class="p">(</span><span class="n">input_data</span><span class="p">:</span> <span class="n">DataFrame</span><span class="p">,</span> <span class="n">user_instruction</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">input_column</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">descend</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">context</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">]</span> <span class="o">|</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">model</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">func</span><span class="p">:</span> <span class="n">Callable</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">strategy</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s1">&#39;plain&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;plain&#39;</span><span class="p">,</span> <span class="n">rate_limit</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">16</span><span class="p">,</span> <span class="n">assertions</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Callable</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="p">[],</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+</code></pre></div>
+
+    <div class="doc doc-contents first">
+
+        <p>A function wrapper for rank operation</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Default</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                <code>input_data</code>
+            </td>
+            <td>
+                  <code><span title="pandas.DataFrame">DataFrame</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Input dataframe</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>user_instruction</code>
+            </td>
+            <td>
+                  <code><span title="str">str</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>User instruction. Defaults to None.</p>
+              </div>
+            </td>
+            <td>
+                  <code>None</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>input_column</code>
+            </td>
+            <td>
+                  <code><span title="str">str</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Input column. Defaults to None.</p>
+              </div>
+            </td>
+            <td>
+                  <code>None</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>descend</code>
+            </td>
+            <td>
+                  <code><span title="bool">bool</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Whether to rank in descending order (True) or ascending order (False). Defaults to True.</p>
+              </div>
+            </td>
+            <td>
+                  <code>True</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>context</code>
+            </td>
+            <td>
+                  <code><span title="list">list</span>[<span title="dict">dict</span>] | <span title="str">str</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Context. Defaults to None.</p>
+              </div>
+            </td>
+            <td>
+                  <code>None</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>model</code>
+            </td>
+            <td>
+                  <code><span title="str">str</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Model. Defaults to None.</p>
+              </div>
+            </td>
+            <td>
+                  <code>None</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>func</code>
+            </td>
+            <td>
+                  <code><span title="typing.Callable">Callable</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>User function. Defaults to None.</p>
+              </div>
+            </td>
+            <td>
+                  <code>None</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>strategy</code>
+            </td>
+            <td>
+                  <code><span title="typing.Literal">Literal</span>[&#39;plain&#39;]</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Strategy. Defaults to "plain".</p>
+              </div>
+            </td>
+            <td>
+                  <code>&#39;plain&#39;</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>rate_limit</code>
+            </td>
+            <td>
+                  <code><span title="int">int</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Rate limit. Defaults to 16.</p>
+              </div>
+            </td>
+            <td>
+                  <code>16</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>assertions</code>
+            </td>
+            <td>
+                  <code><span title="list">list</span>[<span title="typing.Callable">Callable</span>]</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Assertions. Defaults to [].</p>
+              </div>
+            </td>
+            <td>
+                  <code>[]</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>**kwargs</code>
+            </td>
+            <td>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Additional keyword arguments for OpenAI Clent.</p>
+              </div>
+            </td>
+            <td>
+                  <code>{}</code>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+            <details class="mkdocstrings-source">
+              <summary>Source code in <code>nirvana/ops/rank.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-14">14</a></span>
+<span class="normal"><a href="#__codelineno-0-15">15</a></span>
+<span class="normal"><a href="#__codelineno-0-16">16</a></span>
+<span class="normal"><a href="#__codelineno-0-17">17</a></span>
+<span class="normal"><a href="#__codelineno-0-18">18</a></span>
+<span class="normal"><a href="#__codelineno-0-19">19</a></span>
+<span class="normal"><a href="#__codelineno-0-20">20</a></span>
+<span class="normal"><a href="#__codelineno-0-21">21</a></span>
+<span class="normal"><a href="#__codelineno-0-22">22</a></span>
+<span class="normal"><a href="#__codelineno-0-23">23</a></span>
+<span class="normal"><a href="#__codelineno-0-24">24</a></span>
+<span class="normal"><a href="#__codelineno-0-25">25</a></span>
+<span class="normal"><a href="#__codelineno-0-26">26</a></span>
+<span class="normal"><a href="#__codelineno-0-27">27</a></span>
+<span class="normal"><a href="#__codelineno-0-28">28</a></span>
+<span class="normal"><a href="#__codelineno-0-29">29</a></span>
+<span class="normal"><a href="#__codelineno-0-30">30</a></span>
+<span class="normal"><a href="#__codelineno-0-31">31</a></span>
+<span class="normal"><a href="#__codelineno-0-32">32</a></span>
+<span class="normal"><a href="#__codelineno-0-33">33</a></span>
+<span class="normal"><a href="#__codelineno-0-34">34</a></span>
+<span class="normal"><a href="#__codelineno-0-35">35</a></span>
+<span class="normal"><a href="#__codelineno-0-36">36</a></span>
+<span class="normal"><a href="#__codelineno-0-37">37</a></span>
+<span class="normal"><a href="#__codelineno-0-38">38</a></span>
+<span class="normal"><a href="#__codelineno-0-39">39</a></span>
+<span class="normal"><a href="#__codelineno-0-40">40</a></span>
+<span class="normal"><a href="#__codelineno-0-41">41</a></span>
+<span class="normal"><a href="#__codelineno-0-42">42</a></span>
+<span class="normal"><a href="#__codelineno-0-43">43</a></span>
+<span class="normal"><a href="#__codelineno-0-44">44</a></span>
+<span class="normal"><a href="#__codelineno-0-45">45</a></span>
+<span class="normal"><a href="#__codelineno-0-46">46</a></span>
+<span class="normal"><a href="#__codelineno-0-47">47</a></span>
+<span class="normal"><a href="#__codelineno-0-48">48</a></span>
+<span class="normal"><a href="#__codelineno-0-49">49</a></span>
+<span class="normal"><a href="#__codelineno-0-50">50</a></span>
+<span class="normal"><a href="#__codelineno-0-51">51</a></span>
+<span class="normal"><a href="#__codelineno-0-52">52</a></span>
+<span class="normal"><a href="#__codelineno-0-53">53</a></span>
+<span class="normal"><a href="#__codelineno-0-54">54</a></span>
+<span class="normal"><a href="#__codelineno-0-55">55</a></span>
+<span class="normal"><a href="#__codelineno-0-56">56</a></span>
+<span class="normal"><a href="#__codelineno-0-57">57</a></span>
+<span class="normal"><a href="#__codelineno-0-58">58</a></span>
+<span class="normal"><a href="#__codelineno-0-59">59</a></span>
+<span class="normal"><a href="#__codelineno-0-60">60</a></span>
+<span class="normal"><a href="#__codelineno-0-61">61</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-14" name="__codelineno-0-14"></a><span class="k">def</span><span class="w"> </span><span class="nf">rank_wrapper</span><span class="p">(</span>
+<a id="__codelineno-0-15" name="__codelineno-0-15"></a>    <span class="n">input_data</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span>
+<a id="__codelineno-0-16" name="__codelineno-0-16"></a>    <span class="n">user_instruction</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<a id="__codelineno-0-17" name="__codelineno-0-17"></a>    <span class="n">input_column</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<a id="__codelineno-0-18" name="__codelineno-0-18"></a>    <span class="n">descend</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+<a id="__codelineno-0-19" name="__codelineno-0-19"></a>    <span class="n">context</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">]</span> <span class="o">|</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<a id="__codelineno-0-20" name="__codelineno-0-20"></a>    <span class="n">model</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<a id="__codelineno-0-21" name="__codelineno-0-21"></a>    <span class="n">func</span><span class="p">:</span> <span class="n">Callable</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<a id="__codelineno-0-22" name="__codelineno-0-22"></a>    <span class="n">strategy</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;plain&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;plain&quot;</span><span class="p">,</span>
+<a id="__codelineno-0-23" name="__codelineno-0-23"></a>    <span class="n">rate_limit</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">16</span><span class="p">,</span>
+<a id="__codelineno-0-24" name="__codelineno-0-24"></a>    <span class="n">assertions</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Callable</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="p">[],</span>
+<a id="__codelineno-0-25" name="__codelineno-0-25"></a>    <span class="o">**</span><span class="n">kwargs</span>
+<a id="__codelineno-0-26" name="__codelineno-0-26"></a><span class="p">):</span>
+<a id="__codelineno-0-27" name="__codelineno-0-27"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<a id="__codelineno-0-28" name="__codelineno-0-28"></a><span class="sd">    A function wrapper for rank operation</span>
+<a id="__codelineno-0-29" name="__codelineno-0-29"></a>
+<a id="__codelineno-0-30" name="__codelineno-0-30"></a><span class="sd">    Args:</span>
+<a id="__codelineno-0-31" name="__codelineno-0-31"></a><span class="sd">        input_data (pd.DataFrame): Input dataframe</span>
+<a id="__codelineno-0-32" name="__codelineno-0-32"></a><span class="sd">        user_instruction (str, optional): User instruction. Defaults to None.</span>
+<a id="__codelineno-0-33" name="__codelineno-0-33"></a><span class="sd">        input_column (str, optional): Input column. Defaults to None.</span>
+<a id="__codelineno-0-34" name="__codelineno-0-34"></a><span class="sd">        descend (bool, optional): Whether to rank in descending order (True) or ascending order (False). Defaults to True.</span>
+<a id="__codelineno-0-35" name="__codelineno-0-35"></a><span class="sd">        context (list[dict] | str, optional): Context. Defaults to None.</span>
+<a id="__codelineno-0-36" name="__codelineno-0-36"></a><span class="sd">        model (str, optional): Model. Defaults to None.</span>
+<a id="__codelineno-0-37" name="__codelineno-0-37"></a><span class="sd">        func (Callable, optional): User function. Defaults to None.</span>
+<a id="__codelineno-0-38" name="__codelineno-0-38"></a><span class="sd">        strategy (Literal[&quot;plain&quot;], optional): Strategy. Defaults to &quot;plain&quot;.</span>
+<a id="__codelineno-0-39" name="__codelineno-0-39"></a><span class="sd">        rate_limit (int, optional): Rate limit. Defaults to 16.</span>
+<a id="__codelineno-0-40" name="__codelineno-0-40"></a><span class="sd">        assertions (list[Callable], optional): Assertions. Defaults to [].</span>
+<a id="__codelineno-0-41" name="__codelineno-0-41"></a><span class="sd">        **kwargs: Additional keyword arguments for OpenAI Clent.</span>
+<a id="__codelineno-0-42" name="__codelineno-0-42"></a><span class="sd">    &quot;&quot;&quot;</span>
+<a id="__codelineno-0-43" name="__codelineno-0-43"></a>
+<a id="__codelineno-0-44" name="__codelineno-0-44"></a>    <span class="n">rank_op</span> <span class="o">=</span> <span class="n">RankOperation</span><span class="p">(</span>
+<a id="__codelineno-0-45" name="__codelineno-0-45"></a>        <span class="n">user_instruction</span><span class="o">=</span><span class="n">user_instruction</span><span class="p">,</span>
+<a id="__codelineno-0-46" name="__codelineno-0-46"></a>        <span class="n">input_columns</span><span class="o">=</span><span class="p">[</span><span class="n">input_column</span><span class="p">],</span>
+<a id="__codelineno-0-47" name="__codelineno-0-47"></a>        <span class="n">descend</span><span class="o">=</span><span class="n">descend</span><span class="p">,</span>
+<a id="__codelineno-0-48" name="__codelineno-0-48"></a>        <span class="n">context</span><span class="o">=</span><span class="n">context</span><span class="p">,</span>
+<a id="__codelineno-0-49" name="__codelineno-0-49"></a>        <span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">,</span>
+<a id="__codelineno-0-50" name="__codelineno-0-50"></a>        <span class="n">tool</span><span class="o">=</span><span class="n">FunctionCallTool</span><span class="o">.</span><span class="n">from_function</span><span class="p">(</span><span class="n">func</span><span class="o">=</span><span class="n">func</span><span class="p">)</span> <span class="k">if</span> <span class="n">func</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+<a id="__codelineno-0-51" name="__codelineno-0-51"></a>        <span class="n">strategy</span><span class="o">=</span><span class="n">strategy</span><span class="p">,</span>
+<a id="__codelineno-0-52" name="__codelineno-0-52"></a>        <span class="n">rate_limit</span><span class="o">=</span><span class="n">rate_limit</span><span class="p">,</span>
+<a id="__codelineno-0-53" name="__codelineno-0-53"></a>        <span class="n">assertions</span><span class="o">=</span><span class="n">assertions</span>
+<a id="__codelineno-0-54" name="__codelineno-0-54"></a>    <span class="p">)</span>
+<a id="__codelineno-0-55" name="__codelineno-0-55"></a>    <span class="n">outputs</span> <span class="o">=</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">rank_op</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span>
+<a id="__codelineno-0-56" name="__codelineno-0-56"></a>        <span class="n">input_data</span><span class="o">=</span><span class="n">input_data</span><span class="p">,</span>
+<a id="__codelineno-0-57" name="__codelineno-0-57"></a>        <span class="o">**</span><span class="n">kwargs</span>
+<a id="__codelineno-0-58" name="__codelineno-0-58"></a>    <span class="p">))</span>
+<a id="__codelineno-0-59" name="__codelineno-0-59"></a>    <span class="n">ranking</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">outputs</span><span class="o">.</span><span class="n">ranked_indices</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">),</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">k</span><span class="p">:</span> <span class="n">outputs</span><span class="o">.</span><span class="n">ranked_indices</span><span class="p">[</span><span class="n">k</span> <span class="o">-</span> <span class="mi">1</span><span class="p">])</span>
+<a id="__codelineno-0-60" name="__codelineno-0-60"></a>    <span class="n">outputs</span><span class="o">.</span><span class="n">ranking</span> <span class="o">=</span> <span class="n">ranking</span>
+<a id="__codelineno-0-61" name="__codelineno-0-61"></a>    <span class="k">return</span> <span class="n">outputs</span>
+</code></pre></div></td></tr></table></div>
+            </details>
+    </div>
+
+</div>
 
 
 

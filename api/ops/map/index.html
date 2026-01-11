@@ -594,18 +594,47 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#nirvanaopsmap" class="md-nav__link">
+  <a href="#core-implementation" class="md-nav__link">
     <span class="md-ellipsis">
       
-        nirvana.ops.map
+        Core Implementation
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Core Implementation">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#nirvana.ops.map.MapOperation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        MapOperation
       
     </span>
   </a>
   
 </li>
+        
+      </ul>
+    </nav>
+  
+</li>
       
         <li class="md-nav__item">
-  <a href="#mapopoutputs" class="md-nav__link">
+  <a href="#output-class" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Output Class
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Output Class">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#nirvana.ops.map.MapOpOutputs" class="md-nav__link">
     <span class="md-ellipsis">
       
         MapOpOutputs
@@ -614,46 +643,29 @@
   </a>
   
 </li>
+        
+      </ul>
+    </nav>
+  
+</li>
       
         <li class="md-nav__item">
-  <a href="#mapoperation" class="md-nav__link">
+  <a href="#function-wrapper" class="md-nav__link">
     <span class="md-ellipsis">
       
-        MapOperation
+        Function Wrapper
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="MapOperation">
+    <nav class="md-nav" aria-label="Function Wrapper">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#parameters" class="md-nav__link">
+  <a href="#nirvana.ops.map.map_wrapper" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Parameters
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#properties" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Properties:
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#methods" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Methods
+        map_wrapper
       
     </span>
   </a>
@@ -1232,18 +1244,47 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#nirvanaopsmap" class="md-nav__link">
+  <a href="#core-implementation" class="md-nav__link">
     <span class="md-ellipsis">
       
-        nirvana.ops.map
+        Core Implementation
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Core Implementation">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#nirvana.ops.map.MapOperation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        MapOperation
       
     </span>
   </a>
   
 </li>
+        
+      </ul>
+    </nav>
+  
+</li>
       
         <li class="md-nav__item">
-  <a href="#mapopoutputs" class="md-nav__link">
+  <a href="#output-class" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Output Class
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Output Class">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#nirvana.ops.map.MapOpOutputs" class="md-nav__link">
     <span class="md-ellipsis">
       
         MapOpOutputs
@@ -1252,46 +1293,29 @@
   </a>
   
 </li>
+        
+      </ul>
+    </nav>
+  
+</li>
       
         <li class="md-nav__item">
-  <a href="#mapoperation" class="md-nav__link">
+  <a href="#function-wrapper" class="md-nav__link">
     <span class="md-ellipsis">
       
-        MapOperation
+        Function Wrapper
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="MapOperation">
+    <nav class="md-nav" aria-label="Function Wrapper">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#parameters" class="md-nav__link">
+  <a href="#nirvana.ops.map.map_wrapper" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Parameters
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#properties" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Properties:
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#methods" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Methods
+        map_wrapper
       
     </span>
   </a>
@@ -1324,96 +1348,877 @@
 
 
 <h1 id="map-operation">Map Operation<a class="headerlink" href="#map-operation" title="Permanent link">&para;</a></h1>
-<p>The Map operation applies a specified transformation in natural language to each item in a column of input data</p>
-<h2 id="nirvanaopsmap">nirvana.ops.map<a class="headerlink" href="#nirvanaopsmap" title="Permanent link">&para;</a></h2>
-<p><code>( input_data: pandas.DataFrame, user_instruction: str, input_column: str, output_columns: list[str], func: Callable = None, strategy: Literal["plain", "fewshot", "self-refine"] = "plain", **kwargs ) -&gt; MapOpOutputs</code></p>
-<p>A function wrapper that invokes <code>MapOperation.execute(input_data)</code></p>
-<h2 id="mapopoutputs">MapOpOutputs<a class="headerlink" href="#mapopoutputs" title="Permanent link">&para;</a></h2>
-<p>The type of return value of <code>MapOperation</code> (base: <code>BaseOpOutputs</code>).</p>
-<p><strong>Parameters:</strong></p>
-<ul>
-<li><code>field_name</code> (<code>list[str]</code>): List of output column names</li>
-<li><code>output</code> (<code>dict[str, list]</code>): Output values for the generated fields</li>
-<li><code>cost</code> (<code>float</code>): Token cost for executing map operation  </li>
-</ul>
-<h2 id="mapoperation">MapOperation<a class="headerlink" href="#mapoperation" title="Permanent link">&para;</a></h2>
-<p>Core class to implement map operation (base: <code>BaseOperation</code>).</p>
-<p><strong>Parameters:</strong></p>
-<h3 id="parameters">Parameters<a class="headerlink" href="#parameters" title="Permanent link">&para;</a></h3>
-<table>
-<thead>
-<tr>
-<th><strong>Name</strong></th>
-<th><strong>Type</strong></th>
-<th><strong>Description</strong></th>
-<th><strong>Default</strong></th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>user_instruction</code></td>
-<td><code>str</code></td>
-<td>User instruction</td>
-<td>required</td>
-</tr>
-<tr>
-<td><code>input_columns</code></td>
-<td><code>list[str]</code></td>
-<td>List of input columns</td>
-<td>required</td>
-</tr>
-<tr>
-<td><code>output_columns</code></td>
-<td><code>list[str]</code></td>
-<td>List of names of generated fields</td>
-<td>required</td>
-</tr>
-<tr>
-<td><code>context</code></td>
-<td><code>dict</code></td>
-<td>Additional context information (e.g., demonstrations) for LLM reasoning</td>
-<td><code>{}</code></td>
-</tr>
-<tr>
-<td><code>model</code></td>
-<td><code>str</code></td>
-<td>LLM backend for operation execution</td>
-<td><code>None</code></td>
-</tr>
-<tr>
-<td><code>tool</code></td>
-<td><code>BaseTool</code></td>
-<td>Function tools for operation execution</td>
-<td><code>None</code></td>
-</tr>
-<tr>
-<td><code>semaphore</code></td>
-<td><code>int</code></td>
-<td>Concurrent LLM calls</td>
-<td><code>16</code></td>
-</tr>
-<tr>
-<td><code>assertions</code></td>
-<td><code>list[Callable]</code></td>
-<td>Assertions/guardrails to constrain behavior of map operation</td>
-<td><code>[]</code></td>
-</tr>
-<tr>
-<td><code>strategy</code></td>
-<td><code>Literal["plain", "fewshot", "self-refine"]</code></td>
-<td>The workflow of LLM inference: <code>plain</code> represents a direct LLM inference; <code>fewshot</code> represents LLM inference with few-shot demos (requiring demos in <code>context</code>); <code>self-refine</code> represents self-refinement workflow that gives feedback to the initial generation then refines LLM outputs accordingly</td>
-<td><code>"plain"</code></td>
-</tr>
-</tbody>
-</table>
-<h3 id="properties">Properties:<a class="headerlink" href="#properties" title="Permanent link">&para;</a></h3>
-<ul>
-<li><code>dependencies</code> (<code>list(str)</code>): Dependent columns of the map operation</li>
-<li><code>generated_fields</code> (<code>list(str)</code>): Names of generated fields of the map operation</li>
-<li><code>op_kwargs</code> (<code>dict</code>): arguments in the map operation</li>
-</ul>
-<h3 id="methods">Methods<a class="headerlink" href="#methods" title="Permanent link">&para;</a></h3>
-<h4 id="executeinput_data-args-kwargs-mapopoutputs"><code>execute(input_data, *args, **kwargs) -&gt; MapOpOutputs</code><a class="headerlink" href="#executeinput_data-args-kwargs-mapopoutputs" title="Permanent link">&para;</a></h4>
+<p>The Map operation applies a specified transformation in natural language to each item in a column of input data.</p>
+<h2 id="core-implementation">Core Implementation<a class="headerlink" href="#core-implementation" title="Permanent link">&para;</a></h2>
+
+
+<div class="doc doc-object doc-class">
+
+
+
+<h3 id="nirvana.ops.map.MapOperation" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-class"></code>              <code class="highlight language-python"><span class="n">nirvana</span><span class="o">.</span><span class="n">ops</span><span class="o">.</span><span class="n">map</span><span class="o">.</span><span class="n">MapOperation</span><span class="p">(</span><span class="n">user_instruction</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">input_columns</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[],</span> <span class="n">output_columns</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[],</span> <span class="n">context</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">]</span> <span class="o">|</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">model</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">tool</span><span class="p">:</span> <span class="n">Callable</span> <span class="o">|</span> <span class="n">BaseTool</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">strategy</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s1">&#39;plain&#39;</span><span class="p">,</span> <span class="s1">&#39;fewshot&#39;</span><span class="p">,</span> <span class="s1">&#39;self-refine&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;plain&#39;</span><span class="p">,</span> <span class="n">limit</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">rate_limit</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">16</span><span class="p">,</span> <span class="n">assertions</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Callable</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="p">[])</span></code>
+
+<a href="#nirvana.ops.map.MapOperation" class="headerlink" title="Permanent link">&para;</a></h3>
+
+
+    <div class="doc doc-contents first">
+            <p class="doc doc-class-bases">
+              Bases: <code><span title="nirvana.ops.base.BaseOperation">BaseOperation</span></code></p>
+
+
+
+        <p>Map operator: Applies an LLM to perform a transformation on a column, producing a new column as output</p>
+
+
+
+
+
+
+
+
+                  <details class="mkdocstrings-source">
+                    <summary>Source code in <code>nirvana/ops/map.py</code></summary>
+                    <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-87"> 87</a></span>
+<span class="normal"><a href="#__codelineno-0-88"> 88</a></span>
+<span class="normal"><a href="#__codelineno-0-89"> 89</a></span>
+<span class="normal"><a href="#__codelineno-0-90"> 90</a></span>
+<span class="normal"><a href="#__codelineno-0-91"> 91</a></span>
+<span class="normal"><a href="#__codelineno-0-92"> 92</a></span>
+<span class="normal"><a href="#__codelineno-0-93"> 93</a></span>
+<span class="normal"><a href="#__codelineno-0-94"> 94</a></span>
+<span class="normal"><a href="#__codelineno-0-95"> 95</a></span>
+<span class="normal"><a href="#__codelineno-0-96"> 96</a></span>
+<span class="normal"><a href="#__codelineno-0-97"> 97</a></span>
+<span class="normal"><a href="#__codelineno-0-98"> 98</a></span>
+<span class="normal"><a href="#__codelineno-0-99"> 99</a></span>
+<span class="normal"><a href="#__codelineno-0-100">100</a></span>
+<span class="normal"><a href="#__codelineno-0-101">101</a></span>
+<span class="normal"><a href="#__codelineno-0-102">102</a></span>
+<span class="normal"><a href="#__codelineno-0-103">103</a></span>
+<span class="normal"><a href="#__codelineno-0-104">104</a></span>
+<span class="normal"><a href="#__codelineno-0-105">105</a></span>
+<span class="normal"><a href="#__codelineno-0-106">106</a></span>
+<span class="normal"><a href="#__codelineno-0-107">107</a></span>
+<span class="normal"><a href="#__codelineno-0-108">108</a></span>
+<span class="normal"><a href="#__codelineno-0-109">109</a></span>
+<span class="normal"><a href="#__codelineno-0-110">110</a></span>
+<span class="normal"><a href="#__codelineno-0-111">111</a></span>
+<span class="normal"><a href="#__codelineno-0-112">112</a></span>
+<span class="normal"><a href="#__codelineno-0-113">113</a></span>
+<span class="normal"><a href="#__codelineno-0-114">114</a></span>
+<span class="normal"><a href="#__codelineno-0-115">115</a></span>
+<span class="normal"><a href="#__codelineno-0-116">116</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-87" name="__codelineno-0-87"></a><span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+<a id="__codelineno-0-88" name="__codelineno-0-88"></a>    <span class="bp">self</span><span class="p">,</span>
+<a id="__codelineno-0-89" name="__codelineno-0-89"></a>    <span class="n">user_instruction</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
+<a id="__codelineno-0-90" name="__codelineno-0-90"></a>    <span class="n">input_columns</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[],</span>
+<a id="__codelineno-0-91" name="__codelineno-0-91"></a>    <span class="n">output_columns</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[],</span>
+<a id="__codelineno-0-92" name="__codelineno-0-92"></a>    <span class="n">context</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">]</span> <span class="o">|</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<a id="__codelineno-0-93" name="__codelineno-0-93"></a>    <span class="n">model</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<a id="__codelineno-0-94" name="__codelineno-0-94"></a>    <span class="n">tool</span><span class="p">:</span> <span class="n">Callable</span> <span class="o">|</span> <span class="n">BaseTool</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<a id="__codelineno-0-95" name="__codelineno-0-95"></a>    <span class="n">strategy</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;plain&quot;</span><span class="p">,</span> <span class="s2">&quot;fewshot&quot;</span><span class="p">,</span> <span class="s2">&quot;self-refine&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;plain&quot;</span><span class="p">,</span>
+<a id="__codelineno-0-96" name="__codelineno-0-96"></a>    <span class="n">limit</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<a id="__codelineno-0-97" name="__codelineno-0-97"></a>    <span class="n">rate_limit</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">16</span><span class="p">,</span>
+<a id="__codelineno-0-98" name="__codelineno-0-98"></a>    <span class="n">assertions</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Callable</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="p">[],</span>
+<a id="__codelineno-0-99" name="__codelineno-0-99"></a><span class="p">):</span>
+<a id="__codelineno-0-100" name="__codelineno-0-100"></a>    <span class="k">if</span> <span class="n">tool</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">tool</span><span class="p">,</span> <span class="n">BaseTool</span><span class="p">):</span>
+<a id="__codelineno-0-101" name="__codelineno-0-101"></a>        <span class="n">tool</span> <span class="o">=</span> <span class="n">FunctionCallTool</span><span class="o">.</span><span class="n">from_function</span><span class="p">(</span><span class="n">func</span><span class="o">=</span><span class="n">tool</span><span class="p">)</span>
+<a id="__codelineno-0-102" name="__codelineno-0-102"></a>
+<a id="__codelineno-0-103" name="__codelineno-0-103"></a>    <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
+<a id="__codelineno-0-104" name="__codelineno-0-104"></a>        <span class="n">op_name</span><span class="o">=</span><span class="s2">&quot;map&quot;</span><span class="p">,</span>
+<a id="__codelineno-0-105" name="__codelineno-0-105"></a>        <span class="n">user_instruction</span><span class="o">=</span><span class="n">user_instruction</span><span class="p">,</span>
+<a id="__codelineno-0-106" name="__codelineno-0-106"></a>        <span class="n">context</span><span class="o">=</span><span class="n">context</span><span class="p">,</span>
+<a id="__codelineno-0-107" name="__codelineno-0-107"></a>        <span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">,</span>
+<a id="__codelineno-0-108" name="__codelineno-0-108"></a>        <span class="n">tool</span><span class="o">=</span><span class="n">tool</span><span class="p">,</span>
+<a id="__codelineno-0-109" name="__codelineno-0-109"></a>        <span class="n">strategy</span><span class="o">=</span><span class="n">strategy</span><span class="p">,</span>
+<a id="__codelineno-0-110" name="__codelineno-0-110"></a>        <span class="n">limit</span><span class="o">=</span><span class="n">limit</span><span class="p">,</span>
+<a id="__codelineno-0-111" name="__codelineno-0-111"></a>        <span class="n">rate_limit</span><span class="o">=</span><span class="n">rate_limit</span><span class="p">,</span>
+<a id="__codelineno-0-112" name="__codelineno-0-112"></a>        <span class="n">assertions</span><span class="o">=</span><span class="n">assertions</span><span class="p">,</span>
+<a id="__codelineno-0-113" name="__codelineno-0-113"></a>    <span class="p">)</span>
+<a id="__codelineno-0-114" name="__codelineno-0-114"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">prompter</span> <span class="o">=</span> <span class="n">MapPrompter</span><span class="p">()</span>
+<a id="__codelineno-0-115" name="__codelineno-0-115"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">input_columns</span> <span class="o">=</span> <span class="n">input_columns</span>
+<a id="__codelineno-0-116" name="__codelineno-0-116"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">output_columns</span> <span class="o">=</span> <span class="n">output_columns</span>
+</code></pre></div></td></tr></table></div>
+                  </details>
+
+
+
+<div class="doc doc-children">
+
+
+
+
+
+<h4 id="nirvana.ops.map.MapOperation-attributes">Attributes<a href="#nirvana.ops.map.MapOperation-attributes" class="headerlink" title="Permanent link">&para;</a></h4>
+
+<div class="doc doc-object doc-attribute">
+
+
+
+<h5 id="nirvana.ops.map.MapOperation.strategy_options" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-attribute"></code>            <code class="highlight language-python"><span class="n">strategy_options</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;plain&#39;</span><span class="p">,</span> <span class="s1">&#39;fewshot&#39;</span><span class="p">,</span> <span class="s1">&#39;self-refine&#39;</span><span class="p">]</span></code>
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-class-attribute"><code>class-attribute</code></small>
+      <small class="doc doc-label doc-label-instance-attribute"><code>instance-attribute</code></small>
+  </span>
+
+<a href="#nirvana.ops.map.MapOperation.strategy_options" class="headerlink" title="Permanent link">&para;</a></h5>
+
+
+    <div class="doc doc-contents ">
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-attribute">
+
+
+
+<h5 id="nirvana.ops.map.MapOperation.prompter" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-attribute"></code>            <code class="highlight language-python"><span class="n">prompter</span> <span class="o">=</span> <span class="n">MapPrompter</span><span class="p">()</span></code>
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-instance-attribute"><code>instance-attribute</code></small>
+  </span>
+
+<a href="#nirvana.ops.map.MapOperation.prompter" class="headerlink" title="Permanent link">&para;</a></h5>
+
+
+    <div class="doc doc-contents ">
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-attribute">
+
+
+
+<h5 id="nirvana.ops.map.MapOperation.input_columns" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-attribute"></code>            <code class="highlight language-python"><span class="n">input_columns</span> <span class="o">=</span> <span class="n">input_columns</span></code>
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-instance-attribute"><code>instance-attribute</code></small>
+  </span>
+
+<a href="#nirvana.ops.map.MapOperation.input_columns" class="headerlink" title="Permanent link">&para;</a></h5>
+
+
+    <div class="doc doc-contents ">
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-attribute">
+
+
+
+<h5 id="nirvana.ops.map.MapOperation.output_columns" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-attribute"></code>            <code class="highlight language-python"><span class="n">output_columns</span> <span class="o">=</span> <span class="n">output_columns</span></code>
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-instance-attribute"><code>instance-attribute</code></small>
+  </span>
+
+<a href="#nirvana.ops.map.MapOperation.output_columns" class="headerlink" title="Permanent link">&para;</a></h5>
+
+
+    <div class="doc doc-contents ">
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-attribute">
+
+
+
+<h5 id="nirvana.ops.map.MapOperation.dependencies" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-attribute"></code>            <code class="highlight language-python"><span class="n">dependencies</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span></code>
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-property"><code>property</code></small>
+  </span>
+
+<a href="#nirvana.ops.map.MapOperation.dependencies" class="headerlink" title="Permanent link">&para;</a></h5>
+
+
+    <div class="doc doc-contents ">
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-attribute">
+
+
+
+<h5 id="nirvana.ops.map.MapOperation.generated_fields" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-attribute"></code>            <code class="highlight language-python"><span class="n">generated_fields</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span></code>
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-property"><code>property</code></small>
+  </span>
+
+<a href="#nirvana.ops.map.MapOperation.generated_fields" class="headerlink" title="Permanent link">&para;</a></h5>
+
+
+    <div class="doc doc-contents ">
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-attribute">
+
+
+
+<h5 id="nirvana.ops.map.MapOperation.op_kwargs" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-attribute"></code>            <code class="highlight language-python"><span class="n">op_kwargs</span></code>
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-property"><code>property</code></small>
+  </span>
+
+<a href="#nirvana.ops.map.MapOperation.op_kwargs" class="headerlink" title="Permanent link">&para;</a></h5>
+
+
+    <div class="doc doc-contents ">
+
+    </div>
+
+</div>
+
+
+<h4 id="nirvana.ops.map.MapOperation-functions">Functions<a href="#nirvana.ops.map.MapOperation-functions" class="headerlink" title="Permanent link">&para;</a></h4>
+
+<div class="doc doc-object doc-function">
+
+
+<h5 id="nirvana.ops.map.MapOperation.execute" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-method"></code>            <code class="highlight language-python"><span class="n">execute</span><span class="p">(</span><span class="n">input_data</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></code>
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-async"><code>async</code></small>
+  </span>
+
+<a href="#nirvana.ops.map.MapOperation.execute" class="headerlink" title="Permanent link">&para;</a></h5>
+
+
+    <div class="doc doc-contents ">
+
+
+            <details class="mkdocstrings-source">
+              <summary>Source code in <code>nirvana/ops/map.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-187">187</a></span>
+<span class="normal"><a href="#__codelineno-0-188">188</a></span>
+<span class="normal"><a href="#__codelineno-0-189">189</a></span>
+<span class="normal"><a href="#__codelineno-0-190">190</a></span>
+<span class="normal"><a href="#__codelineno-0-191">191</a></span>
+<span class="normal"><a href="#__codelineno-0-192">192</a></span>
+<span class="normal"><a href="#__codelineno-0-193">193</a></span>
+<span class="normal"><a href="#__codelineno-0-194">194</a></span>
+<span class="normal"><a href="#__codelineno-0-195">195</a></span>
+<span class="normal"><a href="#__codelineno-0-196">196</a></span>
+<span class="normal"><a href="#__codelineno-0-197">197</a></span>
+<span class="normal"><a href="#__codelineno-0-198">198</a></span>
+<span class="normal"><a href="#__codelineno-0-199">199</a></span>
+<span class="normal"><a href="#__codelineno-0-200">200</a></span>
+<span class="normal"><a href="#__codelineno-0-201">201</a></span>
+<span class="normal"><a href="#__codelineno-0-202">202</a></span>
+<span class="normal"><a href="#__codelineno-0-203">203</a></span>
+<span class="normal"><a href="#__codelineno-0-204">204</a></span>
+<span class="normal"><a href="#__codelineno-0-205">205</a></span>
+<span class="normal"><a href="#__codelineno-0-206">206</a></span>
+<span class="normal"><a href="#__codelineno-0-207">207</a></span>
+<span class="normal"><a href="#__codelineno-0-208">208</a></span>
+<span class="normal"><a href="#__codelineno-0-209">209</a></span>
+<span class="normal"><a href="#__codelineno-0-210">210</a></span>
+<span class="normal"><a href="#__codelineno-0-211">211</a></span>
+<span class="normal"><a href="#__codelineno-0-212">212</a></span>
+<span class="normal"><a href="#__codelineno-0-213">213</a></span>
+<span class="normal"><a href="#__codelineno-0-214">214</a></span>
+<span class="normal"><a href="#__codelineno-0-215">215</a></span>
+<span class="normal"><a href="#__codelineno-0-216">216</a></span>
+<span class="normal"><a href="#__codelineno-0-217">217</a></span>
+<span class="normal"><a href="#__codelineno-0-218">218</a></span>
+<span class="normal"><a href="#__codelineno-0-219">219</a></span>
+<span class="normal"><a href="#__codelineno-0-220">220</a></span>
+<span class="normal"><a href="#__codelineno-0-221">221</a></span>
+<span class="normal"><a href="#__codelineno-0-222">222</a></span>
+<span class="normal"><a href="#__codelineno-0-223">223</a></span>
+<span class="normal"><a href="#__codelineno-0-224">224</a></span>
+<span class="normal"><a href="#__codelineno-0-225">225</a></span>
+<span class="normal"><a href="#__codelineno-0-226">226</a></span>
+<span class="normal"><a href="#__codelineno-0-227">227</a></span>
+<span class="normal"><a href="#__codelineno-0-228">228</a></span>
+<span class="normal"><a href="#__codelineno-0-229">229</a></span>
+<span class="normal"><a href="#__codelineno-0-230">230</a></span>
+<span class="normal"><a href="#__codelineno-0-231">231</a></span>
+<span class="normal"><a href="#__codelineno-0-232">232</a></span>
+<span class="normal"><a href="#__codelineno-0-233">233</a></span>
+<span class="normal"><a href="#__codelineno-0-234">234</a></span>
+<span class="normal"><a href="#__codelineno-0-235">235</a></span>
+<span class="normal"><a href="#__codelineno-0-236">236</a></span>
+<span class="normal"><a href="#__codelineno-0-237">237</a></span>
+<span class="normal"><a href="#__codelineno-0-238">238</a></span>
+<span class="normal"><a href="#__codelineno-0-239">239</a></span>
+<span class="normal"><a href="#__codelineno-0-240">240</a></span>
+<span class="normal"><a href="#__codelineno-0-241">241</a></span>
+<span class="normal"><a href="#__codelineno-0-242">242</a></span>
+<span class="normal"><a href="#__codelineno-0-243">243</a></span>
+<span class="normal"><a href="#__codelineno-0-244">244</a></span>
+<span class="normal"><a href="#__codelineno-0-245">245</a></span>
+<span class="normal"><a href="#__codelineno-0-246">246</a></span>
+<span class="normal"><a href="#__codelineno-0-247">247</a></span>
+<span class="normal"><a href="#__codelineno-0-248">248</a></span>
+<span class="normal"><a href="#__codelineno-0-249">249</a></span>
+<span class="normal"><a href="#__codelineno-0-250">250</a></span>
+<span class="normal"><a href="#__codelineno-0-251">251</a></span>
+<span class="normal"><a href="#__codelineno-0-252">252</a></span>
+<span class="normal"><a href="#__codelineno-0-253">253</a></span>
+<span class="normal"><a href="#__codelineno-0-254">254</a></span>
+<span class="normal"><a href="#__codelineno-0-255">255</a></span>
+<span class="normal"><a href="#__codelineno-0-256">256</a></span>
+<span class="normal"><a href="#__codelineno-0-257">257</a></span>
+<span class="normal"><a href="#__codelineno-0-258">258</a></span>
+<span class="normal"><a href="#__codelineno-0-259">259</a></span>
+<span class="normal"><a href="#__codelineno-0-260">260</a></span>
+<span class="normal"><a href="#__codelineno-0-261">261</a></span>
+<span class="normal"><a href="#__codelineno-0-262">262</a></span>
+<span class="normal"><a href="#__codelineno-0-263">263</a></span>
+<span class="normal"><a href="#__codelineno-0-264">264</a></span>
+<span class="normal"><a href="#__codelineno-0-265">265</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-187" name="__codelineno-0-187"></a><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">execute</span><span class="p">(</span>
+<a id="__codelineno-0-188" name="__codelineno-0-188"></a>    <span class="bp">self</span><span class="p">,</span> 
+<a id="__codelineno-0-189" name="__codelineno-0-189"></a>    <span class="n">input_data</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span>
+<a id="__codelineno-0-190" name="__codelineno-0-190"></a>    <span class="o">**</span><span class="n">kwargs</span>
+<a id="__codelineno-0-191" name="__codelineno-0-191"></a><span class="p">):</span>  
+<a id="__codelineno-0-192" name="__codelineno-0-192"></a>    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">user_instruction</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">has_udf</span><span class="p">():</span>
+<a id="__codelineno-0-193" name="__codelineno-0-193"></a>        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Neither `user_instruction` nor `func` is given.&quot;</span><span class="p">)</span>
+<a id="__codelineno-0-194" name="__codelineno-0-194"></a>
+<a id="__codelineno-0-195" name="__codelineno-0-195"></a>    <span class="k">if</span> <span class="n">input_data</span><span class="o">.</span><span class="n">empty</span><span class="p">:</span>
+<a id="__codelineno-0-196" name="__codelineno-0-196"></a>        <span class="k">return</span> <span class="n">MapOpOutputs</span><span class="p">(</span><span class="n">outputs</span><span class="o">=</span><span class="p">{},</span> <span class="n">cost</span><span class="o">=</span><span class="mf">0.0</span><span class="p">)</span>
+<a id="__codelineno-0-197" name="__codelineno-0-197"></a>
+<a id="__codelineno-0-198" name="__codelineno-0-198"></a>    <span class="n">processed_data</span> <span class="o">=</span> <span class="n">input_data</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">input_columns</span><span class="p">]</span>
+<a id="__codelineno-0-199" name="__codelineno-0-199"></a>    <span class="n">dtypes</span> <span class="o">=</span> <span class="p">[]</span>
+<a id="__codelineno-0-200" name="__codelineno-0-200"></a>    <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">input_columns</span><span class="p">:</span>
+<a id="__codelineno-0-201" name="__codelineno-0-201"></a>        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">input_data</span><span class="p">[</span><span class="n">col</span><span class="p">]</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="n">ImageDtype</span><span class="p">):</span>
+<a id="__codelineno-0-202" name="__codelineno-0-202"></a>            <span class="n">dtypes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;image&quot;</span><span class="p">)</span>
+<a id="__codelineno-0-203" name="__codelineno-0-203"></a>        <span class="k">else</span><span class="p">:</span>
+<a id="__codelineno-0-204" name="__codelineno-0-204"></a>            <span class="n">dtypes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;text&quot;</span><span class="p">)</span>
+<a id="__codelineno-0-205" name="__codelineno-0-205"></a>
+<a id="__codelineno-0-206" name="__codelineno-0-206"></a>    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">strategy</span> <span class="o">==</span> <span class="s2">&quot;plain&quot;</span><span class="p">:</span>
+<a id="__codelineno-0-207" name="__codelineno-0-207"></a>        <span class="n">execution_func</span> <span class="o">=</span> <span class="n">functools</span><span class="o">.</span><span class="n">partial</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_execute_by_plain_llm</span><span class="p">,</span> <span class="n">dtypes</span><span class="o">=</span><span class="n">dtypes</span><span class="p">,</span> <span class="n">model</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+<a id="__codelineno-0-208" name="__codelineno-0-208"></a>    <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">strategy</span> <span class="o">==</span> <span class="s2">&quot;fewshot&quot;</span><span class="p">:</span>
+<a id="__codelineno-0-209" name="__codelineno-0-209"></a>        <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">context</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;Few-shot examples must be provided in the context for in-context learning.&quot;</span>
+<a id="__codelineno-0-210" name="__codelineno-0-210"></a>        <span class="n">demos</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">context</span>
+<a id="__codelineno-0-211" name="__codelineno-0-211"></a>        <span class="n">execution_func</span> <span class="o">=</span> <span class="n">functools</span><span class="o">.</span><span class="n">partial</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_execute_by_fewshot_llm</span><span class="p">,</span> <span class="n">dtypes</span><span class="o">=</span><span class="n">dtypes</span><span class="p">,</span> <span class="n">demos</span><span class="o">=</span><span class="n">demos</span><span class="p">,</span> <span class="n">model</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+<a id="__codelineno-0-212" name="__codelineno-0-212"></a>    <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">strategy</span> <span class="o">==</span> <span class="s2">&quot;self_refine&quot;</span><span class="p">:</span>
+<a id="__codelineno-0-213" name="__codelineno-0-213"></a>        <span class="n">execution_func</span> <span class="o">=</span> <span class="n">functools</span><span class="o">.</span><span class="n">partial</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_execute_by_self_refine</span><span class="p">,</span> <span class="n">dtypes</span><span class="o">=</span><span class="n">dtypes</span><span class="p">,</span> <span class="n">model</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+<a id="__codelineno-0-214" name="__codelineno-0-214"></a>    <span class="k">else</span><span class="p">:</span>
+<a id="__codelineno-0-215" name="__codelineno-0-215"></a>        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;The optional strategies available for map are </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">strategy_options</span><span class="si">}</span><span class="s2">. Strategy </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">strategy</span><span class="si">}</span><span class="s2"> is not supported.&quot;</span><span class="p">)</span>
+<a id="__codelineno-0-216" name="__codelineno-0-216"></a>
+<a id="__codelineno-0-217" name="__codelineno-0-217"></a>    <span class="c1"># Create tasks for all data points</span>
+<a id="__codelineno-0-218" name="__codelineno-0-218"></a>    <span class="n">tasks</span> <span class="o">=</span> <span class="p">[]</span>
+<a id="__codelineno-0-219" name="__codelineno-0-219"></a>    <span class="n">empty_map_result</span> <span class="o">=</span> <span class="p">{</span><span class="n">column</span><span class="p">:</span> <span class="kc">None</span> <span class="k">for</span> <span class="n">column</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">output_columns</span><span class="p">}</span>
+<a id="__codelineno-0-220" name="__codelineno-0-220"></a>    <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">data</span> <span class="ow">in</span> <span class="n">processed_data</span><span class="o">.</span><span class="n">iterrows</span><span class="p">():</span>
+<a id="__codelineno-0-221" name="__codelineno-0-221"></a>        <span class="k">if</span> <span class="n">data</span><span class="o">.</span><span class="n">empty</span><span class="p">:</span>
+<a id="__codelineno-0-222" name="__codelineno-0-222"></a>            <span class="n">tasks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">asyncio</span><span class="o">.</span><span class="n">create_task</span><span class="p">(</span><span class="n">asyncio</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">result</span><span class="o">=</span><span class="p">(</span><span class="n">empty_map_result</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">))))</span>
+<a id="__codelineno-0-223" name="__codelineno-0-223"></a>        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">has_udf</span><span class="p">():</span>
+<a id="__codelineno-0-224" name="__codelineno-0-224"></a>            <span class="n">tasks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">asyncio</span><span class="o">.</span><span class="n">create_task</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_execute_by_func</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">user_instruction</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">tool</span><span class="p">,</span> <span class="n">execution_func</span><span class="p">)))</span>
+<a id="__codelineno-0-225" name="__codelineno-0-225"></a>        <span class="k">else</span><span class="p">:</span>
+<a id="__codelineno-0-226" name="__codelineno-0-226"></a>            <span class="n">tasks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">asyncio</span><span class="o">.</span><span class="n">create_task</span><span class="p">(</span><span class="n">execution_func</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">user_instruction</span><span class="p">)))</span>
+<a id="__codelineno-0-227" name="__codelineno-0-227"></a>
+<a id="__codelineno-0-228" name="__codelineno-0-228"></a>    <span class="c1"># Wait for all tasks to complete</span>
+<a id="__codelineno-0-229" name="__codelineno-0-229"></a>    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">limit</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">limit</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+<a id="__codelineno-0-230" name="__codelineno-0-230"></a>        <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;The limit should be positive. To execute, the limit will be ignored.&quot;</span><span class="p">)</span>
+<a id="__codelineno-0-231" name="__codelineno-0-231"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">limit</span> <span class="o">=</span> <span class="kc">None</span>
+<a id="__codelineno-0-232" name="__codelineno-0-232"></a>
+<a id="__codelineno-0-233" name="__codelineno-0-233"></a>    <span class="n">token_cost</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span>
+<a id="__codelineno-0-234" name="__codelineno-0-234"></a>    <span class="n">map_outputs</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="n">column</span><span class="p">:</span> <span class="p">[]</span> <span class="k">for</span> <span class="n">column</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">output_columns</span><span class="p">}</span>
+<a id="__codelineno-0-235" name="__codelineno-0-235"></a>    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">limit</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+<a id="__codelineno-0-236" name="__codelineno-0-236"></a>        <span class="n">num_passed_records</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
+<a id="__codelineno-0-237" name="__codelineno-0-237"></a>        <span class="n">reach_limit</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+<a id="__codelineno-0-238" name="__codelineno-0-238"></a>        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">tasks</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">limit</span><span class="p">):</span>
+<a id="__codelineno-0-239" name="__codelineno-0-239"></a>            <span class="k">if</span> <span class="n">reach_limit</span><span class="p">:</span>
+<a id="__codelineno-0-240" name="__codelineno-0-240"></a>                <span class="k">break</span>
+<a id="__codelineno-0-241" name="__codelineno-0-241"></a>            <span class="n">batch_tasks</span> <span class="o">=</span> <span class="n">tasks</span><span class="p">[</span><span class="n">i</span><span class="p">:</span><span class="n">i</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">limit</span><span class="p">]</span>
+<a id="__codelineno-0-242" name="__codelineno-0-242"></a>            <span class="n">batch_results</span> <span class="o">=</span> <span class="k">await</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">gather</span><span class="p">(</span><span class="o">*</span><span class="n">batch_tasks</span><span class="p">)</span>
+<a id="__codelineno-0-243" name="__codelineno-0-243"></a>            <span class="n">token_cost</span> <span class="o">+=</span> <span class="nb">sum</span><span class="p">([</span><span class="n">result</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">result</span> <span class="ow">in</span> <span class="n">batch_results</span><span class="p">])</span>
+<a id="__codelineno-0-244" name="__codelineno-0-244"></a>            <span class="k">for</span> <span class="n">result</span><span class="p">,</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">batch_results</span><span class="p">:</span>
+<a id="__codelineno-0-245" name="__codelineno-0-245"></a>                <span class="n">num_passed_records</span> <span class="o">+=</span> <span class="mi">1</span>
+<a id="__codelineno-0-246" name="__codelineno-0-246"></a>                <span class="k">for</span> <span class="n">column</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">output_columns</span><span class="p">:</span>
+<a id="__codelineno-0-247" name="__codelineno-0-247"></a>                    <span class="n">map_outputs</span><span class="p">[</span><span class="n">column</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">result</span><span class="p">[</span><span class="n">column</span><span class="p">])</span>
+<a id="__codelineno-0-248" name="__codelineno-0-248"></a>                <span class="k">if</span> <span class="n">num_passed_records</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">limit</span><span class="p">:</span>
+<a id="__codelineno-0-249" name="__codelineno-0-249"></a>                    <span class="n">reach_limit</span> <span class="o">=</span> <span class="kc">True</span>
+<a id="__codelineno-0-250" name="__codelineno-0-250"></a>                    <span class="k">break</span>
+<a id="__codelineno-0-251" name="__codelineno-0-251"></a>        <span class="n">num_remaining_records</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">processed_data</span><span class="p">)</span> <span class="o">-</span> <span class="n">num_passed_records</span>
+<a id="__codelineno-0-252" name="__codelineno-0-252"></a>        <span class="k">if</span> <span class="n">num_remaining_records</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+<a id="__codelineno-0-253" name="__codelineno-0-253"></a>            <span class="k">for</span> <span class="n">column</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">output_columns</span><span class="p">:</span>
+<a id="__codelineno-0-254" name="__codelineno-0-254"></a>                <span class="n">map_outputs</span><span class="p">[</span><span class="n">column</span><span class="p">]</span><span class="o">.</span><span class="n">extend</span><span class="p">([</span><span class="kc">None</span><span class="p">]</span> <span class="o">*</span> <span class="n">num_remaining_records</span><span class="p">)</span>
+<a id="__codelineno-0-255" name="__codelineno-0-255"></a>    <span class="k">else</span><span class="p">:</span>
+<a id="__codelineno-0-256" name="__codelineno-0-256"></a>        <span class="n">results</span> <span class="o">=</span> <span class="k">await</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">gather</span><span class="p">(</span><span class="o">*</span><span class="n">tasks</span><span class="p">)</span>
+<a id="__codelineno-0-257" name="__codelineno-0-257"></a>        <span class="n">token_cost</span> <span class="o">+=</span> <span class="nb">sum</span><span class="p">([</span><span class="n">result</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">result</span> <span class="ow">in</span> <span class="n">results</span><span class="p">])</span>
+<a id="__codelineno-0-258" name="__codelineno-0-258"></a>        <span class="k">for</span> <span class="n">result</span><span class="p">,</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">results</span><span class="p">:</span>
+<a id="__codelineno-0-259" name="__codelineno-0-259"></a>            <span class="k">for</span> <span class="n">column</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">output_columns</span><span class="p">:</span>
+<a id="__codelineno-0-260" name="__codelineno-0-260"></a>                <span class="n">map_outputs</span><span class="p">[</span><span class="n">column</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">result</span><span class="p">[</span><span class="n">column</span><span class="p">])</span>
+<a id="__codelineno-0-261" name="__codelineno-0-261"></a>
+<a id="__codelineno-0-262" name="__codelineno-0-262"></a>    <span class="k">return</span> <span class="n">MapOpOutputs</span><span class="p">(</span>
+<a id="__codelineno-0-263" name="__codelineno-0-263"></a>        <span class="n">outputs</span><span class="o">=</span><span class="n">map_outputs</span><span class="p">,</span>
+<a id="__codelineno-0-264" name="__codelineno-0-264"></a>        <span class="n">cost</span><span class="o">=</span><span class="n">token_cost</span>
+<a id="__codelineno-0-265" name="__codelineno-0-265"></a>    <span class="p">)</span>
+</code></pre></div></td></tr></table></div>
+            </details>
+    </div>
+
+</div>
+
+
+
+  </div>
+
+    </div>
+
+</div><h2 id="output-class">Output Class<a class="headerlink" href="#output-class" title="Permanent link">&para;</a></h2>
+
+
+<div class="doc doc-object doc-class">
+
+
+
+<h3 id="nirvana.ops.map.MapOpOutputs" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-class"></code>              <code class="highlight language-python"><span class="n">nirvana</span><span class="o">.</span><span class="n">ops</span><span class="o">.</span><span class="n">map</span><span class="o">.</span><span class="n">MapOpOutputs</span><span class="p">(</span><span class="n">cost</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span> <span class="n">outputs</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">]</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">())</span></code>
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-dataclass"><code>dataclass</code></small>
+  </span>
+
+<a href="#nirvana.ops.map.MapOpOutputs" class="headerlink" title="Permanent link">&para;</a></h3>
+
+
+    <div class="doc doc-contents first">
+            <p class="doc doc-class-bases">
+              Bases: <code><span title="nirvana.ops.base.BaseOpOutputs">BaseOpOutputs</span></code></p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="doc doc-children">
+
+
+
+
+
+<h4 id="nirvana.ops.map.MapOpOutputs-attributes">Attributes<a href="#nirvana.ops.map.MapOpOutputs-attributes" class="headerlink" title="Permanent link">&para;</a></h4>
+
+<div class="doc doc-object doc-attribute">
+
+
+
+<h5 id="nirvana.ops.map.MapOpOutputs.outputs" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-attribute"></code>            <code class="highlight language-python"><span class="n">outputs</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">dict</span><span class="p">)</span></code>
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-class-attribute"><code>class-attribute</code></small>
+      <small class="doc doc-label doc-label-instance-attribute"><code>instance-attribute</code></small>
+  </span>
+
+<a href="#nirvana.ops.map.MapOpOutputs.outputs" class="headerlink" title="Permanent link">&para;</a></h5>
+
+
+    <div class="doc doc-contents ">
+
+    </div>
+
+</div>
+
+
+<h4 id="nirvana.ops.map.MapOpOutputs-functions">Functions<a href="#nirvana.ops.map.MapOpOutputs-functions" class="headerlink" title="Permanent link">&para;</a></h4>
+
+<div class="doc doc-object doc-function">
+
+
+<h5 id="nirvana.ops.map.MapOpOutputs.__add__" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-method"></code>            <code class="highlight language-python"><span class="fm">__add__</span><span class="p">(</span><span class="n">other</span><span class="p">:</span> <span class="n">MapOpOutputs</span><span class="p">)</span></code>
+
+<a href="#nirvana.ops.map.MapOpOutputs.__add__" class="headerlink" title="Permanent link">&para;</a></h5>
+
+
+    <div class="doc doc-contents ">
+
+
+            <details class="mkdocstrings-source">
+              <summary>Source code in <code>nirvana/ops/map.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-70">70</a></span>
+<span class="normal"><a href="#__codelineno-0-71">71</a></span>
+<span class="normal"><a href="#__codelineno-0-72">72</a></span>
+<span class="normal"><a href="#__codelineno-0-73">73</a></span>
+<span class="normal"><a href="#__codelineno-0-74">74</a></span>
+<span class="normal"><a href="#__codelineno-0-75">75</a></span>
+<span class="normal"><a href="#__codelineno-0-76">76</a></span>
+<span class="normal"><a href="#__codelineno-0-77">77</a></span>
+<span class="normal"><a href="#__codelineno-0-78">78</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-70" name="__codelineno-0-70"></a><span class="k">def</span><span class="w"> </span><span class="fm">__add__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="s2">&quot;MapOpOutputs&quot;</span><span class="p">):</span>
+<a id="__codelineno-0-71" name="__codelineno-0-71"></a>    <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">outputs</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">outputs</span><span class="o">.</span><span class="n">keys</span><span class="p">(),</span> <span class="s2">&quot;Cannot merge MapOpOutputs with different field names.&quot;</span>
+<a id="__codelineno-0-72" name="__codelineno-0-72"></a>    <span class="n">new_output</span> <span class="o">=</span> <span class="p">{}</span>
+<a id="__codelineno-0-73" name="__codelineno-0-73"></a>    <span class="k">for</span> <span class="n">field_name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">outputs</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+<a id="__codelineno-0-74" name="__codelineno-0-74"></a>        <span class="n">new_output</span><span class="p">[</span><span class="n">field_name</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">outputs</span><span class="p">[</span><span class="n">field_name</span><span class="p">]</span> <span class="o">+</span> <span class="n">other</span><span class="o">.</span><span class="n">outputs</span><span class="p">[</span><span class="n">field_name</span><span class="p">]</span>
+<a id="__codelineno-0-75" name="__codelineno-0-75"></a>    <span class="k">return</span> <span class="n">MapOpOutputs</span><span class="p">(</span>
+<a id="__codelineno-0-76" name="__codelineno-0-76"></a>        <span class="n">outputs</span><span class="o">=</span><span class="n">new_output</span><span class="p">,</span>
+<a id="__codelineno-0-77" name="__codelineno-0-77"></a>        <span class="n">cost</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">cost</span> <span class="o">+</span> <span class="n">other</span><span class="o">.</span><span class="n">cost</span>
+<a id="__codelineno-0-78" name="__codelineno-0-78"></a>    <span class="p">)</span>
+</code></pre></div></td></tr></table></div>
+            </details>
+    </div>
+
+</div>
+
+
+
+  </div>
+
+    </div>
+
+</div><h2 id="function-wrapper">Function Wrapper<a class="headerlink" href="#function-wrapper" title="Permanent link">&para;</a></h2>
+
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="nirvana.ops.map.map_wrapper" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-function"></code>            <span class="doc doc-object-name doc-function-name">nirvana.ops.map.map_wrapper</span>
+
+
+<a href="#nirvana.ops.map.map_wrapper" class="headerlink" title="Permanent link">&para;</a></h3>
+<div class="doc-signature highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">map_wrapper</span><span class="p">(</span><span class="n">input_data</span><span class="p">:</span> <span class="n">DataFrame</span><span class="p">,</span> <span class="n">user_instruction</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">input_columns</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">output_columns</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">context</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">]</span> <span class="o">|</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">model</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">func</span><span class="p">:</span> <span class="n">Callable</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">strategy</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s1">&#39;plain&#39;</span><span class="p">,</span> <span class="s1">&#39;fewshot&#39;</span><span class="p">,</span> <span class="s1">&#39;self-refine&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;plain&#39;</span><span class="p">,</span> <span class="n">limit</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">rate_limit</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">16</span><span class="p">,</span> <span class="n">assertions</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Callable</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="p">[],</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+</code></pre></div>
+
+    <div class="doc doc-contents first">
+
+        <p>A function wrapper for map operation</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Default</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                <code>input_data</code>
+            </td>
+            <td>
+                  <code><span title="pandas.DataFrame">DataFrame</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Input dataframe</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>user_instruction</code>
+            </td>
+            <td>
+                  <code><span title="str">str</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>User instruction. Defaults to None.</p>
+              </div>
+            </td>
+            <td>
+                  <code>None</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>input_columns</code>
+            </td>
+            <td>
+                  <code><span title="list">list</span>[<span title="str">str</span>]</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Input column. Defaults to None.</p>
+              </div>
+            </td>
+            <td>
+                  <code>None</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>output_columns</code>
+            </td>
+            <td>
+                  <code><span title="list">list</span>[<span title="str">str</span>]</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Output columns. Defaults to None.</p>
+              </div>
+            </td>
+            <td>
+                  <code>None</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>context</code>
+            </td>
+            <td>
+                  <code><span title="list">list</span>[<span title="dict">dict</span>] | <span title="str">str</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Context. Defaults to None.</p>
+              </div>
+            </td>
+            <td>
+                  <code>None</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>model</code>
+            </td>
+            <td>
+                  <code><span title="str">str</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Model. Defaults to None.</p>
+              </div>
+            </td>
+            <td>
+                  <code>None</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>func</code>
+            </td>
+            <td>
+                  <code><span title="typing.Callable">Callable</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>User function. Defaults to None.</p>
+              </div>
+            </td>
+            <td>
+                  <code>None</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>strategy</code>
+            </td>
+            <td>
+                  <code><span title="typing.Literal">Literal</span>[&#39;plain&#39;, &#39;fewshot&#39;, &#39;self-refine&#39;]</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Strategy. Defaults to "plain".</p>
+              </div>
+            </td>
+            <td>
+                  <code>&#39;plain&#39;</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>limit</code>
+            </td>
+            <td>
+                  <code><span title="int">int</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Maximum number of outputs to produce before stopping.</p>
+              </div>
+            </td>
+            <td>
+                  <code>None</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>rate_limit</code>
+            </td>
+            <td>
+                  <code><span title="int">int</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Rate limit. Defaults to 16.</p>
+              </div>
+            </td>
+            <td>
+                  <code>16</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>assertions</code>
+            </td>
+            <td>
+                  <code><span title="list">list</span>[<span title="typing.Callable">Callable</span>]</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Assertions. Defaults to [].</p>
+              </div>
+            </td>
+            <td>
+                  <code>[]</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>**kwargs</code>
+            </td>
+            <td>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Additional keyword arguments for OpenAI Clent.</p>
+              </div>
+            </td>
+            <td>
+                  <code>{}</code>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+            <details class="mkdocstrings-source">
+              <summary>Source code in <code>nirvana/ops/map.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-15">15</a></span>
+<span class="normal"><a href="#__codelineno-0-16">16</a></span>
+<span class="normal"><a href="#__codelineno-0-17">17</a></span>
+<span class="normal"><a href="#__codelineno-0-18">18</a></span>
+<span class="normal"><a href="#__codelineno-0-19">19</a></span>
+<span class="normal"><a href="#__codelineno-0-20">20</a></span>
+<span class="normal"><a href="#__codelineno-0-21">21</a></span>
+<span class="normal"><a href="#__codelineno-0-22">22</a></span>
+<span class="normal"><a href="#__codelineno-0-23">23</a></span>
+<span class="normal"><a href="#__codelineno-0-24">24</a></span>
+<span class="normal"><a href="#__codelineno-0-25">25</a></span>
+<span class="normal"><a href="#__codelineno-0-26">26</a></span>
+<span class="normal"><a href="#__codelineno-0-27">27</a></span>
+<span class="normal"><a href="#__codelineno-0-28">28</a></span>
+<span class="normal"><a href="#__codelineno-0-29">29</a></span>
+<span class="normal"><a href="#__codelineno-0-30">30</a></span>
+<span class="normal"><a href="#__codelineno-0-31">31</a></span>
+<span class="normal"><a href="#__codelineno-0-32">32</a></span>
+<span class="normal"><a href="#__codelineno-0-33">33</a></span>
+<span class="normal"><a href="#__codelineno-0-34">34</a></span>
+<span class="normal"><a href="#__codelineno-0-35">35</a></span>
+<span class="normal"><a href="#__codelineno-0-36">36</a></span>
+<span class="normal"><a href="#__codelineno-0-37">37</a></span>
+<span class="normal"><a href="#__codelineno-0-38">38</a></span>
+<span class="normal"><a href="#__codelineno-0-39">39</a></span>
+<span class="normal"><a href="#__codelineno-0-40">40</a></span>
+<span class="normal"><a href="#__codelineno-0-41">41</a></span>
+<span class="normal"><a href="#__codelineno-0-42">42</a></span>
+<span class="normal"><a href="#__codelineno-0-43">43</a></span>
+<span class="normal"><a href="#__codelineno-0-44">44</a></span>
+<span class="normal"><a href="#__codelineno-0-45">45</a></span>
+<span class="normal"><a href="#__codelineno-0-46">46</a></span>
+<span class="normal"><a href="#__codelineno-0-47">47</a></span>
+<span class="normal"><a href="#__codelineno-0-48">48</a></span>
+<span class="normal"><a href="#__codelineno-0-49">49</a></span>
+<span class="normal"><a href="#__codelineno-0-50">50</a></span>
+<span class="normal"><a href="#__codelineno-0-51">51</a></span>
+<span class="normal"><a href="#__codelineno-0-52">52</a></span>
+<span class="normal"><a href="#__codelineno-0-53">53</a></span>
+<span class="normal"><a href="#__codelineno-0-54">54</a></span>
+<span class="normal"><a href="#__codelineno-0-55">55</a></span>
+<span class="normal"><a href="#__codelineno-0-56">56</a></span>
+<span class="normal"><a href="#__codelineno-0-57">57</a></span>
+<span class="normal"><a href="#__codelineno-0-58">58</a></span>
+<span class="normal"><a href="#__codelineno-0-59">59</a></span>
+<span class="normal"><a href="#__codelineno-0-60">60</a></span>
+<span class="normal"><a href="#__codelineno-0-61">61</a></span>
+<span class="normal"><a href="#__codelineno-0-62">62</a></span>
+<span class="normal"><a href="#__codelineno-0-63">63</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-15" name="__codelineno-0-15"></a><span class="k">def</span><span class="w"> </span><span class="nf">map_wrapper</span><span class="p">(</span>
+<a id="__codelineno-0-16" name="__codelineno-0-16"></a>    <span class="n">input_data</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> 
+<a id="__codelineno-0-17" name="__codelineno-0-17"></a>    <span class="n">user_instruction</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<a id="__codelineno-0-18" name="__codelineno-0-18"></a>    <span class="n">input_columns</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<a id="__codelineno-0-19" name="__codelineno-0-19"></a>    <span class="n">output_columns</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<a id="__codelineno-0-20" name="__codelineno-0-20"></a>    <span class="n">context</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">]</span> <span class="o">|</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<a id="__codelineno-0-21" name="__codelineno-0-21"></a>    <span class="n">model</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<a id="__codelineno-0-22" name="__codelineno-0-22"></a>    <span class="n">func</span><span class="p">:</span> <span class="n">Callable</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<a id="__codelineno-0-23" name="__codelineno-0-23"></a>    <span class="n">strategy</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;plain&quot;</span><span class="p">,</span> <span class="s2">&quot;fewshot&quot;</span><span class="p">,</span> <span class="s2">&quot;self-refine&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;plain&quot;</span><span class="p">,</span>
+<a id="__codelineno-0-24" name="__codelineno-0-24"></a>    <span class="n">limit</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<a id="__codelineno-0-25" name="__codelineno-0-25"></a>    <span class="n">rate_limit</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">16</span><span class="p">,</span>
+<a id="__codelineno-0-26" name="__codelineno-0-26"></a>    <span class="n">assertions</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Callable</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="p">[],</span>
+<a id="__codelineno-0-27" name="__codelineno-0-27"></a>    <span class="o">**</span><span class="n">kwargs</span>
+<a id="__codelineno-0-28" name="__codelineno-0-28"></a><span class="p">):</span>
+<a id="__codelineno-0-29" name="__codelineno-0-29"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<a id="__codelineno-0-30" name="__codelineno-0-30"></a><span class="sd">    A function wrapper for map operation</span>
+<a id="__codelineno-0-31" name="__codelineno-0-31"></a>
+<a id="__codelineno-0-32" name="__codelineno-0-32"></a><span class="sd">    Args:</span>
+<a id="__codelineno-0-33" name="__codelineno-0-33"></a><span class="sd">        input_data (pd.DataFrame): Input dataframe</span>
+<a id="__codelineno-0-34" name="__codelineno-0-34"></a><span class="sd">        user_instruction (str, optional): User instruction. Defaults to None.</span>
+<a id="__codelineno-0-35" name="__codelineno-0-35"></a><span class="sd">        input_columns (list[str], optional): Input column. Defaults to None.</span>
+<a id="__codelineno-0-36" name="__codelineno-0-36"></a><span class="sd">        output_columns (list[str], optional): Output columns. Defaults to None.</span>
+<a id="__codelineno-0-37" name="__codelineno-0-37"></a><span class="sd">        context (list[dict] | str, optional): Context. Defaults to None.</span>
+<a id="__codelineno-0-38" name="__codelineno-0-38"></a><span class="sd">        model (str, optional): Model. Defaults to None.</span>
+<a id="__codelineno-0-39" name="__codelineno-0-39"></a><span class="sd">        func (Callable, optional): User function. Defaults to None.</span>
+<a id="__codelineno-0-40" name="__codelineno-0-40"></a><span class="sd">        strategy (Literal[&quot;plain&quot;, &quot;fewshot&quot;, &quot;self-refine&quot;], optional): Strategy. Defaults to &quot;plain&quot;.</span>
+<a id="__codelineno-0-41" name="__codelineno-0-41"></a><span class="sd">        limit (int): Maximum number of outputs to produce before stopping.</span>
+<a id="__codelineno-0-42" name="__codelineno-0-42"></a><span class="sd">        rate_limit (int, optional): Rate limit. Defaults to 16.</span>
+<a id="__codelineno-0-43" name="__codelineno-0-43"></a><span class="sd">        assertions (list[Callable], optional): Assertions. Defaults to [].</span>
+<a id="__codelineno-0-44" name="__codelineno-0-44"></a><span class="sd">        **kwargs: Additional keyword arguments for OpenAI Clent.</span>
+<a id="__codelineno-0-45" name="__codelineno-0-45"></a><span class="sd">    &quot;&quot;&quot;</span>
+<a id="__codelineno-0-46" name="__codelineno-0-46"></a>
+<a id="__codelineno-0-47" name="__codelineno-0-47"></a>    <span class="n">map_op</span> <span class="o">=</span> <span class="n">MapOperation</span><span class="p">(</span>
+<a id="__codelineno-0-48" name="__codelineno-0-48"></a>        <span class="n">user_instruction</span><span class="o">=</span><span class="n">user_instruction</span><span class="p">,</span>
+<a id="__codelineno-0-49" name="__codelineno-0-49"></a>        <span class="n">strategy</span><span class="o">=</span><span class="n">strategy</span><span class="p">,</span>
+<a id="__codelineno-0-50" name="__codelineno-0-50"></a>        <span class="n">input_columns</span><span class="o">=</span><span class="n">input_columns</span><span class="p">,</span>
+<a id="__codelineno-0-51" name="__codelineno-0-51"></a>        <span class="n">output_columns</span><span class="o">=</span><span class="n">output_columns</span><span class="p">,</span>
+<a id="__codelineno-0-52" name="__codelineno-0-52"></a>        <span class="n">context</span><span class="o">=</span><span class="n">context</span><span class="p">,</span>
+<a id="__codelineno-0-53" name="__codelineno-0-53"></a>        <span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">,</span>
+<a id="__codelineno-0-54" name="__codelineno-0-54"></a>        <span class="n">tool</span><span class="o">=</span><span class="n">FunctionCallTool</span><span class="o">.</span><span class="n">from_function</span><span class="p">(</span><span class="n">func</span><span class="o">=</span><span class="n">func</span><span class="p">)</span> <span class="k">if</span> <span class="n">func</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+<a id="__codelineno-0-55" name="__codelineno-0-55"></a>        <span class="n">limit</span><span class="o">=</span><span class="n">limit</span><span class="p">,</span>
+<a id="__codelineno-0-56" name="__codelineno-0-56"></a>        <span class="n">rate_limit</span><span class="o">=</span><span class="n">rate_limit</span><span class="p">,</span>
+<a id="__codelineno-0-57" name="__codelineno-0-57"></a>        <span class="n">assertions</span><span class="o">=</span><span class="n">assertions</span>
+<a id="__codelineno-0-58" name="__codelineno-0-58"></a>    <span class="p">)</span>
+<a id="__codelineno-0-59" name="__codelineno-0-59"></a>    <span class="n">outputs</span> <span class="o">=</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">map_op</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span>
+<a id="__codelineno-0-60" name="__codelineno-0-60"></a>        <span class="n">input_data</span><span class="o">=</span><span class="n">input_data</span><span class="p">,</span>
+<a id="__codelineno-0-61" name="__codelineno-0-61"></a>        <span class="o">**</span><span class="n">kwargs</span>
+<a id="__codelineno-0-62" name="__codelineno-0-62"></a>    <span class="p">))</span>
+<a id="__codelineno-0-63" name="__codelineno-0-63"></a>    <span class="k">return</span> <span class="n">outputs</span>
+</code></pre></div></td></tr></table></div>
+            </details>
+    </div>
+
+</div>
 
 
 
