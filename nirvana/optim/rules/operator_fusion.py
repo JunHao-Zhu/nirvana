@@ -1,4 +1,3 @@
-import asyncio
 from enum import Enum
 
 from nirvana.executors.tools import FunctionCallTool
@@ -55,8 +54,8 @@ Output the merged instruction concisely in the following format.
             return node_a.op_name == node_b.op_name
         else:
             return (
-                (node_a.op_name in {"map", "filter"} and node_b.op_name in {"map", "filter"}) and 
-                (node_a.operator.dependencies == node_b.operator.dependencies)
+                (node_a.op_name == "map" and node_b.op_name == "filter") or 
+                (node_a.op_name == "filter" and node_b.op_name == "map")
             )
 
     @classmethod
@@ -162,7 +161,7 @@ Output the merged instruction concisely in the following format.
         # Prepare new map operator
         op_kwargs = node.operator.op_kwargs if node.op_name == "map" else node_to_merge.operator.op_kwargs
         op_kwargs["user_instruction"] = new_instruction
-        dependencies = set(node.operator.dependencies + node_to_merge.operator.dependencies)
+        dependencies = set(node.operator.dependencies).union(node_to_merge.operator.dependencies)
         op_kwargs["input_columns"] = list(dependencies)
 
         generated_fields = node.operator.generated_fields if node.op_name == "map" else node_to_merge.operator.generated_fields
@@ -184,7 +183,7 @@ Output the merged instruction concisely in the following format.
         filter_kwargs = {
             "user_instruction": f"Fields {op_kwargs['output_columns']} contain None",
             "input_columns": op_kwargs["output_columns"],
-            "tool": FunctionCallTool.from_function(func=lambda x: x.hasnans),
+            "tool": FunctionCallTool.from_function(func=lambda x: not x.hasnans, name="check if None is included"),
         }
         node_fields = {
             "left_input_fields": new_map_node.node_fields.output_fields,

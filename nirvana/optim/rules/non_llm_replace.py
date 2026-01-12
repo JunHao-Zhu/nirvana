@@ -1,5 +1,4 @@
 import re
-import asyncio
 from collections import deque
 
 from nirvana.executors.llm_backbone import LLMClient

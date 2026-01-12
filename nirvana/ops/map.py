@@ -179,7 +179,13 @@ class MapOperation(BaseOperation):
             if llm_result is None:
                 return {column: None for column in output_columns}
             else:
-                map_output = {column: llm_result.get(column, None) for column in output_columns}
+                map_output = {}
+                for column in output_columns:
+                    value = llm_result.get(column, None)
+                    if value == "" or value.lower() == "none":
+                        map_output[column] = None
+                    else:
+                        map_output[column] = value
                 return map_output
         except KeyError as e:
             raise KeyError(f"Expected field {e} not found in the LLM response.")
