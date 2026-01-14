@@ -8,6 +8,7 @@ The Reduce operation aggregates multiple values in a given column into a single 
     options:
       show_root_heading: true
       show_source: true
+      heading_level: 3
       show_signature_annotations: true
       members_order: source
       docstring_style: google
@@ -18,6 +19,7 @@ The Reduce operation aggregates multiple values in a given column into a single 
     options:
       show_root_heading: true
       show_source: true
+      heading_level: 3
       show_signature_annotations: true
       docstring_style: google
 
@@ -25,8 +27,10 @@ The Reduce operation aggregates multiple values in a given column into a single 
 
 ::: nirvana.ops.reduce.reduce_wrapper
     options:
+      heading: nirvana.ops.reduce
       show_root_heading: true
       show_source: true
+      heading_level: 3
       show_signature_annotations: true
       separate_signature: true
       docstring_style: google
