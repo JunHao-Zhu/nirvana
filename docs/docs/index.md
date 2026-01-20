@@ -86,6 +86,6 @@ If you have a complex semantic query over large datasets on hand, you probabily 
     movie.semantic_reduce(user_instruction="Summerize the common plot structure of these high-rated crime movies.", input_column="Overview")
 
     config = nv.optim.OptimizeConfig(do_logical_optimization=True, do_physical_optimization=True, max_rounds=5, num_samples=5, improve_margin=0.2)
-    result, cost, runtime = df.optimize_and_execute(optim_config=config)
+    result, cost, runtime = movie.optimize_and_execute(optim_config=config)
     ```
 For details and usages of query optimization refers to [optimization](https://github.com/JunHao-Zhu/nirvana/api/optimizer/)

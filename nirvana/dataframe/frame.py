@@ -72,6 +72,12 @@ class DataFrame(LineageMixin):
         df = pd.read_table(path, sep=sep, **kwargs)
         return cls(df)
     
+    def head(self, n=5):
+        return self._data.head(n)
+    
+    def tail(self, n=5):
+        return self._data.tail(n)
+    
     def _get(self, posidx, materialize: bool = False):
         if isinstance(posidx, str):
             # str index => column selection (AbstractColumn)

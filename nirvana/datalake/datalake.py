@@ -1,7 +1,9 @@
 import os
 import asyncio
+from typing import Iterator
 import pandas as pd
 
+from nirvana.dataframe.frame import DataFrame
 from nirvana.datalake.lake_manager import LakeMetadata, LakeManager
 from nirvana.ops.discover import SummarizeOperation, VectorizeOperation, DiscoverOperation
 
@@ -101,7 +103,7 @@ class DataLake:
         pool_factor: int = 5,
         alpha: float = 0.5,
         **kwargs
-    ):
+    ) -> Iterator[DataFrame]:
         discover_op = DiscoverOperation(**kwargs)
         discover_output = asyncio.run(
             discover_op.execute(
@@ -114,4 +116,8 @@ class DataLake:
                 alpha=alpha
             )
         )
+        for table_idx in discover_output.table_ids:
+            yield DataFrame.from_external_file(
+                self.mgr[table_idx].path
+            )
         pass
