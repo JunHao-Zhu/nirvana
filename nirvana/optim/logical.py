@@ -102,7 +102,7 @@ class LogicalOptimizer:
         selected_index = np.random.choice(len(token_costs), p=total_prob)
         return self.plan_candidates[selected_index]
 
-    def preprare_for_logical_optimization(
+    def prepare_for_logical_optimization(
         self,
         plan: LineageNode,
         dev_datasets: list | None,
@@ -158,7 +158,7 @@ class LogicalOptimizer:
         optimize_cost = 0.0
         optimize_start_time = time.time()
         # 0. prepare for logical optimization
-        initial_state = self.preprare_for_logical_optimization(
+        initial_state = self.prepare_for_logical_optimization(
             initial_plan,
             dev_datasets=dev_datasets,
             num_samples=num_samples,
