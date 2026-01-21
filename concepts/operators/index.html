@@ -81,6 +81,11 @@
     <label class="md-overlay" for="__drawer"></label>
     <div data-md-component="skip">
       
+        
+        <a href="#operators" class="md-skip">
+          Skip to content
+        </a>
+      
     </div>
     <div data-md-component="announce">
       
@@ -272,7 +277,7 @@
     
     
       <li class="md-tabs__item md-tabs__item--active">
-        <a href="../data_lineage/" class="md-tabs__link">
+        <a href="../dataframe/" class="md-tabs__link">
           
   
   
@@ -840,6 +845,8 @@
       
         
       
+        
+      
     
     
     
@@ -895,6 +902,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../dataframe/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Data Frame
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../data_lineage/" class="md-nav__link">
         
   
@@ -929,6 +964,26 @@
       <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
       
       
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Operators
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
       
       <a href="./" class="md-nav__link md-nav__link--active">
         
@@ -946,6 +1001,119 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#supported-operators" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Supported Operators
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Supported Operators">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#scan" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Scan
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#map-semantic_map" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Map (semantic_map)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#filter-semantic_filter" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Filter (semantic_filter)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#rank-semantic_rank" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Rank (semantic_rank)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#reduce-semantic_reduce" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Reduce (semantic_reduce)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#join-semantic_join" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Join (semantic_join)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#operator-interface" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Operator Interface
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
       
     </li>
   
@@ -983,10 +1151,10 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3_3" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3_4" >
         
           
-          <label class="md-nav__link" for="__nav_3_3" id="__nav_3_3_label" tabindex="">
+          <label class="md-nav__link" for="__nav_3_4" id="__nav_3_4_label" tabindex="">
             
   
   
@@ -1004,8 +1172,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_3_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_3_3">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_4">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -1103,6 +1271,110 @@
   
   
   
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#supported-operators" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Supported Operators
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Supported Operators">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#scan" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Scan
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#map-semantic_map" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Map (semantic_map)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#filter-semantic_filter" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Filter (semantic_filter)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#rank-semantic_rank" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Rank (semantic_rank)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#reduce-semantic_reduce" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Reduce (semantic_reduce)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#join-semantic_join" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Join (semantic_join)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#operator-interface" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Operator Interface
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
   
 </nav>
                   </div>
@@ -1122,9 +1394,45 @@
   
 
 
-  <h1>Operators</h1>
-
-
+<h1 id="operators">Operators<a class="headerlink" href="#operators" title="Permanent link">&para;</a></h1>
+<p>Nirvana provides a set of semantic operators that allow you to manipulate data using natural language instructions. These operators form the nodes of the data lineage graph.</p>
+<h2 id="supported-operators">Supported Operators<a class="headerlink" href="#supported-operators" title="Permanent link">&para;</a></h2>
+<h3 id="scan">Scan<a class="headerlink" href="#scan" title="Permanent link">&para;</a></h3>
+<p>The <strong>Scan</strong> operator is the entry point of the lineage. It represents the initial loading of data into the system.
+- <strong>Input</strong>: A data source (e.g., in-memory DataFrame, external file).
+- <strong>Output</strong>: A DataFrame containing the loaded data.</p>
+<h3 id="map-semantic_map">Map (<code>semantic_map</code>)<a class="headerlink" href="#map-semantic_map" title="Permanent link">&para;</a></h3>
+<p>The <strong>Map</strong> operator performs row-wise transformations. It applies a user instruction to each row to generate new columns.
+- <strong>Use Cases</strong>: Sentiment analysis, information extraction, translation, style transfer.
+- <strong>Input</strong>: Specific columns from the DataFrame.
+- <strong>Output</strong>: New columns appended to the DataFrame.</p>
+<h3 id="filter-semantic_filter">Filter (<code>semantic_filter</code>)<a class="headerlink" href="#filter-semantic_filter" title="Permanent link">&para;</a></h3>
+<p>The <strong>Filter</strong> operator selects rows based on a boolean condition derived from the user instruction.
+- <strong>Use Cases</strong>: Removing irrelevant data, selecting specific items.
+- <strong>Input</strong>: Specific columns to evaluate.
+- <strong>Output</strong>: A subset of the original rows.</p>
+<h3 id="rank-semantic_rank">Rank (<code>semantic_rank</code>)<a class="headerlink" href="#rank-semantic_rank" title="Permanent link">&para;</a></h3>
+<p>The <strong>Rank</strong> operator reorders rows based on their relevance or a specified quality metric.
+- <strong>Use Cases</strong>: Top-k retrieval, prioritizing importance.
+- <strong>Input</strong>: Input column to rank by.
+- <strong>Output</strong>: A reordered DataFrame (often used with a limit).</p>
+<h3 id="reduce-semantic_reduce">Reduce (<code>semantic_reduce</code>)<a class="headerlink" href="#reduce-semantic_reduce" title="Permanent link">&para;</a></h3>
+<p>The <strong>Reduce</strong> operator aggregates the data into a single result or a summary.
+- <strong>Use Cases</strong>: Summarization, key insight extraction.
+- <strong>Input</strong>: Input column to aggregate.
+- <strong>Output</strong>: A single-row DataFrame containing the result.</p>
+<h3 id="join-semantic_join">Join (<code>semantic_join</code>)<a class="headerlink" href="#join-semantic_join" title="Permanent link">&para;</a></h3>
+<p>The <strong>Join</strong> operator combines two DataFrames based on a semantic relationship or fuzzy matching key.
+- <strong>Use Cases</strong>: Merging datasets with different schemas, linking entities.
+- <strong>Input</strong>: Left and Right DataFrames, join keys/conditions.
+- <strong>Output</strong>: A merged DataFrame.</p>
+<h2 id="operator-interface">Operator Interface<a class="headerlink" href="#operator-interface" title="Permanent link">&para;</a></h2>
+<p>All operators inherit from <code>BaseOperation</code> and implement the <code>execute</code> method:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="k">class</span><span class="w"> </span><span class="nc">BaseOperation</span><span class="p">:</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">execute</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_data</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">BaseOpOutputs</span><span class="p">:</span>
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>        <span class="k">pass</span>
+</code></pre></div>
+<p>The execution is typically handled by an LLM (Semantic Operator) or a deterministic function (if provided).</p>
 
 
 
