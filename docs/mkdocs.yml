@@ -22,6 +22,7 @@ nav:
           - LLM: api/executor/llm.md
           - Tools: api/executor/tools.md
   - Concepts:
+      - Data Frame: concepts/dataframe.md
       - Data Lineage: concepts/data_lineage.md
       - Operators: concepts/operators.md
       - Optimizers:

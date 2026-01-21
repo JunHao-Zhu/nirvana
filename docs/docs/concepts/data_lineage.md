@@ -11,7 +11,7 @@ Data lineage is represented as a **directed acyclic graph (DAG)** where:
 
 ## LineageNode
 
-The `LineageNode` class (in `nirvana/lineage/abstractions.py`) is the fundamental building block:
+The `LineageNode` class (in `nirvana/lineage/abstractions.py`) is the fundamental building block. It supports asynchronous execution:
 
 ```python
 class LineageNode(NodeBase):
@@ -28,39 +28,28 @@ class LineageNode(NodeBase):
         self.datasource = datasource
         self._left_child = None
         self._right_child = None
+
+    async def run(self, input: pd.DataFrame | list[pd.DataFrame] | None = None) -> NodeOutput:
+        # Executes the operator asynchronously and returns NodeOutput
+        ...
 ```
 
 **Key Components:**
 
-1. **Operator**: The actual operation instance (MapOperation, FilterOperation, etc.)
-2. **NodeFields**: Tracks input and output fields:
-   ```python
-   @dataclass
-   class NodeFields:
-       left_input_fields: list[str]
-       right_input_fields: list[str]
-       output_fields: list[str]
-   ```
-3. **Child Nodes**: Left and right children for binary operations (e.g., join)
+1.  **Operator**: The actual operation instance (MapOperation, FilterOperation, etc.)
+2.  **NodeFields**: Tracks input and output fields:
+    ```python
+    @dataclass
+    class NodeFields:
+        left_input_fields: list[str]
+        right_input_fields: list[str]
+        output_fields: list[str]
+    ```
+3.  **Child Nodes**: Left and right children for binary operations (e.g., join).
 
 ## Building Lineage
 
-When you call semantic operations on a DataFrame, nodes are added to the lineage:
-
-```python
-df = nv.DataFrame(data)
-
-# Creates a scan node
-df.initialize()  # Called automatically in __init__
-
-# Adds a map node
-df.semantic_map(...)  # Creates LineageNode with MapOperation
-
-# Adds a filter node
-df.semantic_filter(...)  # Creates LineageNode with FilterOperation
-```
-
-The `LineageMixin` (in `nirvana/lineage/mixin.py`) provides the lineage management:
+When you call semantic operations on a DataFrame, nodes are added to the lineage. `LineageMixin` manages this process.
 
 ```python
 class LineageMixin:
@@ -86,60 +75,52 @@ class LineageMixin:
 
 ## Execution Model
 
-Execution follows a **post-order traversal** of the lineage graph:
+Execution follows a **post-order traversal** of the lineage graph, and it is asynchronous:
 
 ```python
-def execute_along_lineage(leaf_node: LineageNode):
-    def _execute_node(node: LineageNode) -> pd.DataFrame:
-        # Recursively execute children first
-        if node.left_child:
-            left_output = _execute_node(node.left_child)
-        if node.right_child:
-            right_output = _execute_node(node.right_child)
-        
-        # Execute current node
-        if node.op_name == "scan":
-            return node.datasource
-        elif node.op_name == "join":
-            return node.run([left_output, right_output])
-        else:
-            return node.run(left_output)
+async def execute_node(node: LineageNode) -> tuple[pd.DataFrame, float]:
+    if node.left_child:
+        left_node_output, cost_from_left_subtree = await execute_node(node.left_child)
+    if node.right_child:
+        right_node_output, cost_from_right_subtree = await execute_node(node.right_child)
     
-    return _execute_node(leaf_node)
+    if node.op_name == "scan":
+        node_output = await node.run()
+        # ...
+    elif node.op_name == "join":
+        node_output = await node.run([left_node_output, right_node_output])
+        # ...
+    else:
+        node_output = await node.run(left_node_output)
+        # ...
+        
+    return node_output.output, accumulated_cost
 ```
 
 **Execution Flow:**
 
-1. **Scan**: Returns the datasource DataFrame
-2. **Unary Operations** (map, filter, reduce): Execute on left child output
-3. **Binary Operations** (join): Execute on both children's outputs
+1.  **Scan**: Returns the datasource DataFrame.
+2.  **Unary Operations** (map, filter, reduce, rank): Execute on left child output.
+3.  **Binary Operations** (join): Execute on both children's outputs.
 
 ## Node Execution
 
 Each `LineageNode` has a `run()` method that:
 
-1. Executes the operator's `execute()` method
-2. Collates the results into a DataFrame
-3. Returns a `NodeOutput` with the result, cost, and metadata
+1.  Executes the operator's `execute()` method asynchronously.
+2.  Collates the results into a DataFrame.
+3.  Returns a `NodeOutput` with the result, cost, and metadata.
 
 ```python
 async def run(self, input: pd.DataFrame | list[pd.DataFrame] | None = None) -> NodeOutput:
     if self.op_name == "scan":
-        return NodeOutput(output=self.datasource, cost=0.0)
+        op_outputs = await self.operator.execute(input_data=self.datasource)
+        return NodeOutput(output=op_outputs.output, cost=op_outputs.cost)
     
     elif self.op_name == "join":
         op_outputs = await self.operator.execute(left_data=input[0], right_data=input[1])
-        # Collate join results
-        input[0]["keys"] = op_outputs.left_join_keys
-        input[1]["keys"] = op_outputs.right_join_keys
-        output = input[0].join(input[1], on="keys", how=self.operator.how).drop("keys", axis=1)
+        # Handle join logic
         return NodeOutput(output=output, cost=op_outputs.cost)
-    
-    elif self.op_name == "filter":
-        op_outputs = await self.operator.execute(input_data=input)
-        if op_outputs.output is None:
-            return NodeOutput(output=input, cost=op_outputs.cost)
-        return NodeOutput(output=input[op_outputs.output], cost=op_outputs.cost)
     
     # ... other operators
 ```
