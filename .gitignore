@@ -24,3 +24,5 @@ experiments/*.ipynb
 # MkDocs
 site/
 
+# Rust
+target/
