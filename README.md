@@ -1,8 +1,24 @@
 # Nirvana
+<!--- BADGES: START --->
+[![Paper](https://img.shields.io/badge/Paper-arXiv-red)](https://arxiv.org/abs/2511.19830)
+[![PyPI](https://img.shields.io/pypi/v/nirvana-ai)](https://pypi.org/project/nirvana-ai/)
+[![Documentation](https://img.shields.io/badge/Documentation-docs-green)](https://JunHao-Zhu.github.io/nirvana)
+<!--- BADGES: END --->
 
-A system prototype for [Beyond Relational: Semantic-Aware Multi-Modal Analytics with LLM-Native Query Optimization]()
+An LLM-powered semantic data analytics programming framework.
+
+> 📖 **Documentation**: Full documentation is available at [docs/](docs/) or build locally with `mkdocs serve`.
 
 ## Tutorial
+
+### Installation
+```bash
+pip install nirvana-ai
+```
+To install the latest version from `main`:
+```bash
+pip install git+https://github.com/JunHao-Zhu/nirvana.git
+```
 
 ### LLM backbone configuration
 Before using semantic operators, first configure the llm settings used in the system. Taking OpenAI as an example,
@@ -29,16 +45,15 @@ Operator `map`: Perform a projecton on the target data based on a predicate (the
 ...         "When the menace known as the Joker wreaks havoc and chaos on the people of Gotham, Batman must accept one of the greatest psychological and physical tests of his ability to fight injustice."
 ...     ]
 ... })
->>> nv.ops.map(df, "According to the movie overview, extract the genre of each movie.", input_column="overview", output_column = "genre", strategy="plain_llm")
+>>> nv.ops.map(df, "According to the movie overview, extract the genre of each movie.", input_columns=["overview"], output_columns = ["genre"], strategy="plain")
 MapOpOutputs(
-    field_name = "genre",
-    output = ["crime, drama", "action, thriller, superhero"]
+    outputs = {"genre": ["crime, drama", "action, thriller, superhero"]}
 )
 ```
 
 Operator `filter`: Evaluate a condition on the target data (returning either True or False) (the code refers to ops/filter.py (execution) and prompt_templates/filter_prompter.py (prompts))
 ```python
->>> nv.ops.filter(df, "Whether the movie is released after 2000?", input_column="title", strategy="plain_llm")
+>>> nv.ops.filter(df, "Whether the movie is released after 2000?", input_columns=["title"], strategy="plain")
 FilterOpOutputs(
     output = [False, True]
 )
@@ -53,15 +68,35 @@ ReduceOpOutputs(
 ```
 > The current version of the reduce operator is simple. In the next step, we will implement it using several optimizations, like `summarize and aggregate` and `incremental aggregation`.
 
-Operator `rank`: Rank a set of data based on the user instruction by quicksort (under intensive testing)
+Operator `rank`: Rank a set of data based on the user instruction by quicksort.
 ```python
->>> nv.ops.rank(df, "rank the movies by their relevance to DC Comics.", input_column="title")
+>>> nv.ops.rank(df, "rank the movies by their relevance to DC Comics.", input_column="title", descend=True)
 RankOpOutputs(
-    output = [2, 1]
+    ranking = [2, 1],
+    ranked_indices = [1, 0]
 )
 ```
+`descend=True`: order values in descending order from the highest satisfied value to the lowest satisfied value.
 
-Operator `join`: Join values of two columns against a specific user's instruction (under intensive testing). The current implementation has inherent quadratic complexity which we aim to avoid.
+Operator `join`: Join values of two columns against a specific user's instruction. Two implementation options are avilable: (1) Nested Join (`nest`): applyies quadratic evaluations; (2) Block Join (`block`): applies batch-wise evaluation, which might reduce the cost.
+```python
+# left_data: clinical_note
+# | name | age | gender | symptom |
+# | Alice | 12 | F | headache |
+# | Bob | 20 | M | have a cough |
+
+# right_data: drug
+# | name | medical_use |
+# | Salbutamol | treat bronchospasm, as well as chronic obstructive pulmonary disease |
+# | ibuprofen | treat mild to moderate pain, painful menstruation, osteoarthritis, dental pain, headaches, and pain from kidney stones|
+>>> nv.ops.join(left_data=clinical_note, right_data=drug, user_instruction="Does the drug cure the possible disease according to the symptoms?", left_on="symptom", right_on="medical_use", how="inner")
+RankOpOutputs(
+    joined_pairs = [("headache", "ibuprofen"), ("have a cough", "Salbutamol")],
+    left_join_keys = [1, 2],
+    right_join_keys = [2, 1]
+)
+```
+For now, it supports inner join, left join, and right join by setting parameter `how` to `inner`, `left`, and `right`.
 
 Operator `discover`: Discover relevant data from a data lake based on a query. This operation is applied to a data lake with an interface of DataLake class above it (see datalake/datalake.py)
 
@@ -84,44 +119,38 @@ Data lineage (a directed acyclic graph) enables lazy exeuction and logical and p
 ```
 For example, with `semantic_filter`, it creates an op node in the data lineage of dataframe `df`, and `optimize_and_execute()` optimizes the logical plan and physical plan, then executes the query processing.
 
-Data lineage includes two core abstrations: `LineageOpNode` and `LineageDataNode`. `LineageOpNode` serves the operator optimization and execution. `LineageDataNode` serves the optimizations from perspective of data, like materializing the intermediate result and reusing it. By default, no `LineageDataNode` is included in data lineage, and it is created by setting `materialize` parameter `True` when necessary.
-```python
->>> df.semantic_filter("Whether the image is a software logo?", input_column="logos", strategy="plain_llm")
-```
+The core abstractions of data lineage is `LineageNode` (found in `lineage/abstractions.py`), serving the operator optimization and execution. The usages of `LineageNode` are found in `lineage/mixin.py`.
 
-### Logical plan optimization
-An agentic optimization workflow starts after the initial logical plan given and an optimize task
-invoked. A usage example of logical plan optimization is shown as follow.
+### Plan optimization
+Considering the following semantic data analytics query,
 ```python
->>> df = nv.DataFrame(pd.read_csv("/testdata/imdb_top_1000.csv").sample(n=200).drop("Genre", axis=1))
+>>> df = nv.DataFrame(pd.read_csv("/testdata/movie_data.csv"))
 >>> df.semantic_map(user_instruction="According to the movie overview, extract the genre of each movie.", input_column="Overview", output_column="Genre")
 >>> df.semantic_filter(user_instruction="The rating is higher than 7.", input_column="IMDB_Rating")
 >>> df.semantic_filter(user_instruction="The rating is lower than 8.", input_column="IMDB_Rating")
 >>> df.semantic_reduce(user_instruction="Count the number of crime movies.", input_column="Genre")
 ```
-The initial logical plan and its cost are like, 
+Nirvana does logical optimization and physical optimization separately. You can turn on/off each optimization in `OptimizeConfig` and execute the query processing with the configure.
 ```python
->>> df.print_logical_plan()
-map: [Overview]->[Genre] (According to the movie overview, extract the genre of each movie.) =>
-filter: [IMDB_Rating]->[Bool] (The rating is higher than 7.) =>
-filter: [IMDB_Rating]->[Bool] (The rating is lower than 8.) =>
-reduce: [Genre] (Count the number of crime movies.)
->>> output, cost, runtime = df.execute()
->>> print(cost)
-84542
-```
-After logical plan optimization, the new logical plan and its cost are like,
-```python
->>> config = nv.optim.OptimizeConfig(do_logical_optimization=True, do_physical_optimization=True)
+>>> config = nv.optim.OptimizeConfig(do_logical_optimization=True, do_physical_optimization=False)
 >>> output, cost, runtime = df.optimize_and_execute(optim_config=config)
-Plan optimization is finished, here are some statistics:
-initial plan cost: 4289 -> optimized plan cost: 2572
-initial plan accuracy: 1.0 -> optimized plan accuracy: 1.0
->>> df.print_logical_plan()
-filter: [IMDB_Rating]->[Bool] (The rating is higher than 7 and lower than 8.) =>
-map: [Overview]->[Genre] (According to the movie overview, extract the genre of each movie.) =>
-reduce: [Genre] (Count the number of crime movies.)
->>> print(cost)
-46074
 ```
-Now support three transformation rules: `Filter pushdown`, `Operator fusion`, and `Non-LLM replacement`.
+
+#### Logical plan optimization
+Rule-based logical plan optimization is adopted in Nirvana. Now we support 5 transformation rules (found in `optim/rules.py`):
+- `Non-llm replacement`: Replaces NL instructions over non-image/video/audio data with an equivalent compute function (powered by LLMs).
+- `Map pullup`: Pulls up maps to the top of the query plan.
+- `Filter pullup`: Identifies cases where a filter can be applied on columns in other tables.
+- `Filter pushdown`: Pushes filters down into the query plan and duplicates filters over equivalency sets.
+- `Non-llm pushdown`: Pushes operators using non-llm functions/tools down into the query plan.
+
+The rules are applied in a sequential order as they are listed here. The knob to turn on/off each rule is defined in `OptimizeConfig`, and by default all the rules will be used. If you want to turn off the LLM-powered semantic transformation rule `Non-llm replacement`, for example, you can do this:
+```python
+>>> config = nv.optim.OptimizeConfig(do_logical_optimization=True, non_llm_replace=False)
+```
+
+#### Physical plan optimization
+In this version, physical plan optimization assigns the most cost-effective model to each operator in a query plan (found in `optim/physical.py`). To use it, you need to set `do_physical_optimization` to `True` and set hyperparameters like `sample_size` and `improve_margin` in `OptimizeConfig`.
+```python
+>>> config = nv.optim.OptimizeConfig(do_logical_optimization=True, do_physical_optimization=True, sample_size=5, improve_margin=0.2)
+```

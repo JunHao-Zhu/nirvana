@@ -1,7 +1,6 @@
 import os
 import logging
-import nirvana as nvn
-import pandas as pd
+import nirvana as nv
 
 from nirvana.optim import OptimizeConfig
 
@@ -26,7 +25,7 @@ def create_logger(log_dir, log_name):
     return logger
 
 
-nvn.configure_llm_backbone(
+nv.configure_llm_backbone(
     model_name="gpt-4o-2024-08-06" if LO else "gpt-4.1-2025-04-14", 
     api_key="<YOUR_API_KEY>",
 )
@@ -39,18 +38,23 @@ if __name__ == "__main__":
     if not PO:
         ablation_suffix += "_wopo"
     logger = create_logger(log_dir="log/steam", log_name=f"q10_r{ROUND}{ablation_suffix}")
-    data = pd.read_csv("testdata/steam_games.csv")
-    data["rating"] = nvn.ImageArray(data["rating"])
-    df = nvn.DataFrame(data)
+    df = nv.DataFrame.from_external_file("testdata/steam_games.csv")
     
     logger.info(f"Q10: Compute the average price of games that support both Windows and MacOS and receive a positive review.")
-    df.semantic_map(user_instruction="Give the video game a binary review (positive or negative) based on the existing review.", input_column="overall_reviews", output_column="comments")
-    df.semantic_filter(user_instruction="The game receives a positive review.", input_column="comments")
-    df.semantic_filter(user_instruction="According to the given PEGI rating (in picture), check if the game is only suitable for adults (18 years or older).", input_column="rating")
-    df.semantic_filter(user_instruction="The game supports both Windows and MacOS.", input_column="platforms")
+    df.semantic_map(user_instruction="Give the video game a binary review (positive or negative) based on the existing review.", input_columns=["overall_reviews"], output_columns=["comments"])
+    df.semantic_filter(user_instruction="The game receives a positive review.", input_columns=["comments"])
+    df.semantic_filter(user_instruction="According to the given PEGI rating (in picture), check if the game is only suitable for adults (18 years or older).", input_columns=["rating"])
+    df.semantic_filter(user_instruction="The game supports both Windows and MacOS.", input_columns=["platforms"])
     df.semantic_reduce(user_instruction="Compute the average original price.", input_column="original_price")
 
-    config = OptimizeConfig(do_logical_optimization=LO, do_physical_optimization=PO, sample_size=5, improve_margin=0.2, approx_mode=True)
+    config = OptimizeConfig(
+        do_logical_optimization=LO,
+        do_physical_optimization=PO,
+        max_rounds=5,
+        sample_size=5,
+        improve_margin=0.2,
+        approx_mode=True
+    )
     logger.info(f"Display the optimization config:\n{str(config)}")
     output, cost, runtime = df.optimize_and_execute(optim_config=config)
     if ROUND == 1:

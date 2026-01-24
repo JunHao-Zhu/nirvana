@@ -14,28 +14,28 @@ class RankPrompter:
         )
 
     def generate_prompt(
-            self, 
-            data1: Any,
-            data2: Any,
-            user_instruction: str,
-            dtype: str = "str",
+        self, 
+        data1: Any,
+        data2: Any,
+        user_instruction: str,
+        dtype: str = "text",
     ):
         # 1. Prepare system message
         sys_message = [{"role": "system", "content": self.system_instruction}]
 
         # 2. Prepare user message
         user_content = []
-        if dtype == "str":
-            user_content.append({"type": "text", "text": f"Data item 1: {str(data1)}"})
-            user_content.append({"type": "text", "text": f"Data item 2: {str(data2)}"})
+        if dtype == "text":
+            user_content.append({"type": "input_text", "text": f"Item 1:\n{str(data1)}"})
+            user_content.append({"type": "input_text", "text": f"Item 2:\n{str(data2)}"})
         elif dtype == "image":
-            user_content.append({"type": "text", "text": f"Data item 1: "})
-            user_content.append({"type": "image_url", "image_url": {"url": data1}})
-            user_content.append({"type": "text", "text": f"Data item 2: "})
-            user_content.append({"type": "image_url", "image_url": {"url": data2}})
+            user_content.append({"type": "input_text", "text": f"Item 1:"})
+            user_content.append({"type": "input_image", "image_url": data1})
+            user_content.append({"type": "input_text", "text": f"Item 2:"})
+            user_content.append({"type": "input_image", "image_url": data2})
         else:
             raise ValueError(f"Data type {dtype} is not supported.")
-        user_content.append({"type": "text", "text": f"Criterion: {user_instruction}"})
+        user_content.append({"type": "input_text", "text": f"Criterion: {user_instruction}"})
         user_message = [{"role": "user", "content": user_content}]
 
         messages = sys_message + user_message

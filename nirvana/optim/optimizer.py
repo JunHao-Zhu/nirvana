@@ -1,38 +1,44 @@
-from typing import List, Optional
-from dataclasses import dataclass, field
-import json
+import warnings
+from typing import Optional
+from pydantic import BaseModel, Field
+from typing_extensions import deprecated
 import pandas as pd
 
-from nirvana.models.llm_backbone import LLMClient
+from nirvana.executors.llm_backbone import LLMClient
 from nirvana.lineage.abstractions import LineageNode
 from nirvana.optim.logical import LogicalOptimizer
 from nirvana.optim.physical import PhysicalOptimizer
-
-
-@dataclass
-class OptimizeConfig:
-    do_logical_optimization: bool = field(default=True, metadata={"help": "whether perform logical plan optimize."})
-    do_physical_optimization: bool = field(default=True, metadata={"help": "whether perform physical plan optimize."})
-    max_round: int = field(default=3, metadata={"help": "The maximum number of rounds calling agentic logical optimization."})
-    sample_ratio: Optional[float] = field(default=None, metadata={"help": "The ratio of data used for physical optimization."})
-    sample_size: Optional[int] = field(default=None, metadata={"help": "The number of data used for physical optimization."})
-    improve_margin: float = field(default=0.2, metadata={"help": "The margin of improvement for physical optimization."})
-    approx_mode: bool = field(default=True, metadata={"help": "Whether use approximation for physical optimization."})
-
-    def to_json(self):
-        return {
-            "do_logical_optimization": self.do_logical_optimization,
-            "do_physical_optimization": self.do_physical_optimization,
-            "max_round": self.max_round,
-            "sample_ratio": self.sample_ratio,
-            "sample_size": self.sample_size,
-            "improve_margin": self.improve_margin,
-            "approx_mode": self.approx_mode
-        }
     
-    def __str__(self):
-        config_json = self.to_json()
-        return json.dumps(config_json, indent=2)
+
+class OptimizeConfig(BaseModel):
+    do_logical_optimization: bool = Field(default=True, description="whether perform logical plan optimization.")
+    do_physical_optimization: bool = Field(default=True, description="whether perform physical plan optimization.")
+    sample_size: Optional[int] = Field(default=5, description="The number of data used for plan optimization.")
+    max_rounds: int = Field(default=5, description="The maximum number of optimization rounds for logical optimization.")
+    improve_margin: float = Field(default=0.2, description="The improvement margin for physical optimization.")
+
+    # transformation rules
+    filter_pullup: bool = Field(default=True, description="Whether use filter pullup.")
+    filter_pushdown: bool = Field(default=True, description="Whether use filter pushdown.")
+    map_pullup: bool = Field(default=True, description="Whether use map pullup.")
+    non_llm_pushdown: bool = Field(default=True, description="Whether use non-llm pushdown.")
+    non_llm_replace: bool = Field(default=True, description="Whether use non-llm replacement")
+    operator_fusion: bool = Field(default=True, description="Whether use operator fusion.")
+
+    # available backend models for query optimization
+    avaiable_models: list[str] = Field(default_factory=list, description="The available models for physical optimization.")
+
+    # deprecated fields
+    approx_mode: bool = Field(
+        default=True,
+        description="Whether use approximation for physical optimization.",
+        deprecated=deprecated("`approx_mode` is deprecated and will be removed in future versions."),
+    )
+    sample_ratio: Optional[float] = Field(
+        default=None,
+        description="The ratio of data used for physical optimization.",
+        deprecated=deprecated("`sample_ratio` is deprecated and will be removed in future versions. Please use `sample_size` instead."),
+    )
 
 
 class PlanOptimizer:
@@ -42,33 +48,40 @@ class PlanOptimizer:
     def set_agent(cls, client: LLMClient):
         cls.client = client
 
-    def __init__(self, config: OptimizeConfig = None):
+    def __init__(self, config: OptimizeConfig | dict = None):
+        if isinstance(config, dict):
+            config = OptimizeConfig(**config)
         self.config = config if config is not None else OptimizeConfig()
-        if self.config.do_logical_optimization:
-            self.logical_optimizer = LogicalOptimizer(self.config.max_round, self.client)
-        else:
-            self.logical_optimizer = None
-        if self.config.do_physical_optimization:
-            self.physical_optimizer = PhysicalOptimizer(self.client)
-        else:
-            self.physical_optimizer = None
+        self.prepare_optimizers(self.config)
 
     def set_config(self, config: OptimizeConfig):
         self.config = config
+
+    def prepare_optimizers(self, config: OptimizeConfig):
+        if self.config.sample_ratio:
+            warnings.warn(
+                "`sample_ratio` is deprecated and will be removed in future versions. Now we use default `sample_size` instead.",
+                DeprecationWarning,
+            )
+        if config.do_logical_optimization:
+            self.logical_optimizer = LogicalOptimizer(
+                self.config.max_rounds, self.client, config.filter_pullup, config.filter_pushdown, config.map_pullup, config.non_llm_pushdown, config.non_llm_replace
+            )
+        else:
+            self.logical_optimizer = None
+
+        if config.do_physical_optimization:
+            self.physical_optimizer = PhysicalOptimizer(self.client, config.avaiable_models, config.sample_size, config.improve_margin)
+        else:
+            self.physical_optimizer = None
 
     def clear(self):
         if self.logical_optimizer:
             self.logical_optimizer.clear()
 
-    def optimize_logical_plan(self, plan: LineageNode, input_dataset_name: str, columns: List[str]):
-        plan = self.logical_optimizer.optimize(plan, input_dataset_name, columns)
+    def optimize_logical_plan(self, plan: LineageNode):
+        plan = self.logical_optimizer.optimize(plan, num_samples=self.config.sample_size)
         return plan
     
-    def optimize_physical_plan(self, plan: LineageNode, input_data: pd.DataFrame):
-        if self.config.sample_ratio:
-            num_sample = int(self.config.sample_ratio * len(input_data)) + 1
-        elif self.config.sample_size:
-            num_sample = self.config.sample_size
-        else:
-            raise ValueError("Please specify either `sample_ratio` or `sample_size` for physical plan optimization.")
-        return self.physical_optimizer.optimize(plan, input_data, num_sample, self.config.improve_margin, self.config.approx_mode)
+    def optimize_physical_plan(self, plan: LineageNode):
+        return self.physical_optimizer.optimize(plan)

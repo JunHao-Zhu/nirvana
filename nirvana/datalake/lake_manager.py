@@ -1,18 +1,20 @@
 import os
-from typing import Optional
+from dataclasses import dataclass, field
 from collections.abc import MutableSequence
+from typing import Optional
 import bm25s
 import chromadb
 
 
+@dataclass
 class LakeMetadata:
     path: str
-    context: Optional[str] = None
-    column_summary: Optional[str] = None
-    record_summary: Optional[str] = None
-    is_summarized: bool = False
-    is_vector_indexed: bool = False
-    is_text_indexed: bool = False
+    context: str | None = field(default=None)
+    column_summary: str | None = field(default=None)
+    record_summary: str | None = field(default=None)
+    is_summarized: bool = field(default=False)
+    is_vector_indexed: bool = field(default=False)
+    is_text_indexed: bool = field(default=False)
 
 
 class LakeManager(MutableSequence):

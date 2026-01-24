@@ -20,7 +20,7 @@ class ReducePrompter:
             self, 
             data_set: Iterable[Any],
             user_instruction: str,
-            dtype: str = "str",
+            dtype: str = "text",
     ):
         # 1. Prepare system message
         sys_message = [{"role": "system", "content": self.system_instruction}]
@@ -28,14 +28,14 @@ class ReducePrompter:
         # 2. Prepare user message
         user_content = []
         for ctr, data in enumerate(data_set):
-            if dtype == "str" or dtype == "numeric":
-                user_content.append({"type": "text", "text": f"Data {ctr + 1}: {str(data)}"})
+            if dtype == "text" or dtype == "numeric":
+                user_content.append({"type": "input_text", "text": f"Data {ctr + 1}: {str(data)}"})
             elif dtype == "image":
-                user_content.append({"type": "text", "text": f"Data {ctr + 1}: "})
-                user_content.append({"type": "image_url", "image_url": {"url": data}})
+                user_content.append({"type": "input_text", "text": f"Data {ctr + 1}: "})
+                user_content.append({"type": "input_image", "image_url": data})
             else:
                 raise ValueError(f"Data type {dtype} is not supported.")
-        user_content.append({"type": "text", "text": user_instruction})
+        user_content.append({"type": "input_text", "text": user_instruction})
         user_message = [{"role": "user", "content": user_content}]
 
         messages = sys_message + user_message

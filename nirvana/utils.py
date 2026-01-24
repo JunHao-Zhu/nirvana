@@ -3,13 +3,13 @@ from copy import deepcopy
 from pathlib import Path
 from typing import Union
 
-from nirvana.models.llm_backbone import LLMClient
+from nirvana.executors.llm_backbone import LLMClient
 from nirvana.ops.base import BaseOperation
 from nirvana.optim.optimizer import PlanOptimizer
 
 
 def configure_llm_backbone(
-        model_name: str = None, api_key: Union[str, Path] = None, **kwargs
+    model_name: str = None, api_key: Union[str, Path] = None, **kwargs
 ):
     """
     Configures the LLM (Large Language Model) backbone by initializing and setting it 

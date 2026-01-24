@@ -21,22 +21,25 @@ df = mjg.DataFrame({
 ```
 Moreover, in the future, we consider reading data from data lake storages (e.g, S3, Delta Lake, etc.)
 """
-from typing import Union
+from typing import Callable, Literal
 import pandas as pd
 
 from nirvana.lineage.mixin import LineageMixin
+from nirvana.dataframe.arrays.utils import infer_and_convert_dtype
 
 
 class DataFrame(LineageMixin):
     def __init__(
-            self,
-            data: pd.DataFrame = None,
-            *args,
-            **kwargs
+        self,
+        data: dict | pd.DataFrame = None,
+        *args,
+        **kwargs
     ):
-        self._data = data
-        self.columns = list(data.columns)
-        self.last_node = None
+        self._data = pd.DataFrame(data) if isinstance(data, dict) else data
+        for col in self._data.columns:
+            converted_array, inferred_dtype = infer_and_convert_dtype(self._data[col])
+            self._data[col] = converted_array
+        self.initialize()
 
     def __len__(self):
         _len = self.nrows
@@ -44,6 +47,9 @@ class DataFrame(LineageMixin):
     
     def __contains__(self, item):
         return self.columns.__contains__(item)
+    
+    def __repr__(self) -> str:
+        return f"{self.__class__.__name__}(nrows={self.nrows}, ncols={len(self.columns)})"
     
     @property
     def columns(self):
@@ -65,38 +71,229 @@ class DataFrame(LineageMixin):
     def from_external_file(cls, path: str, sep=',', **kwargs):
         df = pd.read_table(path, sep=sep, **kwargs)
         return cls(df)
+    
+    def head(self, n=5):
+        return self._data.head(n)
+    
+    def tail(self, n=5):
+        return self._data.tail(n)
+    
+    def _get(self, posidx, materialize: bool = False):
+        if isinstance(posidx, str):
+            # str index => column selection (AbstractColumn)
+            if posidx in self.columns:
+                return self._data[posidx]
+            raise KeyError(f"Column `{posidx}` does not exist.")
 
-    def semantic_map(self, user_instruction, input_column, output_column, rate_limit: int = 16):
+        elif isinstance(posidx, int):
+            # int index => single row
+            return self._data.iloc[posidx]
+        
+        index_type = None
+        if isinstance(posidx, slice):
+            index_type = "row"
+        elif (isinstance(posidx, tuple) or isinstance(posidx, list)) and len(posidx):
+            if isinstance(posidx[0], str):
+                index_type = "column"
+            else:
+                index_type = "row"
+        else:
+            raise TypeError("Invalid index type: {}".format(type(posidx)))
+        
+        if index_type == "row":
+            return self._data.iloc[posidx]
+        elif index_type == "column":
+            return self._data[posidx]
+
+    def __getitem__(self, posidx):
+        return self._get(posidx)
+
+    def semantic_map(
+        self,
+        user_instruction: str,
+        input_columns: list[str],
+        output_columns: list[str],
+        context: list[dict] | str | None = None,
+        model: str | None = None,
+        func: Callable | None = None,
+        strategy: Literal["plain", "fewshot", "self-refine"] = "plain",
+        limit: int | None = None,
+        rate_limit: int = 16,
+        assertions: list[Callable] | None = [],
+    ):
+        op_kwargs = {
+            "user_instruction": user_instruction,
+            "input_columns": input_columns,
+            "output_columns": output_columns,
+            "context": context,
+            "model": model,
+            "tool": func,
+            "strategy": strategy,
+            "limit": limit,
+            "rate_limit": rate_limit,
+            "assertions": assertions,
+        }
+        data_kwargs = {
+            "left_input_fields": self.leaf_node.node_fields.output_fields,
+            "right_input_fields": [],
+            "output_fields": self.leaf_node.node_fields.left_input_fields + output_columns,
+        }
         self.add_operator(op_name="map",
-                          user_instruction=user_instruction,
-                          input_column=input_column,
-                          output_column=output_column,
-                          fields=self.columns,
+                          op_kwargs=op_kwargs,
+                          data_kwargs=data_kwargs,
                           rate_limit=rate_limit)
         
-    def semantic_filter(self, user_instruction, input_column, rate_limit: int = 16):
+    def semantic_filter(
+        self,
+        user_instruction: str,
+        input_columns: list[str],
+        func: Callable | None = None,
+        context: list[dict] | str | None = None,
+        model: str | None = None,
+        strategy: Literal["plain", "fewshot", "self-refine"] = "plain",
+        limit: int | None = None,
+        rate_limit: int = 16,
+        assertions: list[Callable] | None = [],
+    ):
+        op_kwargs = {
+            "user_instruction": user_instruction,
+            "input_columns": input_columns,
+            "context": context,
+            "model": model,
+            "tool": func,
+            "strategy": strategy,
+            "limit": limit,
+            "rate_limit": rate_limit,
+            "assertions": assertions,
+        }
+        data_kwargs = {
+            "left_input_fields": self.leaf_node.node_fields.output_fields,
+            "right_input_fields": [],
+            "output_fields": self.leaf_node.node_fields.output_fields,
+        }
         self.add_operator(op_name="filter",
-                          user_instruction=user_instruction,
-                          input_column=input_column,
-                          fields=self.columns,
+                          op_kwargs=op_kwargs,
+                          data_kwargs=data_kwargs,
                           rate_limit=rate_limit)
         
-    def semantic_reduce(self, user_instruction, input_column, rate_limit: int = 16):
+    def semantic_reduce(
+        self,
+        user_instruction: str,
+        input_column: str,
+        context: list[dict] | str | None = None,
+        model: str | None = None,
+        func: Callable | None = None,
+        strategy: Literal["plain"] = "plain",
+        rate_limit: int = 16,
+        assertions: list[Callable] | None = [],
+    ):
+        op_kwargs = {
+            "user_instruction": user_instruction,
+            "input_columns": [input_column],
+            "context": context,
+            "model": model,
+            "tool": func,
+            "strategy": strategy,
+            "rate_limit": rate_limit,
+            "assertions": assertions,
+        }
+        data_kwargs = {
+            "left_input_fields": self.leaf_node.node_fields.output_fields,
+            "right_input_fields": [],
+            "output_fields": []
+        }
         self.add_operator(op_name="reduce",
-                          user_instruction=user_instruction,
-                          input_column=input_column,
-                          fields=self.columns,
+                          op_kwargs=op_kwargs,
+                          data_kwargs=data_kwargs,
                           rate_limit=rate_limit)
         
+    def semantic_join(
+        self,
+        other: "DataFrame",
+        user_instruction: str,
+        left_on: str,
+        right_on: str,
+        how: Literal["inner", "left", "right"] = "inner",
+        context: list[dict] | str | None = None,
+        model: str | None = None,
+        func: Callable | None = None,
+        strategy: Literal["nest", "block"] = "nest",
+        limit: int | None = None,
+        rate_limit: int = 16,
+        assertions: list[Callable] | None = [],
+        batch_size: int = 5,
+    ):
+        union_fields = (
+            list(set(self.leaf_node.node_fields.output_fields) | set(other.leaf_node.node_fields.output_fields))
+        )
+        op_kwargs = {
+            "user_instruction": user_instruction,
+            "left_on": [left_on],
+            "right_on": [right_on],
+            "how": how,
+            "context": context,
+            "model": model,
+            "tool": func,
+            "strategy": strategy,
+            "limit": limit,
+            "rate_limit": rate_limit,
+            "assertions": assertions,
+            "batch_size": batch_size,
+        }
+        data_kwargs = {
+            "input_left_fields": self.leaf_node.node_fields.output_fields,
+            "input_right_fields": other.leaf_node.node_fields.output_fields,
+            "output_fields": union_fields
+        }
+        self.add_operator(op_name="join",
+                          op_kwargs=op_kwargs,
+                          data_kwargs=data_kwargs,
+                          other=other,
+                          rate_limit=rate_limit)
+        
+    def semantic_rank(
+        self,
+        user_instruction: str,
+        input_column: str,
+        descend: bool = True,
+        context: list[dict] | str | None = None,
+        model: str | None = None,
+        func: Callable | None = None,
+        strategy: Literal["plain"] = "plain",
+        limit: int | None = None,
+        rate_limit: int = 16,
+        assertions: list[Callable] | None = [],
+    ):
+        op_kwargs = {
+            "user_instruction": user_instruction,
+            "input_columns": [input_column],
+            "descend": descend,
+            "context": context,
+            "model": model,
+            "tool": func,
+            "strategy": strategy,
+            "limit": limit,
+            "rate_limit": rate_limit,
+            "assertions": assertions,
+        }
+        data_kwargs = {
+            "left_input_fields": self.leaf_node.node_fields.output_fields,
+            "right_input_fields": [],
+            "output_fields": self.leaf_node.node_fields.output_fields,
+        }
+        self.add_operator(op_name="rank",
+                          op_kwargs=op_kwargs,
+                          data_kwargs=data_kwargs,
+                          rate_limit=rate_limit)
+    
     def optimize_and_execute(self, optim_config = None):
         self.create_plan_optimizer(optim_config)
         if self.optimizer.config.do_logical_optimization:
-            self.last_node = self.optimizer.optimize_logical_plan(self.last_node, "df", self.columns)
+            self.leaf_node = self.optimizer.optimize_logical_plan(self.leaf_node)
         if self.optimizer.config.do_physical_optimization:
             output, cost, runtime = self.optimizer.optimize_physical_plan(
-                self.last_node,
-                self._data,
+                self.leaf_node,
             )
         else:
-            output, cost, runtime = self.execute(self._data)
+            output, cost, runtime = self.execute()
         return output, cost, runtime
