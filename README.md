@@ -98,7 +98,7 @@ RankOpOutputs(
 ```
 For now, it supports inner join, left join, and right join by setting parameter `how` to `inner`, `left`, and `right`.
 
-Operator `discover`: Discover relevant data from a data lake based on a query. This operation is applied to a data lake with an interface of DataLake class above it (see datalake/datalake.py)
+Operator `discover`: Discover relevant data from a data lake based on a query (under debugging). This operation is applied to a data lake with an interface of DataLake class above it (see datalake/datalake.py)
 
 ### Data lineage
 Data lineage (a directed acyclic graph) enables lazy exeuction and logical and physical plan optimizations. Data lineage is created along with dataframe.
