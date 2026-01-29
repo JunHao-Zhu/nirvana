@@ -342,8 +342,8 @@ impl PyDataFrame {
     }
 
     /// Get the schema as a dictionary of {column_name: dtype}
-    /// Returns media dtypes (image/audio) when applicable
-    fn schema_dict(&self) -> HashMap<String, String> {
+    /// Returns dtypes (image/audio/others) when applicable
+    fn get_dtypes(&self) -> HashMap<String, String> {
         self.columns
             .iter()
             .map(|(name, col)| (name.clone(), col.dtype()))
@@ -823,8 +823,8 @@ mod tests {
 
         let df = PyDataFrame::from_csv(file.path().to_str().unwrap(), None, None).unwrap();
 
-        let schema = df.schema_dict();
-        assert_eq!(schema.get("image_path").unwrap(), "image");
-        assert_eq!(schema.get("id").unwrap(), "Int64");
+        let dtypes = df.get_dtypes();
+        assert_eq!(dtypes.get("image_path").unwrap(), "image");
+        assert_eq!(dtypes.get("id").unwrap(), "Int64");
     }
 }

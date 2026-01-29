@@ -66,6 +66,9 @@ class DataFrame(LineageMixin):
     @property
     def nrows(self):
         return self._data.shape[0]
+
+    def to_pandas(self) -> pd.DataFrame:
+        return self._data.copy()
     
     @classmethod
     def from_external_file(cls, path: str, sep=',', **kwargs):

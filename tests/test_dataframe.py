@@ -10,7 +10,7 @@ import os
 
 # Check if Rust backend is available
 try:
-    from nirvana_core import PyDataFrame
+    from nirvana.nirvana_core import PyDataFrame
     RUST_AVAILABLE = True
 except ImportError:
     RUST_AVAILABLE = False
@@ -19,7 +19,7 @@ except ImportError:
 # Skip all tests if Rust backend not available
 pytestmark = pytest.mark.skipif(
     not RUST_AVAILABLE,
-    reason="Rust backend (nirvana_core) not available"
+    reason="Rust backend (nirvana.nirvana_core) not available"
 )
 
 
@@ -147,18 +147,18 @@ class TestPyDataFrame:
         assert dicts[0] == {"a": 1, "b": "x"}
         assert dicts[1] == {"a": 2, "b": "y"}
     
-    def test_schema_dict(self):
+    def test_dtypes(self):
         """Test getting schema as dict."""
         df = PyDataFrame.from_dict({
             "int_col": [1, 2, 3],
             "str_col": ["a", "b", "c"]
         })
-        schema = df.schema_dict()
-        assert "int_col" in schema
-        assert "str_col" in schema
+        dtypes = df.get_dtypes()
+        assert "int_col" in dtypes
+        assert "str_col" in dtypes
         # The types should be Arrow types
-        assert "Int64" in schema["int_col"]
-        assert "Utf8" in schema["str_col"]
+        assert "Int64" in dtypes["int_col"]
+        assert "Utf8" in dtypes["str_col"]
 
 
 class TestRustDataFrame:
@@ -167,7 +167,16 @@ class TestRustDataFrame:
     @pytest.fixture
     def rust_dataframe(self):
         """Import RustDataFrame only if Rust is available."""
+        import nirvana
         from nirvana.dataframe.rust_frame import DataFrame
+        from nirvana.ops.base import BaseOperation
+        
+        # Mock LLM client
+        class MockLLM:
+            default_model = "gpt-4-turbo"
+            
+        BaseOperation.set_llm(MockLLM())
+        
         return DataFrame
     
     def test_from_dict(self, rust_dataframe):
@@ -234,3 +243,63 @@ class TestRustDataFrame:
         assert isinstance(selected, RustDataFrame)
         assert selected.ncols == 2
         assert set(selected.columns) == {"a", "c"}
+
+    def test_media_inference_csv(self, rust_dataframe, tmp_path):
+        """Test image inference and conversion from CSV."""
+        RustDataFrame = rust_dataframe
+        
+        # Create dummy image files
+        img1 = tmp_path / "test1.jpg"
+        img2 = tmp_path / "test2.png"
+        img1.write_bytes(b"fake_image_data_1")
+        img2.write_bytes(b"fake_image_data_2")
+        
+        csv_content = f"id,image_path\n1,{img1}\n2,{img2}\n"
+        csv_file = tmp_path / "media.csv"
+        csv_file.write_text(csv_content)
+        
+        df = RustDataFrame.from_csv(str(csv_file))
+        
+        # Check media types
+        dtypes = df.dtypes
+        assert dtypes["image_path"] == "image"
+        
+        # Check values are converted (should start with data:image)
+        # Note: The Rust implementation uses inferred mime type. 
+        # .jpg -> image/jpeg, .png -> image/png
+        vals = df.to_dicts()
+        assert vals[0]["image_path"].startswith("data:image/jpeg;base64,")
+        assert vals[1]["image_path"].startswith("data:image/png;base64,")
+
+    def test_media_inference_dict(self, rust_dataframe, tmp_path):
+        """Test audio inference and conversion from dict."""
+        RustDataFrame = rust_dataframe
+        
+        # Create dummy audio file
+        audio1 = tmp_path / "sound.mp3"
+        audio1.write_bytes(b"fake_audio_data")
+        
+        # URL doesn't need file creation, handled by logic (but currently logic might try to fetch if http)
+        # Our implementation handles local files.
+        
+        data = {
+            "id": [1],
+            "audio_path": [str(audio1)]
+        }
+        
+        df = RustDataFrame(data)
+        
+        # Check media types
+        dtypes = df.dtypes
+        assert dtypes["audio_path"] == "audio"
+        
+        # Check conversion (local file -> base64)
+        vals = df.to_dicts()
+        # Base64 of "fake_audio_data"
+        # Since we can't easily predict exact base64 without import, just check it's not the path
+        assert vals[0]["audio_path"] != str(audio1)
+        # Should be base64 string
+        import base64
+        expected = base64.b64encode(b"fake_audio_data").decode('utf-8')
+        assert vals[0]["audio_path"] == expected
+

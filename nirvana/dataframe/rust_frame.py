@@ -11,7 +11,7 @@ from nirvana.lineage.mixin import LineageMixin
 
 # Import Rust bindings (optional, with fallback)
 try:
-    from nirvana_core import (
+    from nirvana.nirvana_core import (
         PyDataFrame,
         PyColumn,
     )
@@ -85,19 +85,15 @@ class DataFrame(LineageMixin):
         else:
             raise TypeError(f"Unsupported data type: {type(data)}")
         
-        # Populate column media types from the Rust schema
-        schema = self._data.schema_dict()
-        for col, dtype in schema.items():
-            if dtype == "image":
-                self._column_media_types[col] = "image"
-            elif dtype == "audio":
-                self._column_media_types[col] = "audio"
-            else:
-                self._column_media_types[col] = "text"
         
         # Create a PyArrow view for pandas compatibility when needed
-        self._arrow_table = None
+        self._arrow_table = None        
         self.initialize()
+
+    @property
+    def dtypes(self) -> dict[str, Any]:
+        data_types = self._data.get_dtypes()
+        return data_types 
     
     @classmethod
     def from_csv(

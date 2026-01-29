@@ -1,11 +1,15 @@
 *.DS_Store
 
+*.so
 .idea/
 .vscode/
 *__pycache__*
 *.egg-info/
 
 dist/
+
+# vibe coding
+.agent/
 
 # virtual environments
 .venv/
