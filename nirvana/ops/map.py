@@ -215,7 +215,7 @@ class MapOperation(BaseOperation):
             assert self.context is not None, "Few-shot examples must be provided in the context for in-context learning."
             demos = self.context
             execution_func = functools.partial(self._execute_by_fewshot_llm, dtypes=dtypes, demos=demos, model=self.model, **kwargs)
-        elif self.strategy == "self_refine":
+        elif self.strategy == "self-refine":
             execution_func = functools.partial(self._execute_by_self_refine, dtypes=dtypes, model=self.model, **kwargs)
         else:
             raise ValueError(f"The optional strategies available for map are {self.strategy_options}. Strategy {self.strategy} is not supported.")

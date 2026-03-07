@@ -12,6 +12,5 @@ __all__ = [
     "map",
     "rank",
     "reduce",
-    "select",
     "join"
 ]

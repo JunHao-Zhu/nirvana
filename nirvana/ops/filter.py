@@ -75,7 +75,7 @@ class FilterOperation(BaseOperation):
     """
     Filter operator: Uses an LLM to evaluate a natural language predicate on a column
     """
-    strategy_options = ["plain", "fewshot", "self_refine"]
+    strategy_options = ["plain", "fewshot", "self-refine"]
     
     def __init__(
         self,
@@ -199,7 +199,7 @@ class FilterOperation(BaseOperation):
             assert self.context is not None, "Few-shot examples must be provided in the context for in-context learning."
             demos = self.context
             execution_func = functools.partial(self._execute_by_fewshot_llm, dtypes=dtypes, demos=demos, field_name=self.input_columns[0], model=self.model, **kwargs)
-        elif self.strategy == "self_refine":
+        elif self.strategy == "self-refine":
             execution_func = functools.partial(self._execute_by_self_refine, dtypes=dtypes, field_name=self.input_columns[0], model=self.model, **kwargs)
         else:
             raise ValueError(f"The optional strategies available for filter are {self.strategy_options}. Strategy {self.strategy} is not supported.")
