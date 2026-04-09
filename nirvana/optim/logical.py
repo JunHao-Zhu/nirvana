@@ -144,7 +144,10 @@ class LogicalOptimizer:
     
     async def estimate_plan_cost(self, plan: LineageNode, ground_truth: pd.DataFrame = None):
         try:
-            results, token_cost, exec_time = await execute_node(plan)
+            execution_start_time = time.time()
+            results, token_cost = await execute_node(plan)
+            execution_end_time = time.time()
+            exec_time = execution_end_time - execution_start_time
         except Exception as e:
             return None, 0.0, 0.0, 0.0
         if ground_truth is None:
