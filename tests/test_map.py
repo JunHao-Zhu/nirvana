@@ -170,7 +170,7 @@ class TestMapOperation:
             user_instruction="Extract the genre of each movie.",
             input_columns=["overview"],
             output_columns=["genre"],
-            strategy="self_refine"
+            strategy="self-refine"
         )
         
         result = await op.execute(input_data=sample_dataframe)
