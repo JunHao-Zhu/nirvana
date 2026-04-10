@@ -428,7 +428,8 @@ class DataFrame(LineageMixin):
             data_kwargs=data_kwargs,
             rate_limit=rate_limit
         )
-        
+        return self
+
     def semantic_filter(
         self,
         user_instruction: str,
@@ -477,7 +478,8 @@ class DataFrame(LineageMixin):
             data_kwargs=data_kwargs,
             rate_limit=rate_limit
         )
-        
+        return self
+
     def semantic_reduce(
         self,
         user_instruction: str,
@@ -523,7 +525,8 @@ class DataFrame(LineageMixin):
             data_kwargs=data_kwargs,
             rate_limit=rate_limit
         )
-        
+        return self
+
     def semantic_join(
         self,
         other: "DataFrame",
@@ -588,7 +591,8 @@ class DataFrame(LineageMixin):
             other=other,
             rate_limit=rate_limit
         )
-        
+        return self
+
     def semantic_rank(
         self,
         user_instruction: str,
@@ -640,7 +644,8 @@ class DataFrame(LineageMixin):
             data_kwargs=data_kwargs,
             rate_limit=rate_limit
         )
-    
+        return self
+
     def optimize_and_execute(self, optim_config=None):
         """
         Optimize the query plan and execute it.
