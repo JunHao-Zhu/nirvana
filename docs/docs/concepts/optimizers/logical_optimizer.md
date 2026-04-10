@@ -19,13 +19,17 @@ Moves filter operations later in the pipeline.
 Reorders map operations relative to others.
 - **Map Pullup**: Delays mapping until after filtering, to avoid mapping rows that will be discarded.
 
-### 4. Operator Fusion
-Combines adjacent operators into a single LLM call.
-- **Benefit**: Reduces API overhead and context limitations. For example, combining a `Filter` and a `Map` into a single "Extract and Filter" prompt.
+### 4. Non-LLM Pushdown
+Pushes purely deterministic predicates (for example, numeric comparisons) ahead of LLM operators by compiling them to Python UDFs.
+- **Benefit**: Lets cheap, deterministic checks eliminate rows before any LLM call is issued.
 
 ### 5. Non-LLM Replacement
 Replaces LLM-based operators with cheaper, deterministic Python functions or regexes when possible.
 - **Example**: If a filter asks for "numbers > 5", it can be rewritten as a simple lambda logic instead of an LLM call.
+
+### 6. Operator Fusion
+Combines adjacent operators into a single LLM call.
+- **Benefit**: Reduces API overhead and context limitations. For example, combining a `Filter` and a `Map` into a single "Extract and Filter" prompt.
 
 ## Optimization Loop
 
