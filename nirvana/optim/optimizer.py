@@ -1,6 +1,6 @@
 import warnings
 from typing import Optional
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 from typing_extensions import deprecated
 import pandas as pd
 
@@ -26,7 +26,7 @@ class OptimizeConfig(BaseModel):
     operator_fusion: bool = Field(default=True, description="Whether use operator fusion.")
 
     # available backend models for query optimization
-    avaiable_models: list[str] = Field(default_factory=list, description="The available models for physical optimization.")
+    available_models: list[str] = Field(default_factory=list, description="The available models for physical optimization.")
 
     # deprecated fields
     approx_mode: bool = Field(
@@ -39,6 +39,22 @@ class OptimizeConfig(BaseModel):
         description="The ratio of data used for physical optimization.",
         deprecated=deprecated("`sample_ratio` is deprecated and will be removed in future versions. Please use `sample_size` instead."),
     )
+    avaiable_models: list[str] = Field(
+        default_factory=list,
+        description="Deprecated misspelling of `available_models`; kept for backward compatibility.",
+        deprecated=deprecated("`avaiable_models` is a typo and will be removed in future versions. Please use `available_models` instead."),
+    )
+
+    @model_validator(mode="after")
+    def _sync_available_models_alias(self) -> "OptimizeConfig":
+        if self.avaiable_models and not self.available_models:
+            warnings.warn(
+                "`avaiable_models` is a typo and will be removed in future versions. Please use `available_models` instead.",
+                DeprecationWarning,
+                stacklevel=2,
+            )
+            self.available_models = self.avaiable_models
+        return self
 
 
 class PlanOptimizer:
@@ -71,7 +87,7 @@ class PlanOptimizer:
             self.logical_optimizer = None
 
         if config.do_physical_optimization:
-            self.physical_optimizer = PhysicalOptimizer(self.client, config.avaiable_models, config.sample_size, config.improve_margin)
+            self.physical_optimizer = PhysicalOptimizer(self.client, config.available_models, config.sample_size, config.improve_margin)
         else:
             self.physical_optimizer = None
 
