@@ -521,7 +521,7 @@ nv.optim.OptimizeConfig(
 | `non_llm_pushdown` | `bool` | `True` | Enable pushing deterministic predicates ahead of LLM operators. |
 | `non_llm_replace` | `bool` | `True` | Enable replacing LLM operators with equivalent Python UDFs when possible. |
 | `operator_fusion` | `bool` | `True` | Enable merging adjacent operators on the same column into a single LLM call. |
-| `available_models` | `list[str]` | `[]` | Candidate model names available for physical optimization. |
+| `available_models` | `list[str]` | `[]` | Candidate model names available from the least-cost to the most-cost model for physical optimization. |
 
 ### Logical plan optimization
 
